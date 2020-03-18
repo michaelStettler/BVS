@@ -2,72 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/bvs/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/models/NeuralField.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/models/NormBaseEncoding.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/models/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/simple_NF_classification.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/BVS.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/layers/GaborFiltersMartin.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/layers/NeuralField.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/layers/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/BVS.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/BVS.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/models/NeuralField.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/models/NormBaseEncoding.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/NormBaseEncoding.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/models/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/simple_NF_classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/simple_NF_classification.py" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
-    <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="simple_NF_classification.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/simple_NF_classification.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" column="18" lean-forward="true" selection-start-line="4" selection-start-column="18" selection-end-line="4" selection-end-column="18" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NeuralField.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/bvs/models/NeuralField.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NormBaseEncoding.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/bvs/models/NormBaseEncoding.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/bvs/__init__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="7" column="38" lean-forward="true" selection-start-line="7" selection-start-column="38" selection-end-line="7" selection-end-column="38" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/bvs/models/__init__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="3" column="46" lean-forward="true" selection-start-line="3" selection-start-column="46" selection-end-line="3" selection-end-column="46" />
-              <folding>
-                <element signature="e#35#71#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -79,68 +31,14 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="IdeDocumentHistory">
-    <option name="CHANGED_PATHS">
-      <list>
-        <option value="$PROJECT_DIR$/README.md" />
-        <option value="$PROJECT_DIR$/bvs/models/NB_encoding.py" />
-        <option value="$PROJECT_DIR$/bvs/models/NF_regression.py" />
-        <option value="$PROJECT_DIR$/bvs/models/NF.py" />
-        <option value="$PROJECT_DIR$/bvs/models/NormBaseEncoding.py" />
-        <option value="$PROJECT_DIR$/bvs/models/__init__.py" />
-        <option value="$PROJECT_DIR$/bvs/models/NeuralField.py" />
-        <option value="$PROJECT_DIR$/examples/simple_NF_classification.py" />
-        <option value="$PROJECT_DIR$/bvs/examples/simple_NF_classification.py" />
-        <option value="$PROJECT_DIR$/bvs/__init__.py" />
-        <option value="$PROJECT_DIR$/simple_NF_classification.py" />
-      </list>
-    </option>
-  </component>
-  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
-  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
-  <component name="JsGulpfileManager">
-    <detection-done>true</detection-done>
-    <sorting>DEFINITION_ORDER</sorting>
-  </component>
-  <component name="NodePackageJsonFileManager">
-    <packageJsonPaths />
-  </component>
-  <component name="ProjectFrameBounds">
-    <option name="y" value="23" />
-    <option name="width" value="1790" />
-    <option name="height" value="1124" />
-  </component>
-  <component name="ProjectView">
-    <navigator proportions="" version="1">
-      <foldersAlwaysOnTop value="true" />
-    </navigator>
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="BVS" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BVS" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BVS" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BVS" type="462c0819:PsiDirectoryNode" />
-              <item name="bvs" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BVS" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BVS" type="462c0819:PsiDirectoryNode" />
-              <item name="bvs" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope" />
-    </panes>
+  <component name="ProjectId" id="1ZGDnlxrlGerfGNJZHwR34Qcfc3" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
@@ -156,21 +54,10 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/bvs/layers" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/bvs" />
     </key>
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -182,89 +69,18 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1584345279244</updated>
+      <workItem from="1584456710383" duration="1333000" />
+      <workItem from="1584516951331" duration="14480000" />
     </task>
     <servers />
-  </component>
-  <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1790" height="1124" extended-state="0" />
-    <layout>
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="7" visible="true" weight="0.32911393" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2528604" />
-      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="right" id="Database" order="3" />
-      <window_info anchor="right" id="SciView" order="3" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" />
-    </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
-  <component name="VcsContentAnnotationSettings">
-    <option name="myLimit" value="2678400000" />
-  </component>
-  <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/bvs/models/NormBaseEncoding.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/examples/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bvs/models/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="46" lean-forward="true" selection-start-line="3" selection-start-column="46" selection-end-line="3" selection-end-column="46" />
-          <folding>
-            <element signature="e#35#71#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bvs/models/NeuralField.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bvs/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="38" lean-forward="true" selection-start-line="7" selection-start-column="38" selection-end-line="7" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="96" selection-start-line="5" selection-start-column="96" selection-end-line="5" selection-end-column="96" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/simple_NF_classification.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="18" lean-forward="true" selection-start-line="4" selection-start-column="18" selection-end-line="4" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
+  <component name="WindowStateProjectService">
+    <state x="469" y="224" key="SettingsEditor" timestamp="1584456751666">
+      <screen x="0" y="23" width="1920" height="1125" />
+    </state>
+    <state x="469" y="224" key="SettingsEditor/0.23.1920.1125@0.23.1920.1125" timestamp="1584456751666" />
   </component>
 </project>

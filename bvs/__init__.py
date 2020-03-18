@@ -1,7 +1,6 @@
 # Copyright 2020 Michael Stettler
 
-from . import (models,
-               areas,
+from . import (layers,
                bscores,
                cscores)
 
