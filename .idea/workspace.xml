@@ -3,9 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config_test2.json" beforeDir="false" afterPath="$PROJECT_DIR$/config_test2.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig3.5.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig3.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig4.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig5.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig6.jpeg" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +70,7 @@
       <workItem from="1584456710383" duration="1333000" />
       <workItem from="1584516951331" duration="19315000" />
       <workItem from="1584548672428" duration="28090000" />
-      <workItem from="1584952069054" duration="4725000" />
+      <workItem from="1584952069054" duration="5297000" />
     </task>
     <servers />
   </component>
