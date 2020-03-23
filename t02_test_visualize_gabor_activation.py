@@ -5,6 +5,7 @@ import math
 import matplotlib.pyplot as plt
 from bvs.layers import GaborFilters
 from bvs.utils.create_preds_seq import create_multi_frame
+from bvs.utils.create_preds_seq import create_multi_frame_heatmap
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input
@@ -56,6 +57,16 @@ x = gabor_layer(input)
 #     plt.imshow(gb.astype(np.float32))
 # plt.show()
 
+kernels = gabor_layer.kernel
+num_kernels = np.shape(kernels)[-1]
+print("shape kernels", np.shape(kernels))
+num_column = min(num_kernels, 4)
+num_row = math.ceil(num_kernels / 4)
+print("num column", num_column, "num_row", num_row)
+multi_frame = create_multi_frame(kernels, num_row, num_column, (256, 256))
+cv2.imwrite("bvs/video/gabor_filters.jpeg", multi_frame.astype(np.uint8))
+
+
 model = Model(inputs=input, outputs=x)
 model.compile(optimizer='rmsprop',
               loss='categorical_crossentropy',
@@ -73,11 +84,12 @@ num_activations = np.shape(activations)[-1]
 num_column = min(num_activations, 4)
 num_row = math.ceil(num_activations / 4)
 print("num column", num_column, "num_row", num_row)
-multi_frame = create_multi_frame(img, activations, num_row, num_column, (256, 256))
+multi_frame = create_multi_frame_heatmap(img, activations, num_row, num_column, (256, 256))
 
-plt.figure()
-plt.imshow(multi_frame)
-cv2.imwrite("bvs/video/gabor_filter.jpeg", multi_frame.astype(np.uint8))
+# plt.figure()
+# plt.imshow(multi_frame)
+# plt.show()
+cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8))
 
 # activations = np.moveaxis(pred[0], -1, 0)
 # for filter in activations:
@@ -98,5 +110,6 @@ cv2.imwrite("bvs/video/gabor_filter.jpeg", multi_frame.astype(np.uint8))
 #     plt.figure()
 #     plt.imshow(output)
 
-plt.show()
+# plt.show()
+
 

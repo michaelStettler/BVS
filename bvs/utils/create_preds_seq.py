@@ -3,7 +3,35 @@ import math
 import cv2
 
 
-def create_multi_frame(image, filters, num_row, num_column, size_image, border=5):
+def create_multi_frame(filters, num_row, num_column, size_image, border=5):
+    # compute size of frame
+    width_img = num_column * size_image[0] + (num_column - 1) * border
+    height_img = num_row * size_image[1] + (num_row - 1) * border
+    multi_frame = np.zeros((height_img, width_img, 3))
+
+    # stack images into the frame
+    for r in range(num_row):
+        for c in range(num_column):
+            startX = c * (size_image[0] + border)
+            stopX = startX + size_image[0]
+            startY = r * (size_image[1] + border)
+            stopY = startY + size_image[1]
+
+            filter = filters[:, :, :, r * num_column + c]
+            print("shape filter", np.shape(filter))
+            filter = (filter - np.min(filter))
+            filter = filter / np.max(filter)
+            filter = np.array(filter * 255).astype(np.uint8)
+            filter = cv2.resize(filter, (256, 256))
+
+            multi_frame[startY:stopY, startX:stopX, :] = filter
+
+    return np.array(multi_frame).astype(np.uint8)
+
+
+def create_multi_frame_heatmap(image, filters, num_row, num_column, size_image, border=5):
+    alpha = 0.25
+
     # compute size of frame
     width_img = num_column * size_image[0] + (num_column - 1) * border
     height_img = num_row * size_image[1] + (num_row - 1) * border
@@ -26,9 +54,8 @@ def create_multi_frame(image, filters, num_row, num_column, size_image, border=5
             filter = np.array(filter * 255).astype(np.uint8)
             filter = cv2.resize(filter, (256, 256))
 
-            alpha = 0.15
-            heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
-            # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
+            # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
+            heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
             output = cv2.addWeighted(image, alpha, heatmap, 1 - alpha, 0)
 
             multi_frame[startY:stopY, startX:stopX, :] = output
