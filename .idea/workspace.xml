@@ -2,24 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/bvs/layers/GaborFiltersCircle.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/utils/unflatten_idx.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config_test.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config_test2.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t01_test_gabor_layer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t04_test_circle_detector.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t05_test_seq_activation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t06_test_V2_activation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/t07_test_PCA_activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/reports/test_gabor_filter.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simple_NF_classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/simple_NF_classification_.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +65,7 @@
       <workItem from="1584456710383" duration="1333000" />
       <workItem from="1584516951331" duration="19315000" />
       <workItem from="1584548672428" duration="28090000" />
-      <workItem from="1584952069054" duration="2126000" />
+      <workItem from="1584952069054" duration="3159000" />
     </task>
     <servers />
   </component>
