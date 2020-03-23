@@ -23,10 +23,8 @@ class GaborFilters(tf.keras.layers.Layer):
             for sigma in self.sigmas:
                 for lamda in self.lamdas:
                     gb = self._build_gabor(sigma, theta, lamda, self.gamma, self.phi)
-                    print("shape gb", np.shape(gb))
                     kernels.append(gb)
 
-        print("shape kernels", np.shape(kernels))
         kernels = np.swapaxes(kernels, 0, -1)
         kernels = np.expand_dims(kernels, axis=2)
         if not self.per_channel:
@@ -36,7 +34,6 @@ class GaborFilters(tf.keras.layers.Layer):
     #     TODO make 3D kernel per colors?
 
     def call(self, input):
-        print("shape input", np.shape(input))
         if self.per_channel:
             conv = tf.concat([tf.nn.conv2d(tf.expand_dims(input[:, :, :, i], axis=3), self.kernel, strides=1, padding='SAME') for i in range(self.inp_shape[-1])], axis=3)
             return conv

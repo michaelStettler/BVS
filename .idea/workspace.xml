@@ -2,19 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/bvs/BVS.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/layers/GaborFiltersMartin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/layers/NeuralField.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/layers/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/BVS.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/BVS.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/layers/GaborFiltersCircle.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bvs/utils/unflatten_idx.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config_test.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config_test2.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t01_test_gabor_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t04_test_circle_detector.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t05_test_seq_activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t06_test_V2_activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/t07_test_PCA_activation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/models/NeuralField.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/models/NormBaseEncoding.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/NormBaseEncoding.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/models/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/simple_NF_classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/simple_NF_classification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/layers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simple_NF_classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/simple_NF_classification_.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,6 +63,10 @@
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/bvs" />
     </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/bvs/layers" />
+    </key>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -70,7 +79,9 @@
       <option name="presentableId" value="Default" />
       <updated>1584345279244</updated>
       <workItem from="1584456710383" duration="1333000" />
-      <workItem from="1584516951331" duration="14480000" />
+      <workItem from="1584516951331" duration="19315000" />
+      <workItem from="1584548672428" duration="28090000" />
+      <workItem from="1584952069054" duration="2126000" />
     </task>
     <servers />
   </component>
@@ -78,9 +89,25 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="442" y="235" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1584698041160">
+      <screen x="0" y="23" width="1920" height="1125" />
+    </state>
+    <state x="442" y="235" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1920.1125@0.23.1920.1125" timestamp="1584698041160" />
+    <state x="742" y="383" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1584628063335">
+      <screen x="0" y="23" width="1920" height="1125" />
+    </state>
+    <state x="742" y="383" key="#com.intellij.fileTypes.FileTypeChooser/0.23.1920.1125@0.23.1920.1125" timestamp="1584628063335" />
     <state x="469" y="224" key="SettingsEditor" timestamp="1584456751666">
       <screen x="0" y="23" width="1920" height="1125" />
     </state>
     <state x="469" y="224" key="SettingsEditor/0.23.1920.1125@0.23.1920.1125" timestamp="1584456751666" />
+    <state x="801" y="497" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1584698113714">
+      <screen x="0" y="23" width="1920" height="1125" />
+    </state>
+    <state x="801" y="497" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1920.1125@0.23.1920.1125" timestamp="1584698113714" />
+    <state x="676" y="294" width="670" height="676" key="search.everywhere.popup" timestamp="1584781760622">
+      <screen x="0" y="23" width="1920" height="1125" />
+    </state>
+    <state x="676" y="294" width="670" height="676" key="search.everywhere.popup/0.23.1920.1125@0.23.1920.1125" timestamp="1584781760622" />
   </component>
 </project>

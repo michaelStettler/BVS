@@ -1,6 +1,6 @@
 {
-  "n_rot": 8,
-  "sigmas": [6],
+  "n_rot": 4,
+  "sigmas": [1.5, 3.5],
   "lamdas": [1],
   "gamma": 0.5
 }

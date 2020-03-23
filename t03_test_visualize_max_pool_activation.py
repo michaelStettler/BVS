@@ -13,7 +13,7 @@ print("Visualize gabor filter")
 
 # load config
 # config = 'config.json'
-config = 'config_test.json'
+config = 'config_test2.json'
 with open(config) as f:
   config = json.load(f)
 

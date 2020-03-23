@@ -1,8 +1,10 @@
 import numpy as np
 import cv2
 import json
+import math
 import matplotlib.pyplot as plt
 from bvs.layers import GaborFilters
+from bvs.utils.create_preds_seq import create_multi_frame
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input
@@ -13,7 +15,7 @@ print("Visualize gabor filter")
 
 # load config
 # config = 'config.json'
-config = 'config_test.json'
+config = 'config_test2.json'
 with open(config) as f:
   config = json.load(f)
 
@@ -30,6 +32,8 @@ img = cv2.resize(img, (256, 256))
 # img[:128, :128, 0] = 255
 # img[128:, 128:, 1] = 255
 # plt.imshow(img)
+
+print("Num orientations {}, sigmas {}, gamma {}".format(config['n_rot'], config['sigmas'], config['gamma']))
 
 # build model
 input = Input(shape=(256, 256, 3))
@@ -62,26 +66,37 @@ test_img = np.expand_dims(img, axis=0)
 pred = model.predict(x=test_img)
 print("shape pred", np.shape(pred))
 
-img0 = pred[0]
-filters = np.moveaxis(img0, -1, 0)
-print("shape predictions", np.shape(pred))
-for filter in filters:
-    img = img - np.min(img)
-    img = np.array((img / np.max(img)) * 255).astype(np.uint8)
-    filter = (filter - np.min(filter))
-    filter = filter / np.max(filter)
-    filter = np.array(filter * 255).astype(np.uint8)
+activations = pred[0]
+print("shape activations", np.shape(activations))
 
-    alpha = 0.2
-    # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
-    heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
-    output = cv2.addWeighted(img, alpha, heatmap, 1 - alpha, 0)
+num_activations = np.shape(activations)[-1]
+num_column = min(num_activations, 4)
+num_row = math.ceil(num_activations / 4)
+print("num column", num_column, "num_row", num_row)
+multi_frame = create_multi_frame(img, activations, num_row, num_column, (256, 256))
 
-    # cv2.imshow("test", output)
-    # cv2.waitKey(0)
+plt.figure()
+plt.imshow(multi_frame)
+cv2.imwrite("bvs/video/gabor_filter.jpeg", multi_frame.astype(np.uint8))
 
-    plt.figure()
-    plt.imshow(output)
+# activations = np.moveaxis(pred[0], -1, 0)
+# for filter in activations:
+#     img = img - np.min(img)
+#     img = np.array((img / np.max(img)) * 255).astype(np.uint8)
+#     filter = (filter - np.min(filter))
+#     filter = filter / np.max(filter)
+#     filter = np.array(filter * 255).astype(np.uint8)
+#
+#     alpha = 0.2
+#     # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
+#     heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
+#     output = cv2.addWeighted(img, alpha, heatmap, 1 - alpha, 0)
+#
+#     # cv2.imshow("test", output)
+#     # cv2.waitKey(0)
+#
+#     plt.figure()
+#     plt.imshow(output)
 
 plt.show()
 
