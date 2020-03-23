@@ -10,29 +10,22 @@ Gabor filter with:
 
 <img src='../../img/gabor_filters_sig1.5_gam0.5.jpeg' height="220">
 <img src='../../img/heatmap_gabor_filters_sig1.5_gam0.5.jpeg' height="220">
-Stimuli with heatmap Gabor Filter activation
+Gabor filters and stimuli with heatmap Gabor Filter activation
 
-**test 2:** n_orient = 8, sigma = 3, lamdas = 1, gamma = 0.5
+**test 2:** n_orient = 4, sigma = 2, lamdas = 1, gamma = 0.5
 
-<img src='../../img/gabor_filter_sig3.jpeg' height="250">
-Stimuli with heatmap Gabor Filter activation
+<img src='../../img/gabor_filters_sig2_gam0.5.jpeg' height="220">
+<img src='../../img/heatmap_gabor_filters_sig2_gam0.5.jpeg' height="220">
+Gabor filters and stimuli with heatmap Gabor Filter activation
 
-**test 3:** n_orient = 8, sigma = 3.5, lamdas = 1, gamma = 0.5
+**test 3:** n_orient = 8, sigma = 3, lamdas = 1, gamma = 0.5
 
-<img src='../../img/gabor_filter_sig3.5.jpeg' height="250">
-Stimuli with heatmap Gabor Filter activation
+<img src='../../img/gabor_filters_sig3_gam0.5.jpeg' height="220">
+<img src='../../img/heatmap_gabor_filters_sig3_gam0.5.jpeg' height="220">
+Gabor filters and stimuli with heatmap Gabor Filter activation
 
 **test 4:** n_orient = 8, sigma = 4, lamdas = 1, gamma = 0.5
 
-<img src='../../img/gabor_filter_sig4.jpeg' height="250">
-Stimuli with heatmap Gabor Filter activation
-
-**test 5:** n_orient = 8, sigma = 5, lamdas = 1, gamma = 0.5
-
-<img src='../../img/gabor_filter_sig5.jpeg' height="250">
-Stimuli with heatmap Gabor Filter activation
-
-**test 6:** n_orient = 8, sigma = 6, lamdas = 1, gamma = 0.5
-
-<img src='../../img/gabor_filter_sig6.jpeg' height="250">
-Stimuli with heatmap Gabor Filter activation
+<img src='../../img/gabor_filters_sig4_gam0.5.jpeg' height="220">
+<img src='../../img/heatmap_gabor_filters_sig4_gam0.5.jpeg' height="220">
+Gabor filters and stimuli with heatmap Gabor Filter activation
