@@ -3,12 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/video/gabor_filters_sig3_gam0.5_lam2.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/video/heatmap_gabor_filters_sig3_gam0.5_lam2.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/video/heatmap_gabor_filters_sig4_gam0.5.jpeg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/config_test2.json" beforeDir="false" afterPath="$PROJECT_DIR$/config_test2.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig3.5.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig3.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig4.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig5.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/img/gabor_filter_sig6.jpeg" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +68,7 @@
       <workItem from="1584456710383" duration="1333000" />
       <workItem from="1584516951331" duration="19315000" />
       <workItem from="1584548672428" duration="28090000" />
-      <workItem from="1584952069054" duration="5297000" />
+      <workItem from="1584952069054" duration="6301000" />
     </task>
     <servers />
   </component>
