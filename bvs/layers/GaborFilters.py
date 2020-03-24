@@ -4,7 +4,7 @@ import numpy as np
 
 
 class GaborFilters(tf.keras.layers.Layer):
-    def __init__(self, ksize, sigma=[3], theta=[np.pi], lamda=[np.pi], gamma=0.5, phi=0, per_channel=False):
+    def __init__(self, ksize, sigma=[3], theta=[np.pi], lamda=[np.pi], gamma=0.5, phi=[0], per_channel=False):
         super(GaborFilters, self).__init__()
         self.ksize = ksize
         self.sigmas = sigma  # standard deviation of the gaussian envelope
@@ -19,11 +19,12 @@ class GaborFilters(tf.keras.layers.Layer):
         # kernels = np.array([self._build_gabor(self.sigma, theta, self.lambd, self.gamma, self.phi) for theta in self.theta])
 
         kernels = []
-        for theta in self.theta:
-            for sigma in self.sigmas:
-                for lamda in self.lamdas:
-                    gb = self._build_gabor(sigma, theta, lamda, self.gamma, self.phi)
-                    kernels.append(gb)
+        for phi in self.phi:
+            for theta in self.theta:
+                for sigma in self.sigmas:
+                    for lamda in self.lamdas:
+                        gb = self._build_gabor(sigma, theta, lamda, self.gamma, phi)
+                        kernels.append(gb)
 
         kernels = np.swapaxes(kernels, 0, -1)
         kernels = np.expand_dims(kernels, axis=2)

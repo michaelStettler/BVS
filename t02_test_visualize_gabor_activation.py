@@ -44,7 +44,8 @@ thetas = np.array(range(n_rot)) / n_rot * np.pi
 sigmas = config['sigmas']
 lamdas = np.array(config['lamdas']) * np.pi
 gamma = config['gamma']
-gabor_layer = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, per_channel=False)
+phi = np.array(config['phi']) * np.pi
+gabor_layer = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, phi=phi, per_channel=False)
 x = gabor_layer(input)
 # print("shape gabor_kernel", np.shape(gabor_layer.kernel))
 
