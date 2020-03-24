@@ -4,15 +4,16 @@ script: t07_test_PCA_activation.py
 
 config file: config_test3.json
 
-**test 1 - 10 components activation PCA: **
+**test 1 - 10 components activation PCA:**
 Used only 1 layer with 3 gabor filters types (config_test3.json). Kept 10 principal component,
 
 explained variance: [0.693 0.141 0.0527 0.027 0.017 0.008 0.008 0.004 0.003 0.002]
 
-<img src='../../img/PCA_10c.gif', height='256'>
+![](../../img/PCA_10c.gif)
+
 heatmap of PCA activation over the sequence
 
-**test 1 - 50 components activation PCA: **
+**test 1 - 50 components activation PCA:**
 Used only 1 layer with 3 gabor filters types (config_test3.json). Kept 50 principal component,
 
 explained variance: 
@@ -27,6 +28,6 @@ explained variance:
  1.8615110e-04 1.8205361e-04 1.8060241e-04 1.7965880e-04 1.7709934e-04
  1.7651166e-04 1.7105186e-04 1.6955007e-04 1.6706037e-04 1.6635279e-04]
 
+![](../../img/PCA_50c.gif)
 
-<img src='../../img/PCA_50c.gif', height='256'>
 heatmap of PCA activation over the sequence
