@@ -16,7 +16,7 @@ axis=3, num_cond=3 (ksize=(1, 1), strides=1, padding='SAME')
 <img src='../../img/heatmap_MaxPooling_only_depths.jpeg' height="110">
 heatmap of depth max pooling activation on 3 different gabor filter type (sigma=2, lambda=1), (sigma=3, lambda=2), (sigma=4, lamda=3)
 
-**test2 - depths and 2D max pool**
+**test3 - depths and 2D max pool**
 axis=3, num_cond=3 (ksize=(1, 1), strides=1, padding='SAME')
 
 <img src='../../img/heatmap_MaxPooling_depths.jpeg' height="110">
