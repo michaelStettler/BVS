@@ -11,7 +11,7 @@ from tensorflow.keras.models import Model
 print("test gabor layer")
 
 # load config
-with open('config.json') as f:
+with open('configs/config.json') as f:
   config = json.load(f)
 
 # load data

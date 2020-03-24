@@ -17,9 +17,9 @@ from tensorflow.keras.models import Model
 print("Visualize PCA activation")
 
 # load config
-# config = 'config.json'
-# config = 'config_test3.json'
-config = 'config_test3_edge.json'
+# config = 'configs/config.json'
+# config = 'configs/onfig_test3.json'
+config = 'configs/config_test3_edge.json'
 with open(config) as f:
   config = json.load(f)
 

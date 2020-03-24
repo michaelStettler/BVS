@@ -15,7 +15,7 @@ print("Visualize gabor filter")
 
 # load config
 # config = 'config.json'
-config = 'config_test.json'
+config = 'configs/config_test.json'
 with open(config) as f:
   config = json.load(f)
 
@@ -46,18 +46,17 @@ thetas = np.array(range(n_rot)) / n_rot * np.pi
 sigmas = config['sigmas']
 lamdas = np.array(config['lamdas']) * np.pi
 gamma = config['gamma']
+maxPool_stride = 3
+
 gabor_layer = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, per_channel=False)
 x = gabor_layer(input)
+pooling_layer = MaxPool2D(pool_size=(3, 3), strides=maxPool_stride, padding='SAME')
+x = pooling_layer(x)
+v2 = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, per_channel=True)
+x = v2(x)
+pooling_layer_v2 = MaxPool2D(pool_size=(3, 3), strides=maxPool_stride, padding='SAME')
+x = pooling_layer_v2(x)
 # print("shape gabor_kernel", np.shape(gabor_layer.kernel))
-
-# g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
-# for gb in g_kernels:
-#     if np.shape(gb)[-1] == 1:
-#         gb = np.squeeze(gb)
-#     gb = (gb+1)/2
-#     plt.figure()
-#     plt.imshow(gb.astype(np.float32))
-# plt.show()
 
 model = Model(inputs=input, outputs=x)
 model.compile(optimizer='rmsprop',
@@ -69,7 +68,7 @@ print("shape data", np.shape(data))
 pred = model.predict(x=data)
 print("shape pred", np.shape(pred))
 
-create_preds_seq(data, pred)
+create_preds_seq(data, pred, max_column=8)
 
 # img0 = pred[0]
 # filters = np.moveaxis(img0, -1, 0)
@@ -80,6 +79,7 @@ create_preds_seq(data, pred)
 #     filter = (filter - np.min(filter))
 #     filter = filter / np.max(filter)
 #     filter = np.array(filter * 255).astype(np.uint8)
+#     filter = cv2.resize(filter, (256, 256))
 #
 #     alpha = 0.2
 #     # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)

@@ -12,8 +12,8 @@ from tensorflow.keras.models import Model
 print("Visualize gabor filter")
 
 # load config
-# config = 'config.json'
-config = 'config_test.json'
+# config = 'configs/config.json'
+config = 'configs/config_test.json'
 with open(config) as f:
   config = json.load(f)
 

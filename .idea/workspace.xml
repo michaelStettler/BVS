@@ -2,11 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/config_test3_edge.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config_test3.json" beforeDir="false" afterPath="$PROJECT_DIR$/config_test3.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/t07_test_PCA_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t07_test_PCA_activation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_test.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_test2.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_test3.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_test3_edge.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t01_test_gabor_layer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t04_test_circle_detector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t05_test_seq_activation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t06_test_V2_activation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/t07_test_PCA_activation.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +79,8 @@
       <workItem from="1584516951331" duration="19315000" />
       <workItem from="1584548672428" duration="28090000" />
       <workItem from="1584952069054" duration="12507000" />
-      <workItem from="1585036187633" duration="5335000" />
+      <workItem from="1585036187633" duration="5766000" />
+      <workItem from="1585055069887" duration="395000" />
     </task>
     <servers />
   </component>
