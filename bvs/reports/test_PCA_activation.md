@@ -4,6 +4,8 @@ script: t07_test_PCA_activation.py
 
 config file: config_test3.json
 
+## Texture filters
+
 **test 1 - 10 components activation PCA:**
 Used only 1 layer with 3 gabor filters types (config_test3.json). Kept 10 principal component,
 
@@ -29,5 +31,28 @@ explained variance:
  1.7651166e-04 1.7105186e-04 1.6955007e-04 1.6706037e-04 1.6635279e-04]
 
 ![](../../img/PCA_50c.gif)
+
+heatmap of PCA activation over the sequence
+
+## Edge filters
+Used only 1 layer with 3 edge gabor filters types (config_test3_edge.json). Kept 50 principal component,
+
+explained variance: 
+[7.45034635e-01 1.45006239e-01 4.48011681e-02 1.93261486e-02
+ 1.27625884e-02 5.95224602e-03 5.45527879e-03 2.86701135e-03
+ 1.86277146e-03 1.54469034e-03 1.23025558e-03 9.87443374e-04
+ 7.57949834e-04 7.05744780e-04 5.51382138e-04 4.48864914e-04
+ 3.71541915e-04 2.91072152e-04 2.53126578e-04 2.38723645e-04
+ 1.99507165e-04 1.65297301e-04 1.39873038e-04 1.26589162e-04
+ 1.17755117e-04 1.04072737e-04 1.00121266e-04 9.16896970e-05
+ 8.75426776e-05 8.05258460e-05 7.84578442e-05 7.57055386e-05
+ 7.41553959e-05 7.30604079e-05 7.19513555e-05 7.12764522e-05
+ 7.05027924e-05 6.90789893e-05 6.78318029e-05 6.73945906e-05
+ 6.71861490e-05 6.53648167e-05 6.45538094e-05 6.43643143e-05
+ 6.32292213e-05 6.22361331e-05 6.12695221e-05 6.05888999e-05
+ 6.01800821e-05 5.92212818e-05]
+
+
+![](../../img/PCA_edge_50c.gif)
 
 heatmap of PCA activation over the sequence
