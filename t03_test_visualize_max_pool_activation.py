@@ -16,7 +16,8 @@ print("Visualize gabor filter")
 
 # load config
 # config = 'config.json'
-config = 'config_test3.json'
+# config = 'config_test3.json'
+config = 'config_test3_edge.json'
 with open(config) as f:
   config = json.load(f)
 
@@ -45,6 +46,7 @@ gabor_layer1 = GaborFilters((15, 15), theta=thetas,
                             sigma=conf['sigmas'],
                             lamda=np.array(conf['lamdas']) * np.pi,
                             gamma=conf['gamma'],
+                            phi=np.array(conf['phi']) * np.pi,
                             per_channel=False)
 x1 = gabor_layer1(input)
 
@@ -56,6 +58,7 @@ gabor_layer2 = GaborFilters((15, 15), theta=thetas,
                             sigma=conf['sigmas'],
                             lamda=np.array(conf['lamdas']) * np.pi,
                             gamma=conf['gamma'],
+                            phi=np.array(conf['phi']) * np.pi,
                             per_channel=False)
 x2 = gabor_layer2(input)
 # -------------------- Gabor 3 ------------------ #
@@ -66,6 +69,7 @@ gabor_layer3 = GaborFilters((15, 15), theta=thetas,
                             sigma=conf['sigmas'],
                             lamda=np.array(conf['lamdas']) * np.pi,
                             gamma=conf['gamma'],
+                            phi=np.array(conf['phi']) * np.pi,
                             per_channel=False)
 x3 = gabor_layer3(input)
 

@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/config_test3_edge.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config_test2.json" beforeDir="false" afterPath="$PROJECT_DIR$/config_test2.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t02_test_visualize_gabor_activation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_test3.json" beforeDir="false" afterPath="$PROJECT_DIR$/config_test3.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/t07_test_PCA_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t07_test_PCA_activation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,14 +45,14 @@
     </option>
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/bvs/layers" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/bvs/layers" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/bvs" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/bvs/layers" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -68,7 +69,7 @@
       <workItem from="1584516951331" duration="19315000" />
       <workItem from="1584548672428" duration="28090000" />
       <workItem from="1584952069054" duration="12507000" />
-      <workItem from="1585036187633" duration="4497000" />
+      <workItem from="1585036187633" duration="5335000" />
     </task>
     <servers />
   </component>
