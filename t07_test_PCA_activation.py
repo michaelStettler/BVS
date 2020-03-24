@@ -3,6 +3,7 @@ import cv2
 import json
 import matplotlib.pyplot as plt
 from bvs.layers import GaborFilters
+from bvs.layers import MaxPoolDepths
 from bvs.utils.create_preds_seq import create_preds_seq
 from bvs.utils.unflatten_idx import unflatten_idx
 import os
@@ -17,7 +18,7 @@ print("Visualize PCA activation")
 
 # load config
 # config = 'config.json'
-config = 'config_test2.json'
+config = 'config_test3.json'
 with open(config) as f:
   config = json.load(f)
 
@@ -41,25 +42,50 @@ data = np.array(data)
 # plt.imshow(img)
 
 # -----------------   build model   ---------------
-# define model parameters
-n_rot = 8
-thetas = np.array(range(n_rot)) / n_rot * np.pi
-sigmas = config['sigmas']
-lamdas = np.array(config['lamdas']) * np.pi
-gamma = config['gamma']
-maxPool_stride = 3
-
-# construt layers
+# build model
 input = Input(shape=(256, 256, 3))
-gabor_layer = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, per_channel=False)
-x = gabor_layer(input)
-pooling_layer = MaxPool2D(pool_size=(3, 3), strides=maxPool_stride, padding='SAME')
+
+# -------------------- Gabor 1 ------------------ #
+conf = config['Gabor'][0]
+n_rot = conf['n_rot']
+thetas = np.array(range(n_rot)) / n_rot * np.pi
+gabor_layer1 = GaborFilters((15, 15), theta=thetas,
+                            sigma=conf['sigmas'],
+                            lamda=np.array(conf['lamdas']) * np.pi,
+                            gamma=conf['gamma'],
+                            per_channel=False)
+x1 = gabor_layer1(input)
+
+# -------------------- Gabor 2 ------------------ #
+conf = config['Gabor'][1]
+n_rot = conf['n_rot']
+thetas = np.array(range(n_rot)) / n_rot * np.pi
+gabor_layer2 = GaborFilters((15, 15), theta=thetas,
+                            sigma=conf['sigmas'],
+                            lamda=np.array(conf['lamdas']) * np.pi,
+                            gamma=conf['gamma'],
+                            per_channel=False)
+x2 = gabor_layer2(input)
+# -------------------- Gabor 3 ------------------ #
+conf = config['Gabor'][2]
+n_rot = conf['n_rot']
+thetas = np.array(range(n_rot)) / n_rot * np.pi
+gabor_layer3 = GaborFilters((15, 15), theta=thetas,
+                            sigma=conf['sigmas'],
+                            lamda=np.array(conf['lamdas']) * np.pi,
+                            gamma=conf['gamma'],
+                            per_channel=False)
+x3 = gabor_layer3(input)
+
+
+# print("shape gabor_kernel", np.shape(gabor_layer.kernel))
+print("shape layers", np.shape(x1), np.shape(x2), np.shape(x3))
+x = tf.concat([x1, x2, x3], axis=3)
+print("shape x", np.shape(x))
+
+# pooling_layer = MaxPool2D(pool_size=(3, 3), strides=1, padding='SAME')
+pooling_layer = MaxPoolDepths(ksize=(3, 3), strides=1, padding='SAME', axis=3, num_cond=3)
 x = pooling_layer(x)
-v2 = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, per_channel=True)
-x = v2(x)
-pooling_layer_v2 = MaxPool2D(pool_size=(3, 3), strides=maxPool_stride, padding='SAME')
-x = pooling_layer_v2(x)
-print("shape gabor_kernel", np.shape(gabor_layer.kernel))
 
 model = Model(inputs=input, outputs=x)
 model.compile(optimizer='rmsprop',

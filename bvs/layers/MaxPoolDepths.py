@@ -4,7 +4,8 @@ import numpy as np
 
 class MaxPoolDepths(tf.keras.layers.Layer):
     """
-    Depth Pooling: Extend the input layer according to the num_cond parameter such as if:
+    Depth Pooling: Basically a 3D max Pooling but with a reshape in function of the number of parameters set.
+    The layers extend the input according to the num_cond parameter such as if:
     input shape (None, None, None, 20) with num_cond = 5 and axis = 3
     Max pool will be created as (None, None, None, 5, 4) and the reduce max apply on the specified axes (3)
     leading to: (None, None, None, 4)
