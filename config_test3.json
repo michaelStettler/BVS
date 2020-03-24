@@ -1,0 +1,20 @@
+{ "Gabor": [
+  {
+    "n_rot": 4,
+    "sigmas": [2],
+    "lamdas": [1],
+    "gamma": 0.5
+  },
+  {
+    "n_rot": 4,
+    "sigmas": [3],
+    "lamdas": [2],
+    "gamma": 0.5
+  },
+  {
+    "n_rot": 4,
+    "sigmas": [4],
+    "lamdas": [3],
+    "gamma": 0.5
+  }]
+}

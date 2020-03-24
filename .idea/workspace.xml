@@ -2,11 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/bvs/layers/MaxPoolDepths.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config_test3.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/video/gabor_filters_sig3_gam0.5_lam2.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/video/heatmap_gabor_filters_sig3_gam0.5_lam2.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/video/heatmap_gabor_filters_sig4_gam0.5.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/layers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config_test2.json" beforeDir="false" afterPath="$PROJECT_DIR$/config_test2.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/t03_test_visualize_max_pool_activation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,14 +47,14 @@
     </option>
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/bvs/layers" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/bvs/layers" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/bvs" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/bvs/layers" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -68,7 +70,8 @@
       <workItem from="1584456710383" duration="1333000" />
       <workItem from="1584516951331" duration="19315000" />
       <workItem from="1584548672428" duration="28090000" />
-      <workItem from="1584952069054" duration="6301000" />
+      <workItem from="1584952069054" duration="12507000" />
+      <workItem from="1585036187633" duration="639000" />
     </task>
     <servers />
   </component>

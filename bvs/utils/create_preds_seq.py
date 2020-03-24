@@ -18,7 +18,6 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
             stopY = startY + size_image[1]
 
             filter = filters[:, :, :, r * num_column + c]
-            print("shape filter", np.shape(filter))
             filter = (filter - np.min(filter))
             filter = filter / np.max(filter)
             filter = np.array(filter * 255).astype(np.uint8)
