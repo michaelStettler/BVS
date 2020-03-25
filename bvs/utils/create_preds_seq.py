@@ -82,6 +82,7 @@ def create_preds_seq(data, preds, max_column=4):
     print("shape seq", np.shape(seq))
 
     # create sequence
+    # todo update to use mutlti_frame function
     for s in range(length_seq):
         img = data[s]
         img = img - np.min(img)

@@ -2,6 +2,10 @@ import tensorflow as tf
 from tensorflow.keras.layers import Conv2D
 import numpy as np
 
+# todo gaborfilter: set the 1.6 octaves wavelength
+# todo gaborfilter: colorcoding
+# todo gaborfilter: dynamic coding ?
+
 
 class GaborFilters(tf.keras.layers.Layer):
     def __init__(self, ksize, sigma=[3], theta=[np.pi], lamda=[np.pi], gamma=0.5, phi=[0], per_channel=False):

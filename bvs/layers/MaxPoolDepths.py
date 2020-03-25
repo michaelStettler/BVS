@@ -4,11 +4,11 @@ import numpy as np
 
 class MaxPoolDepths(tf.keras.layers.Layer):
     """
-    Depth Pooling: Basically a 3D max Pooling but with a reshape in function of the number of parameters set.
-    The layers extend the input according to the num_cond parameter such as if:
+    Depth Pooling: Basically 3D max Pooling, but with a prior reshape function of the number of parameters set.
+    The layers extend the input axis number by one according to the num_cond parameter such as if:
     input shape (None, None, None, 20) with num_cond = 5 and axis = 3
-    Max pool will be created as (None, None, None, 5, 4) and the reduce max apply on the specified axes (3)
-    leading to: (None, None, None, 4)
+    Max pool Depths will created a new Tensor of shape (None, None, None, 5, 4) and only then reduce it by max pooling
+    applied on the specified axis (=3 in this example), leading to: (None, None, None, 4)
     """
     def __init__(self, ksize, strides, padding, axis, num_cond):
         super(MaxPoolDepths, self).__init__()
@@ -20,7 +20,6 @@ class MaxPoolDepths(tf.keras.layers.Layer):
 
     def build(self, input_shape):
         self.inp_shape = input_shape
-        # todo mix with 2d max pooling
 
     def call(self, input):
         inp_shape = tf.shape(input)

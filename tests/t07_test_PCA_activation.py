@@ -128,6 +128,8 @@ for i, p in enumerate(pred):
         heatmap[i, u_idx[0], u_idx[1]] = p[u_idx]
 
 # --------------------- PLOT ------------------------
+
+# todo update that function to use the seq
 # plot heatmap activation on sequence
 # normalize the heatmap and images
 images = data - np.min(data)
