@@ -4,7 +4,7 @@ import numpy as np
 
 class RBF(tf.keras.layers.Layer):
     """
-    own implementation of a RBF network
+    own implementation of a Radial Basis Function (RBF)
 
     use vectorization. Therefore if data is of size (m, n) dataA and dataB is the m times repetitions of the matrix
     into a new dimension to compute each m*m combination (in order to avoid a double for loop over m)
@@ -54,21 +54,26 @@ class RBF(tf.keras.layers.Layer):
     def __init__(self, sigma):
         super(RBF, self).__init__()
         self.sigma = sigma
-        print("sigma", self.sigma)
 
     def build(self, input_shape):
         self.inp_shape = input_shape
 
     def call(self, input):
-        print("shape input", tf.shape(input))
+        """
+        compute RBF with x - x'
+
+        :param input:
+        :return:
+        """
+
         # repetition of first dim into new dimension
-        dataA = tf.matlib.repmat(input, tf.shape(input)[0], 1).reshape(
-            (-1, tf.shape(input)[0], tf.shape(input)[1]))
-        # repetitions of second dim into new dimensions
-        dataB = tf.tile(input, tf.shape(input)[0]).reshape(
-            (-1, tf.shape(input)[0], tf.shape(input)[1]))
-        rbf2 = tf.exp(-tf.linalg.norm(dataA - dataB, axis=2) ** 2 / 2 / self.sigma ** 2)
-        return rbf2
+        x = tf.reshape(tf.tile(input, [tf.shape(input)[0], 1]), [-1, tf.shape(input)[0], tf.shape(input)[1]])
+        # repetition of second dim into new dimension
+        x_prime = tf.reshape(tf.tile(input, [1, tf.shape(input)[0]]), [-1, tf.shape(input)[0], tf.shape(input)[1]])
+        # compute the RBF as gaussian
+        rbf = tf.exp(-tf.norm(x - x_prime, axis=2) ** 2 / 2 / self.sigma ** 2)
+
+        return rbf
 
 
 
