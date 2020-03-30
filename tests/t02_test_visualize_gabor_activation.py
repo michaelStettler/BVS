@@ -34,18 +34,26 @@ img = cv2.resize(img, (256, 256))
 # img[128:, 128:, 1] = 255
 # plt.imshow(img)
 
-print("Num orientations {}, sigmas {}, gamma {}".format(config['n_rot'], config['sigmas'], config['gamma']))
+print("Num orientations {}, lambda {}, gamma {}".format(config['n_rot'], config['lamdas'], config['gamma']))
 
 # build model
 input = Input(shape=(256, 256, 3))
 
 n_rot = config['n_rot']
 thetas = np.array(range(n_rot)) / n_rot * np.pi
-sigmas = config['sigmas']
 lamdas = np.array(config['lamdas']) * np.pi
 gamma = config['gamma']
 phi = np.array(config['phi']) * np.pi
-gabor_layer = GaborFilters((15, 15), theta=thetas, sigma=sigmas, lamda=lamdas, gamma=gamma, phi=phi, per_channel=False)
+use_octave = config['use_octave']
+octave = config['octave']
+gabor_layer = GaborFilters((15, 15),
+                           theta=thetas,
+                           lamda=lamdas,
+                           gamma=gamma,
+                           phi=phi,
+                           use_octave=use_octave,
+                           octave=octave,
+                           per_channel=False)
 x = gabor_layer(input)
 # print("shape gabor_kernel", np.shape(gabor_layer.kernel))
 

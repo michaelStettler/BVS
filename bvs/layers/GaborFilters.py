@@ -8,15 +8,20 @@ import numpy as np
 
 
 class GaborFilters(tf.keras.layers.Layer):
-    def __init__(self, ksize, sigma=[3], theta=[np.pi], lamda=[np.pi], gamma=0.5, phi=[0], per_channel=False):
+    def __init__(self, ksize, sigma=[1], theta=[np.pi], lamda=[np.pi], gamma=0.5, phi=[0], per_channel=False, use_octave=False, octave=1.8):
         super(GaborFilters, self).__init__()
         self.ksize = ksize
-        self.sigmas = sigma  # standard deviation of the gaussian envelope
+        self.sigmas = sigma  # standard deviation of the gaussian envelope  -> usually computed with the octave
         self.theta = theta  # orientation of the normal to the parallel stripes of a Gabor function
         self.lamdas = lamda  # wavelength of the sinusoidal factor
         self.gamma = gamma  # spatial aspect ratio.
         self.phi = phi  # phase offset
         self.per_channel = per_channel  # apply a Gabor filter per channel
+
+        if use_octave:
+            # http: // www.cs.rug.nl / ~imaging / simplecell.html
+            self.sigmas = self.lamdas * 1 / np.pi * np.sqrt(np.log(2) / 2) * (np.power(2, octave) + 1) / (np.power(2, octave) - 1)
+            print("[computed from Lambda ({})] self.sigmas = {}".format(self.lamdas, self.sigmas))
 
     def build(self, input_shape):
         self.inp_shape = input_shape
@@ -61,8 +66,11 @@ class GaborFilters(tf.keras.layers.Layer):
         x_theta = x * np.cos(theta) + y * np.sin(theta)
         y_theta = -x * np.sin(theta) + y * np.cos(theta)
 
+        # gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * \
+        #      np.cos(2 * np.pi / Lambda * x_theta + phi)
         gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * \
-             np.cos(2 * np.pi / Lambda * x_theta + phi)
+             np.cos(1 / Lambda * x_theta + phi)
+
 
         return gb
 
