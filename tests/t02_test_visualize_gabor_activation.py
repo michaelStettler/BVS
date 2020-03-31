@@ -53,11 +53,12 @@ gabor_layer = GaborFilters((15, 15),
                            phi=phi,
                            use_octave=use_octave,
                            octave=octave,
-                           per_channel=False)
+                           per_channel=False,
+                           per_color_channel=True)
 x = gabor_layer(input)
 # print("shape gabor_kernel", np.shape(gabor_layer.kernel))
 
-# g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
+g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
 # for gb in g_kernels:
 #     if np.shape(gb)[-1] == 1:
 #         gb = np.squeeze(gb)
@@ -65,6 +66,8 @@ x = gabor_layer(input)
 #     plt.figure()
 #     plt.imshow(gb.astype(np.float32))
 # plt.show()
+print("shape g_kernels", np.shape(g_kernels))
+# print(g_kernels[0])
 
 kernels = gabor_layer.kernel
 num_kernels = np.shape(kernels)[-1]
@@ -100,25 +103,5 @@ multi_frame = create_multi_frame_heatmap(img, activations, num_row, num_column, 
 # plt.show()
 cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8))
 
-# activations = np.moveaxis(pred[0], -1, 0)
-# for filter in activations:
-#     img = img - np.min(img)
-#     img = np.array((img / np.max(img)) * 255).astype(np.uint8)
-#     filter = (filter - np.min(filter))
-#     filter = filter / np.max(filter)
-#     filter = np.array(filter * 255).astype(np.uint8)
-#
-#     alpha = 0.2
-#     # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
-#     heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
-#     output = cv2.addWeighted(img, alpha, heatmap, 1 - alpha, 0)
-#
-#     # cv2.imshow("test", output)
-#     # cv2.waitKey(0)
-#
-#     plt.figure()
-#     plt.imshow(output)
-
-# plt.show()
 
 

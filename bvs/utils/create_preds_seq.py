@@ -7,7 +7,7 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
     # compute size of frame
     width_img = num_column * size_image[0] + (num_column - 1) * border
     height_img = num_row * size_image[1] + (num_row - 1) * border
-    multi_frame = np.zeros((height_img, width_img, 3))
+    multi_frame = np.zeros((height_img, width_img, np.shape(filters)[2]))
 
     # stack images into the frame
     for r in range(num_row):
@@ -17,13 +17,16 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
             startY = r * (size_image[1] + border)
             stopY = startY + size_image[1]
 
-            filter = filters[:, :, :, r * num_column + c]
-            filter = (filter - np.min(filter))
-            filter = filter / np.max(filter)
-            filter = np.array(filter * 255).astype(np.uint8)
-            filter = cv2.resize(filter, (256, 256))
+            filt = filters[:, :, :, r * num_column + c]  # linearized the double loop argument into a single arg
+            filt = (filt - np.min(filt))
+            filt = filt / np.max(filt)
+            filt = np.array(filt * 255).astype(np.uint8)
+            filt = cv2.resize(filt, (256, 256))
 
-            multi_frame[startY:stopY, startX:stopX, :] = filter
+            if len(np.shape(filt)) <= 2:
+                filt = np.expand_dims(filt, axis=2)
+
+            multi_frame[startY:stopY, startX:stopX, :] = filt
 
     return np.array(multi_frame).astype(np.uint8)
 

@@ -8,7 +8,16 @@ import numpy as np
 
 
 class GaborFilters(tf.keras.layers.Layer):
-    def __init__(self, ksize, sigma=[1], theta=[np.pi], lamda=[np.pi], gamma=0.5, phi=[0], per_channel=False, use_octave=False, octave=1.8):
+    def __init__(self, ksize,
+                 sigma=[1],
+                 theta=[np.pi],
+                 lamda=[np.pi],
+                 gamma=0.5,
+                 phi=[0],
+                 per_channel=False,
+                 per_color_channel=False,
+                 use_octave=True,
+                 octave=1.6):
         super(GaborFilters, self).__init__()
         self.ksize = ksize
         self.sigmas = sigma  # standard deviation of the gaussian envelope  -> usually computed with the octave
@@ -16,7 +25,9 @@ class GaborFilters(tf.keras.layers.Layer):
         self.lamdas = lamda  # wavelength of the sinusoidal factor
         self.gamma = gamma  # spatial aspect ratio.
         self.phi = phi  # phase offset
-        self.per_channel = per_channel  # apply a Gabor filter per channel
+        self.per_channel = per_channel  # apply a Gabor filter per channel (duplicate for RGB channel)
+        self.per_color_channel = per_color_channel  # apply a Gabor filter across color channels (duplicate in function
+        # of color such that R could be inhibited by G, B and GB
 
         if use_octave:
             # http: // www.cs.rug.nl / ~imaging / simplecell.html
@@ -37,11 +48,18 @@ class GaborFilters(tf.keras.layers.Layer):
 
         kernels = np.swapaxes(kernels, 0, -1)
         kernels = np.expand_dims(kernels, axis=2)
-        if not self.per_channel:
-            kernels = np.repeat(kernels, input_shape[-1], axis=2)  # repeat on input dim
-        print("shape kernels", np.shape(kernels))
+
+        if self.per_color_channel and self.per_channel:
+            print("Parameters mutually exclusive! Please select only one to True")
+            print("Set per_color_channel = True and per_channel = False")
+
+        if self.per_color_channel:
+            kernels = self._build_color_kernel(input_shape, kernels)
+        elif not self.per_channel:  # if per_channel = False
+            kernels = np.repeat(kernels, input_shape[-1], axis=2)  # repeat on input axis to correlate with output axis
+            # of input_shape (create only contrast kernnel)
+
         self.kernel = tf.convert_to_tensor(kernels, dtype=tf.float32, name='Gabor_kernel')
-    #     TODO make 3D kernel per colors?
 
     def call(self, input):
         if self.per_channel:
@@ -66,14 +84,60 @@ class GaborFilters(tf.keras.layers.Layer):
         x_theta = x * np.cos(theta) + y * np.sin(theta)
         y_theta = -x * np.sin(theta) + y * np.cos(theta)
 
-        # gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * \
-        #      np.cos(2 * np.pi / Lambda * x_theta + phi)
         gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * \
-             np.cos(1 / Lambda * x_theta + phi)
-
+             np.cos(2 * np.pi / Lambda * x_theta + phi)
 
         return gb
 
+    def _build_color_kernel(self, input_shape, kernels):
+        diff_degree = input_shape[-1] - np.shape(kernels)[2]  # difference between input and output size
+
+        ks = []
+        for i in range(input_shape[-1]):  # loop over input size (i.e. RGB)
+            k = np.zeros(np.shape(kernels))
+            k = np.repeat(k, input_shape[-1], axis=2)  # repeat on input axis to correlate with output axis
+            k[:, :, i, :] = kernels[:, :, 0, :]  # init color channel
+
+            if diff_degree == 2:
+                k = self._expand_2deg(k, i)
+            else:
+                # todo sort out how to do for any possibility
+                raise NotImplementedError
+
+            ks.append(k)
+
+        # reshape to match tensorflow dimensions
+        ks = np.moveaxis(ks, 0, -1)  # first move axis cause reshape does it with channel last first!
+        ks = np.reshape(ks, (np.shape(ks)[0], np.shape(ks)[1], np.shape(ks)[2], -1))
+
+        # add contrast kernels (on each channel)
+        contrast_kernels = kernels.copy()
+        contrast_kernels = np.repeat(contrast_kernels, input_shape[-1], axis=2)
+        ks = np.concatenate([ks, contrast_kernels], axis=3)
+
+        return ks
+
+    def _expand_2deg(self, k, i):
+        """
+        Expand kernel k by two degree -> = 3 new combinations
+        :param k:
+        :return:
+        """
+        k0 = k.copy()
+
+        k1 = k.copy()
+        k1[:, :, (i+1) % 3, :] = -k[:, :, i, :]  # do only one since then it duplicates
+
+        # k2 = k.copy()
+        # k2[:, :, (i+2) % 3, :] = -k[:, :, i, :]
+
+        # k3 = k.copy()
+        # k3[:, :, (i+1) % 3, :] = k[:, :, i, :]
+        # k3[:, :, (i+2) % 3, :] = k[:, :, i, :]
+
+        # return np.concatenate([k0, k1, k2, k3], axis=3)
+        # return np.concatenate([k0, k1, k2], axis=3)
+        return np.concatenate([k0, k1], axis=3)
 
 
 
