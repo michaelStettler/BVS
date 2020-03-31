@@ -79,3 +79,10 @@ Gabor filters and stimuli with heatmap Gabor Filter activation
 <img src='../../img/gabor_filters_sig3_lam3.5_phi_pi:2.jpeg' height="440">
 <img src='../../img/heatmap_gabor_filters_sig3_lam3.5_phi_pi:2.jpeg' height="440">
 Gabor filters and stimuli with heatmap Gabor Filter activation
+
+## Color filters
+**test 12 - Construct all color channels:** n_orient = 4, lamda = 2, sigma = 2.3 (from octave=1.6), gamma = 1, phi = +/- pi/2
+
+<img src='../../img/gabor_filters_color_channel.jpeg' height="1760">
+<img src='../../img/heatmap_gabor_filters_color_channel.jpeg' height="1760">
+Gabor filters and stimuli with heatmap Gabor Filter activation
