@@ -1,0 +1,8 @@
+{
+  "n_rot": 4,
+  "lamdas": [2],
+  "gamma": 0.5,
+  "phi": [-0.5, 0.5],
+  "use_octave": true,
+  "octave": 1.6
+}

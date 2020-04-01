@@ -2,10 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import Conv2D
 import numpy as np
 
-# todo gaborfilter: set the 1.6 octaves wavelength
-# todo gaborfilter: colorcoding
-# todo gaborfilter: dynamic coding ?
-
+# todo gaborfilter: colorcoding -> is it correct ? (see negative value comment in _build_color_kernel)
 
 class GaborFilters(tf.keras.layers.Layer):
     def __init__(self, ksize,
@@ -46,7 +43,7 @@ class GaborFilters(tf.keras.layers.Layer):
                         gb = self._build_gabor(sigma, theta, lamda, self.gamma, phi)
                         kernels.append(gb)
 
-        kernels = np.swapaxes(kernels, 0, -1)
+        kernels = np.moveaxis(kernels, 0, -1)
         kernels = np.expand_dims(kernels, axis=2)
 
         if self.per_color_channel and self.per_channel:
@@ -90,6 +87,8 @@ class GaborFilters(tf.keras.layers.Layer):
         return gb
 
     def _build_color_kernel(self, input_shape, kernels):
+        # todo: check if one should deal differently with the negative sign ?
+        # todo: should the negative get another color channel, but then what about single color?
         diff_degree = input_shape[-1] - np.shape(kernels)[2]  # difference between input and output size
 
         ks = []

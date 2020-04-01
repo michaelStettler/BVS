@@ -4,6 +4,7 @@ import cv2
 
 
 def create_multi_frame(filters, num_row, num_column, size_image, border=5):
+    num_filters = np.shape(filters)[-1]
     # compute size of frame
     width_img = num_column * size_image[0] + (num_column - 1) * border
     height_img = num_row * size_image[1] + (num_row - 1) * border
@@ -12,27 +13,30 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
     # stack images into the frame
     for r in range(num_row):
         for c in range(num_column):
-            startX = c * (size_image[0] + border)
-            stopX = startX + size_image[0]
-            startY = r * (size_image[1] + border)
-            stopY = startY + size_image[1]
+            f = r * num_column + c
+            if f < num_filters:
+                startX = c * (size_image[0] + border)
+                stopX = startX + size_image[0]
+                startY = r * (size_image[1] + border)
+                stopY = startY + size_image[1]
 
-            filt = filters[:, :, :, r * num_column + c]  # linearized the double loop argument into a single arg
-            filt = (filt - np.min(filt))
-            filt = filt / np.max(filt)
-            filt = np.array(filt * 255).astype(np.uint8)
-            filt = cv2.resize(filt, (256, 256))
+                filt = filters[:, :, :, f]  # linearized the double loop argument into a single arg
+                filt = (filt - np.min(filt))
+                filt = filt / np.max(filt)
+                filt = np.array(filt * 255).astype(np.uint8)
+                filt = cv2.resize(filt, (256, 256))
 
-            if len(np.shape(filt)) <= 2:
-                filt = np.expand_dims(filt, axis=2)
+                if len(np.shape(filt)) <= 2:
+                    filt = np.expand_dims(filt, axis=2)
 
-            multi_frame[startY:stopY, startX:stopX, :] = filt
+                multi_frame[startY:stopY, startX:stopX, :] = filt
 
     return np.array(multi_frame).astype(np.uint8)
 
 
 def create_multi_frame_heatmap(image, filters, num_row, num_column, size_image, border=5):
     alpha = 0.25
+    num_filters = np.shape(filters)[-1]
 
     # compute size of frame
     width_img = num_column * size_image[0] + (num_column - 1) * border
@@ -45,22 +49,24 @@ def create_multi_frame_heatmap(image, filters, num_row, num_column, size_image, 
     # stack images into the frame
     for r in range(num_row):
         for c in range(num_column):
-            startX = c * (size_image[0] + border)
-            stopX = startX + size_image[0]
-            startY = r * (size_image[1] + border)
-            stopY = startY + size_image[1]
+            f = r * num_column + c
+            if f < num_filters:
+                startX = c * (size_image[0] + border)
+                stopX = startX + size_image[0]
+                startY = r * (size_image[1] + border)
+                stopY = startY + size_image[1]
 
-            filter = filters[:, :, r * num_column + c]
-            filter = (filter - np.min(filter))
-            filter = filter / np.max(filter)
-            filter = np.array(filter * 255).astype(np.uint8)
-            filter = cv2.resize(filter, (256, 256))
+                filter = filters[:, :, r * num_column + c]
+                filter = (filter - np.min(filter))
+                filter = filter / np.max(filter)
+                filter = np.array(filter * 255).astype(np.uint8)
+                filter = cv2.resize(filter, (256, 256))
 
-            # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
-            heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
-            output = cv2.addWeighted(image, alpha, heatmap, 1 - alpha, 0)
+                # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
+                heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
+                output = cv2.addWeighted(image, alpha, heatmap, 1 - alpha, 0)
 
-            multi_frame[startY:stopY, startX:stopX, :] = output
+                multi_frame[startY:stopY, startX:stopX, :] = output
 
     return np.array(multi_frame).astype(np.uint8)
 
