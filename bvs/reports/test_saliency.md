@@ -12,7 +12,7 @@ config used: {
   "phi": [-0.5, 0.5],  
   "use_octave": true,  
   "octave": 1.6.  
-}
+}  
 per_color_channel=True 
 
 Total: 84 filters
