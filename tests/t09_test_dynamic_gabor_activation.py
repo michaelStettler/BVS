@@ -13,7 +13,7 @@ from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import MaxPool2D
 from tensorflow.keras.models import Model
 
-print("Visualize gabor filter")
+print("Visualize Dynamic gabor filter")
 
 # load config
 # config = 'config.json'
@@ -38,7 +38,7 @@ img = cv2.resize(img, (256, 256))
 print("Num orientations {}, lambda {}, gamma {}".format(config['n_rot'], config['lamdas'], config['gamma']))
 
 # build model
-input = Input(shape=(256, 256, 3))
+input = Input(shape=(5, 256, 256, 3))
 
 n_rot = config['n_rot']
 thetas = np.array(range(n_rot)) / n_rot * np.pi
@@ -47,7 +47,7 @@ gamma = config['gamma']
 phi = np.array(config['phi']) * np.pi
 use_octave = config['use_octave']
 octave = config['octave']
-gabor_layer = GaborFiltersDynamic((15, 15, 5),
+gabor_layer = GaborFiltersDynamic((5, 15, 15),
                            theta=thetas,
                            lamda=lamdas,
                            gamma=gamma,
@@ -59,7 +59,7 @@ gabor_layer = GaborFiltersDynamic((15, 15, 5),
 x = gabor_layer(input)
 # print("shape gabor_kernel", np.shape(gabor_layer.kernel))
 
-g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
+# g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
 # for gb in g_kernels:
 #     if np.shape(gb)[-1] == 1:
 #         gb = np.squeeze(gb)
@@ -67,7 +67,7 @@ g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
 #     plt.figure()
 #     plt.imshow(gb.astype(np.float32))
 # plt.show()
-print("shape g_kernels", np.shape(g_kernels))
+# print("shape g_kernels", np.shape(g_kernels))
 # print(g_kernels[0])
 
 kernels = gabor_layer.kernel
@@ -76,8 +76,10 @@ print("shape kernels", np.shape(kernels))
 num_column = min(num_kernels, 4)
 num_row = math.ceil(num_kernels / 4)
 print("num column", num_column, "num_row", num_row)
-multi_frame = create_multi_frame(kernels, num_row, num_column, (256, 256))
-cv2.imwrite("bvs/video/gabor_filters.jpeg", multi_frame.astype(np.uint8))
+for k, kernel in enumerate(kernels):
+    print("shape kernel", np.shape(kernel))
+    multi_frame = create_multi_frame(kernel, num_row, num_column, (256, 256))
+    cv2.imwrite("bvs/video/gabor_filters_{}.jpeg".format(k), multi_frame.astype(np.uint8))
 
 
 model = Model(inputs=input, outputs=x)
@@ -86,23 +88,23 @@ model.compile(optimizer='rmsprop',
               metrics=['accuracy'])
 print(model.summary())
 
-test_img = np.expand_dims(img, axis=0)
-pred = model.predict(x=test_img)
-print("shape pred", np.shape(pred))
-
-activations = pred[0]
-print("shape activations", np.shape(activations))
-
-num_activations = np.shape(activations)[-1]
-num_column = min(num_activations, 4)
-num_row = math.ceil(num_activations / 4)
-print("num column", num_column, "num_row", num_row)
-multi_frame = create_multi_frame_heatmap(img, activations, num_row, num_column, (256, 256))
-
-# plt.figure()
-# plt.imshow(multi_frame)
-# plt.show()
-cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8))
+# test_img = np.expand_dims(img, axis=0)
+# pred = model.predict(x=test_img)
+# print("shape pred", np.shape(pred))
+#
+# activations = pred[0]
+# print("shape activations", np.shape(activations))
+#
+# num_activations = np.shape(activations)[-1]
+# num_column = min(num_activations, 4)
+# num_row = math.ceil(num_activations / 4)
+# print("num column", num_column, "num_row", num_row)
+# multi_frame = create_multi_frame_heatmap(img, activations, num_row, num_column, (256, 256))
+#
+# # plt.figure()
+# # plt.imshow(multi_frame)
+# # plt.show()
+# cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8))
 
 
 

@@ -16,8 +16,8 @@ class GaborFiltersDynamic(GaborFilters):
                  per_color_channel=False,
                  use_octave=True,
                  octave=1.6,
-                 sigma_t=1,
-                 omega=2,
+                 sigma_t=2,
+                 omega=1,
                  psi=0):
         super(GaborFiltersDynamic, self).__init__(ksize,
                                                   sigma,
@@ -33,6 +33,8 @@ class GaborFiltersDynamic(GaborFilters):
         self.sigma_t = sigma_t
         self.omega = omega
         self.psi = psi
+        self.Aplus = 1
+        self.Aminus = 0.5
 
     def build(self, input_shape):
         self.inp_shape = input_shape
@@ -54,26 +56,29 @@ class GaborFiltersDynamic(GaborFilters):
                         kernels.append(gb)
 
         kernels = np.moveaxis(kernels, 0, -1)
-        kernels = np.expand_dims(kernels, axis=2)
+        kernels = np.expand_dims(kernels, axis=3)
 
         if self.per_color_channel and self.per_channel:
             print("Parameters mutually exclusive! Please select only one to True")
             print("Set per_color_channel = True and per_channel = False")
 
         if self.per_color_channel:
+            # todo control per_channel for dynamic
             kernels = self._build_color_kernel(input_shape, kernels)
         elif not self.per_channel:  # if per_channel = False
-            kernels = np.repeat(kernels, input_shape[-1], axis=2)  # repeat on input axis to correlate with output axis
+            # todo control color channel for dynamic
+            kernels = np.repeat(kernels, input_shape[-1], axis=3)  # repeat on input axis to correlate with output axis
             # of input_shape (create only contrast kernnel)
 
         self.kernel = tf.convert_to_tensor(kernels, dtype=tf.float32, name='Gabor_kernel')
+        print("shape kernel", np.shape(self.kernel))
 
     def call(self, input):
         if self.per_channel:
-            conv = tf.concat([tf.nn.conv2d(tf.expand_dims(input[:, :, :, i], axis=3), self.kernel, strides=1, padding='SAME') for i in range(self.inp_shape[-1])], axis=3)
+            conv = tf.concat([tf.nn.conv3d(tf.expand_dims(input[:, :, :, :, i], axis=4), self.kernel, strides=(1, 1, 1, 1, 1), padding='SAME') for i in range(self.inp_shape[-1])], axis=4)
             return conv
         else:
-            return tf.nn.conv2d(input, self.kernel, strides=1, padding='SAME')
+            return tf.nn.conv3d(input, self.kernel, strides=(1, 1, 1, 1, 1), padding='SAME')
 
     def _build_temporal_gabor(self, sigma, theta, Lambda, gamma, phi, sigma_t, omega, psi):
         """Construct temporal Gabor Filter (3D) feature extraction."""
@@ -84,23 +89,25 @@ class GaborFiltersDynamic(GaborFilters):
         sigma_t = sigma_t
         k = 2 * np.pi / Lambda
         w = omega
+        print("sigma_x", sigma_x, "sigma_t", sigma_t)
+        print("k", k, "w", w)
 
         # Bounding box
-        xmax = int(self.ksize[0] / 2)
+        xmax = int(self.ksize[2] / 2)
         ymax = int(self.ksize[1] / 2)
-        tmax = int(self.ksize[2] / 2)
+        tmax = int(self.ksize[0] / 2)
         xmin = -xmax
         ymin = -ymax
         tmin = -tmax
-        (y, x, t) = np.meshgrid(np.arange(ymin, ymax + 1), np.arange(xmin, xmax + 1), np.arange(tmin, tmax + 1))
+        (t, y, x) = np.meshgrid(np.arange(tmin, tmax + 1), np.arange(ymin, ymax + 1), np.arange(xmin, xmax + 1), indexing='ij')
 
         # Rotation
         x_theta = x * np.cos(theta) + y * np.sin(theta)
         y_theta = -x * np.sin(theta) + y * np.cos(theta)
 
-        gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2 + t ** 2 / sigma_t ** 2)) * \
+        gb = self.Aplus * np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2 + t ** 2 / sigma_t ** 2)) * \
              np.cos(k * x_theta + w * t + phi + psi) + \
-             np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2 + t ** 2 / sigma_t ** 2)) * \
+             self.Aminus * np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2 + t ** 2 / sigma_t ** 2)) * \
              np.cos(k * x_theta - w * t + phi - psi)
 
         # todo: phi(k) and psi(w) ? from formula 2.62 p.46

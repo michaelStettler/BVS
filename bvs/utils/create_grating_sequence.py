@@ -5,7 +5,9 @@ img_size = (256, 256, 3)
 sequence_length = 16
 
 # declare variables
-theta = 0  # np.pi/4
+# theta = 0  # np.pi/4
+# theta = np.pi/4
+theta = np.pi/2
 k = 1
 omega = 1 / sequence_length * 2 * np.pi
 
@@ -16,6 +18,7 @@ x_theta = x * np.cos(theta) + y * np.sin(theta)
 # create sequence
 sequence = np.zeros((sequence_length, img_size[0], img_size[1], img_size[2]))
 for t in range(sequence_length):
+
     # create ratings
     img = np.cos(k * x_theta + t * omega)
     # modify to be a 3D image
