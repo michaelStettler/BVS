@@ -89,8 +89,6 @@ class GaborFiltersDynamic(GaborFilters):
         sigma_t = sigma_t
         k = 2 * np.pi / Lambda
         w = omega
-        print("sigma_x", sigma_x, "sigma_t", sigma_t)
-        print("k", k, "w", w)
 
         # Bounding box
         xmax = int(self.ksize[2] / 2)
