@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/tests/t10_test_feature_saliency.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/GaborFiltersDynamic.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/GaborFiltersDynamic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/t09_test_dynamic_gabor_activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t09_test_dynamic_gabor_activation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/config_test2.json" beforeDir="false" afterPath="$PROJECT_DIR$/configs/config_test2.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +76,7 @@
       <workItem from="1585144123607" duration="5700000" />
       <workItem from="1585208710570" duration="4468000" />
       <workItem from="1585567610994" duration="8766000" />
-      <workItem from="1585637652297" duration="22674000" />
+      <workItem from="1585637652297" duration="23610000" />
     </task>
     <servers />
   </component>
