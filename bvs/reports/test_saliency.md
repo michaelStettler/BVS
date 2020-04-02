@@ -13,4 +13,4 @@ config used: {
   "octave": 1.6.  
 }
 
-<img src='../../img/saliency_test1.jpeg' height="220">
+<img src='../../img/saliency_test1.jpeg' height="440">
