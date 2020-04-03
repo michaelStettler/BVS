@@ -24,7 +24,7 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
                 filt = (filt - np.min(filt))
                 filt = filt / np.max(filt)
                 filt = np.array(filt * 255).astype(np.uint8)
-                filt = cv2.resize(filt, (256, 256))
+                filt = cv2.resize(filt, (size_image[1], size_image[0]))
 
                 if len(np.shape(filt)) <= 2:
                     filt = np.expand_dims(filt, axis=2)
@@ -45,6 +45,8 @@ def create_multi_frame_heatmap(image, filters, num_row, num_column, size_image, 
 
     image = image - np.min(image)
     image = np.array((image / np.max(image)) * 255).astype(np.uint8)
+    if np.shape(image)[2] == 1:
+        image = np.repeat(image, 3, axis=2)
 
     # stack images into the frame
     for r in range(num_row):
@@ -60,7 +62,7 @@ def create_multi_frame_heatmap(image, filters, num_row, num_column, size_image, 
                 filter = (filter - np.min(filter))
                 filter = filter / np.max(filter)
                 filter = np.array(filter * 255).astype(np.uint8)
-                filter = cv2.resize(filter, (256, 256))
+                filter = cv2.resize(filter, (size_image[1], size_image[0]))
 
                 # heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_HOT)
                 heatmap = cv2.applyColorMap(filter, cv2.COLORMAP_VIRIDIS)
