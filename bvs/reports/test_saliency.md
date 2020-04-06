@@ -13,7 +13,7 @@ config used: {
   "use_octave": true,  
   "octave": 1.6,  
   "per_channel": false,  
-  "per_color_channel": false  
+  "per_color_channel": true  
 }  
 
 Total: 84 filters
