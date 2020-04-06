@@ -21,7 +21,7 @@ Total: 84 filters
 
 Max(x) / Sum(ReLu(x)) / Sum(x)
 
-**test 2 - Inhibition Matrix W"
+**test 2 - Inhibition Matrix W**
 
 Graphical computation of inhibitory kernel W_{m,n,theta,i,j,theta'} with m,n the position of the neuron of interest, and i,j the connected neuron (connected neuron -> relative to the neuron of interest, therefore m, n)
 config used: {  
