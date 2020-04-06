@@ -44,5 +44,8 @@ Gabor filter of interest (Theta = 0):
 Connected Gabor filters (Theta' = 0,1,...,12)  
 <img src='../../img/gabor_filters_saliency.jpeg' height="220">
 
+J_{m,n,theta,i,j,theta'} with i,j = -7,-6,...7 and theta' = 0,1,...,12. 
+<img src='../../img/J_exitatory_filter.jpeg' height="220">
+
 W_{m,n,theta,i,j,theta'} with i,j = -7,-6,...7 and theta' = 0,1,...,12. 
 <img src='../../img/W_inibition_filter.jpeg' height="220">
