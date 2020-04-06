@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from bvs.layers import GaborFilters
 from bvs.utils.create_preds_seq import create_multi_frame
 from bvs.utils.create_preds_seq import create_multi_frame_heatmap
+from bvs.utils.create_preds_seq import create_multi_frame_from_multi_channel
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input
@@ -171,86 +172,131 @@ def psi(theta, K):
         return 0.7
     else:
         return 0
+
 # --------------------------------- W/J Matrix --------------------------------
-i_range = 15
-translate = int(i_range/2)
-n = 0
-m = 0
-k = 6
-theta = k * np.pi / n_rot
-print("theta", theta)
+kernel_size = (15, 15)
+# kernel_size = (15, 15)
+translate = int(kernel_size[0]/2)
+# n = 0
+# m = 0
 max_theta = np.pi / (n_rot - 0.001)
 max_beta = np.pi / 1.1
 max_d_theta = np.pi / 3
 max_theta2 = np.pi / (n_rot / 2 - 0.1)
 Ic_control = 0
 Ic = 1 + Ic_control
+mirror_idx = 2
 
-W = np.zeros((i_range, i_range, n_rot))
-J = np.zeros((i_range, i_range, n_rot))
+W = np.zeros((kernel_size[0], kernel_size[1], n_rot, n_rot))
+J = np.zeros((kernel_size[0], kernel_size[1], n_rot, n_rot))
 print("shape J", np.shape(J))
 print("shape W", np.shape(W))
-for i in range(i_range):
-    for j in range(i_range):
-        for dp in range(n_rot):
-            # built kernel with center at the middle
-            di = i - translate
-            dj = j - translate
-            alpha = np.arctan2(-di, dj)  # -di because think of alpha in a normal x,y coordinate and not matrix,
-            # therefore axes i goes up
-            d = np.sqrt(di**2 + dj**2)
-            # compute delta theta
-            theta_p = dp * np.pi / n_rot  # convert dp index to theta_prime in radians
-            a = np.abs(theta - theta_p)
-            d_theta = min(a, np.pi - a)
-            # compute theta1 and theta2 according to the axis from i, j
-            theta1 = theta - alpha
-            if np.abs(theta1) > np.pi / 2:
-                if theta1 < 0:
-                    theta1 += np.pi
-                else:
-                    theta1 -= np.pi
-            theta2 = np.pi - (theta_p - alpha)
-            if np.abs(theta2) > np.pi / 2:
-                if theta2 < 0:
-                    theta2 += np.pi
-                else:
-                    theta2 -= np.pi
-            beta = 2 * np.abs(theta1) + 2 * np.sin(np.abs(theta1 + theta2))
-            d_max = 10 * np.cos(beta/4)
-            if d != 0 and d <= d_max and beta >= max_beta and np.abs(theta1) >= max_theta and d_theta <= max_d_theta:
-                W[i, j, dp] = 0.141 * (1 - np.exp(-0.4 * np.power(beta/d, 1.5)))*np.exp(-np.power(d_theta/(np.pi/4), 1.5))
+for k in range(n_rot):
+    theta = k * np.pi / n_rot
+    # print()
+    # print("theta", theta, theta / np.pi * 180)
+    if theta <= np.pi/2:  # save some computations by mirroring matrix
+        for i in range(kernel_size[0]):
+            for j in range(kernel_size[1]):
+                # built kernel with center at the middle
+                di = i - translate
+                dj = j - translate
+                alpha = np.arctan2(-di, dj)  # -di because think of alpha in a normal x,y coordinate and not a matrix
+                # therefore axes i should goes up
+                if np.abs(alpha) >= np.pi / 2:
+                    if alpha < 0:
+                        alpha += np.pi
+                    else:
+                        alpha -= np.pi
+                d = np.sqrt(di**2 + dj**2)
 
-            if np.abs(theta2) < max_theta2:
-                max_beta_J = max_beta
-            else:
-                max_beta_J = np.pi / 2.69
+                for dp in range(n_rot):
+                    # compute delta theta
+                    theta_p = dp * np.pi / n_rot  # convert dp index to theta_prime in radians
+                    a = np.abs(theta - theta_p)
+                    d_theta = min(a, np.pi - a)
+                    # compute theta1 and theta2 according to the axis from i, j
+                    theta1 = theta - alpha
+                    theta2 = np.pi - (theta_p - alpha)
+                    # condition: |theta1| <= |theta2| <= pi/2
+                    if np.abs(theta1) > np.pi / 2:  # condition1
+                        if theta1 < 0:
+                            theta1 += np.pi
+                        else:
+                            theta1 -= np.pi
+                    theta2 = np.pi - (theta_p - alpha)
+                    if np.abs(theta2) > np.pi / 2:  # condition 2
+                        if theta2 < 0:
+                            theta2 += np.pi
+                        else:
+                            theta2 -= np.pi
+                    # compute beta
+                    beta = 2 * np.abs(theta1) + 2 * np.sin(np.abs(theta1 + theta2))
+                    d_max = 10 * np.cos(beta/4)
+                    if d != 0 and d <= d_max and beta >= max_beta and np.abs(theta1) >= max_theta and d_theta <= max_d_theta:
+                        W[i, j, k, dp] = 0.141 * (1 - np.exp(-0.4 * np.power(beta/d, 1.5)))*np.exp(-np.power(d_theta/(np.pi/4), 1.5))
 
-            if d > 0 and d <= 10 and beta < max_beta_J:
-                # J[i, j, dp] = 1
-                b_div_d = beta/d
-                J[i, j, dp] = 0.126 * np.exp(-np.power(b_div_d, 2) - 2 * np.power(b_div_d, 7) - d**2/90)
+                    if np.abs(theta2) < max_theta2:
+                        max_beta_J = max_beta
+                    else:
+                        max_beta_J = np.pi / 2.69
 
-np.set_printoptions(precision=3, linewidth=200)
-for dp in range(n_rot):
-    print()
-    print(J[:, :, dp])
-    print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
+                    if 0 < d <= 10 and beta <= max_beta_J:
+                        # J[i, j, k, dp] = 1
+                        b_div_d = beta/d
+                        J[i, j, k, dp] = 0.126 * np.exp(-np.power(b_div_d, 2) - 2 * np.power(b_div_d, 7) - np.power(d, 2)/90)
+                        # J[i, j, k, dp] = 0.126 * np.exp(-np.power(b_div_d, 2) - 2 * np.power(b_div_d, 7))
+                        # J[i, j, k, dp] = 0.126 * np.exp(-np.power(b_div_d, 2))
+
+    else:
+        # since the angle are symmetric, we can flip and roll the matrix
+        # mirror index is used to compensate for the "backward" operation from the middle angle (pi/2)
+        W[:, :, k, :] = np.roll(np.flip(W[:, :, k-mirror_idx, :], axis=0), mirror_idx, axis=2)
+        J[:, :, k, :] = np.roll(np.flip(J[:, :, k-mirror_idx, :], axis=0), mirror_idx, axis=2)
+        mirror_idx += 2
+
+# np.set_printoptions(precision=3, linewidth=200)
+# for dp in range(n_rot):
+#     print()
+#     print(J[:, :, 0, dp])
+#     print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
 
 # save W inhibition filters
-W_print = np.expand_dims(W, axis=2)  # expand axis of W to fit multi_frame function
+idx = 11
+W_print = W[:, :, idx, :]
+W_print = np.expand_dims(W_print, axis=2)
 num_filters = np.shape(W)[-1]
 num_column = min(num_filters, max_column)
 num_row = math.ceil(num_filters / num_column)
 multi_frame = create_multi_frame(W_print, num_row, num_column, (256, 256))
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/W"+str(idx)+"_inibition_filter.jpeg", heatmap.astype(np.uint8))
+
+# save J exitatory filters
+J_print = J[:, :, idx, :]
+J_print = np.expand_dims(J_print, axis=2)
+multi_frame = create_multi_frame(J_print, num_row, num_column, (256, 256))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/J"+str(idx)+"_exitatory_filter.jpeg", heatmap.astype(np.uint8))
+
+# save all W inhibition filters
+num_input_channel = np.shape(W)[-2]
+num_filters = num_input_channel * np.shape(W)[-1]
+print("num_filters", num_filters)
+num_column = min(num_filters, max_column)
+num_row = math.ceil(num_filters / num_column)
+print("num_row", num_row, "num_colum", num_column)
+multi_frame = create_multi_frame_from_multi_channel(W, num_row, num_column, (256, 256), num_input_channel)
+print("shape mulit_frame", np.shape(multi_frame))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
 cv2.imwrite("bvs/video/W_inibition_filter.jpeg", heatmap.astype(np.uint8))
 
 # save J exitatory filters
-J_print = np.expand_dims(J, axis=2)  # expand axis of W to fit multi_frame function
-multi_frame = create_multi_frame(J_print, num_row, num_column, (256, 256))
+multi_frame = create_multi_frame_from_multi_channel(J, num_row, num_column, (256, 256), num_input_channel)
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
 cv2.imwrite("bvs/video/J_exitatory_filter.jpeg", heatmap.astype(np.uint8))
+
+
 
 
 
