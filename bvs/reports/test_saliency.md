@@ -37,11 +37,11 @@ config used: {
 
 Total: 12 filters
 
-Gabor filter of interest (Theta): 
+Gabor filter of interest (Theta):  
 <img src='../../img/gabor_filter_hori.jpeg' height="220">
 
-Connected Gabor filters (Theta')
+Connected Gabor filters (Theta')  
 <img src='../../img/gabor_filters_saliency.jpeg' height="220">
 
-W_{m,n,theta,i,j,theta'} with i,j = -7,-6,...7 and theta' = 0,1,...,12
+W_{m,n,theta,i,j,theta'} with i,j = -7,-6,...7 and theta' = 0,1,...,12. 
 <img src='../../img/W_inibition_filter.jpeg' height="220">
