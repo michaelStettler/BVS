@@ -11,9 +11,10 @@ config used: {
   "gamma": 0.5,  
   "phi": [-0.5, 0.5],  
   "use_octave": true,  
-  "octave": 1.6.  
+  "octave": 1.6,  
+  "per_channel": false,  
+  "per_color_channel": false  
 }  
-per_color_channel=True 
 
 Total: 84 filters
 
@@ -30,9 +31,9 @@ config used: {
   "gamma": 0.5,  
   "phi": [0],  
   "use_octave": true,  
-  "octave": 1.6,
-  "per_channel": false,
-  "per_color_channel": false 
+  "octave": 1.6,  
+  "per_channel": false,  
+  "per_color_channel": false  
 }  
 
 Total: 12 filters
