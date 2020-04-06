@@ -47,7 +47,7 @@ print("Num orientations {}, lambda {}, gamma {}".format(config['n_rot'], config[
 input = Input(shape=np.shape(img))
 
 n_rot = config['n_rot']
-thetas = np.array(range(n_rot)) / n_rot * np.pi
+thetas = np.array(range(n_rot)) * np.pi / n_rot
 lamdas = np.array(config['lamdas']) * np.pi
 gamma = config['gamma']
 phi = np.array(config['phi']) * np.pi
@@ -80,11 +80,17 @@ x = gabor_layer(input)
 kernels = gabor_layer.kernel
 num_kernels = np.shape(kernels)[-1]
 print("shape kernels", np.shape(kernels))
-num_column = min(num_kernels, n_rot)
+max_column = 6
+num_column = min(num_kernels, max_column)
 num_row = math.ceil(num_kernels / num_column)
 print("num column", num_column, "num_row", num_row)
 multi_frame = create_multi_frame(kernels, num_row, num_column, (256, 256))
 cv2.imwrite("bvs/video/gabor_filters.jpeg", multi_frame.astype(np.uint8))
+gb0 = kernels[:, :, :, 0]
+gb0 = np.expand_dims(gb0, axis=3)
+print("shape gb0", np.shape(gb0))
+gb0 = create_multi_frame(gb0, 1, 1, (256, 256))
+cv2.imwrite("bvs/video/gabor_filter_hori.jpeg", gb0.astype(np.uint8))
 
 
 model = Model(inputs=input, outputs=x)
@@ -101,7 +107,7 @@ activations = pred[0]
 print("shape activations", np.shape(activations))
 
 num_activations = np.shape(activations)[-1]
-num_column = min(num_activations, n_rot)
+num_column = min(num_activations, max_column)
 num_row = math.ceil(num_activations / num_column)
 print("num column", num_column, "num_row", num_row)
 multi_frame = create_multi_frame_heatmap(img, activations, num_row, num_column, (np.shape(img)[1], np.shape(img)[0]))
@@ -140,10 +146,10 @@ activations = activations / np.max(activations)
 
 
 def gx(x, Tx=1):
-    if x <= 0:
+    if x < Tx:
         return 0
-    elif x <= Tx:
-        return x
+    elif x < Tx + 1:
+        return x - Tx
     else:
         return 1
 
@@ -184,27 +190,67 @@ def psi(theta, K):
 #                     d_theta = np.abs(theta - theta_p) * np.pi / n_rot
 #                     if d < 10 / np.cos(beta/4) or beta > np.pi / 1.1:
 #                         W[i, theta] = 0.141 * (1 - np.exp(-0.4 * np.power(beta/d, 1.5)))*np.exp(-np.power(d_theta/(np.pi/4), 1.5))
-i = 0
-i_range = 21
+i_range = 15
 translate = int(i_range/2)
-theta1 = 0
+n = 0
+m = 0
+k = 0
+theta = k * np.pi / n_rot
+print("theta", theta)
+max_theta = np.pi / (n_rot - 0.001)
+min_beta = np.pi / 1.1
+max_d_theta = np.pi / 3
+Ic_control = 0
+Ic = 1 + Ic_control
 
-W = np.zeros((i_range, n_rot))
+W = np.zeros((i_range, i_range, n_rot))
 print("shape W", np.shape(W))
-for j in range(i_range):
-    for theta_p in range(n_rot):
-        d = np.sqrt((i-(j-translate))**2)
-        print("j", j, "theta_p", theta_p)
-        beta = 2 * theta1 + 2 * np.sin(np.abs(theta1 + theta_p * np.pi / n_rot))
-        d_theta = np.abs(theta1 - theta_p) * np.pi / n_rot
-        print("d", d, "d_theta", d_theta)
-        d_max = 10 * np.cos(beta/4)
-        print("d_max", d_max)
-        if d != 0 and d < d_max:
-            W[j, theta_p] = 1
+for i in range(i_range):
+    for j in range(i_range):
+        for dp in range(n_rot):
+            # built kernel with center at the middle
+            di = i - translate
+            dj = j - translate
+            alpha = np.arctan2(-di, dj)  # -di because think of alpha in a normal x,y coordinate and not matrix,
+            # therefore axes i goes up
+            d = np.sqrt(di**2 + dj**2)
+            # compute delta theta
+            theta_p = dp * np.pi / n_rot  # convert dp index to theta_prime in radians
+            a = np.abs(theta - theta_p)
+            d_theta = min(a, np.pi - a)
+            # compute theta1 and theta2 according to the axis from i, j
+            theta1 = theta - alpha
+            if np.abs(theta1) > np.pi / 2:
+                if theta1 < 0:
+                    theta1 += np.pi
+                else:
+                    theta1 -= np.pi
+            theta2 = np.pi - (theta_p - alpha)
+            if np.abs(theta2) > np.pi / 2:
+                if theta2 < 0:
+                    theta2 += np.pi
+                else:
+                    theta2 -= np.pi
+            beta = 2 * np.abs(theta1) + 2 * np.sin(np.abs(theta1 + theta2))
+            d_max = 10 * np.cos(beta/4)
+            if d != 0 and d <= d_max and beta >= min_beta and np.abs(theta1) >= max_theta and d_theta <= max_d_theta:
+                # W[i, j, dp] = 1
+                W[i, j, dp] = 0.141 * (1 - np.exp(-0.4 * np.power(beta/d, 1.5)))*np.exp(-np.power(d_theta/(np.pi/4), 1.5))
 
-np.set_printoptions(precision=3)
-print(W)
+np.set_printoptions(precision=3, linewidth=200)
+for dp in range(n_rot):
+    print()
+    print(W[:, :, dp])
+    print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
+
+# save inhibition filters
+W_print = np.expand_dims(W, axis=2)  # expand axis of W to fit multi_frame function
+num_filters = np.shape(W)[-1]
+num_column = min(num_filters, max_column)
+num_row = math.ceil(num_filters / num_column)
+multi_frame = create_multi_frame(W_print, num_row, num_column, (256, 256))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/W_inibition_filter.jpeg", heatmap.astype(np.uint8))
 
 
 

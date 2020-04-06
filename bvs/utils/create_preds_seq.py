@@ -22,7 +22,8 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
 
                 filt = filters[:, :, :, f]  # linearized the double loop argument into a single arg
                 filt = (filt - np.min(filt))
-                filt = filt / np.max(filt)
+                if np.max(filt) != 0:
+                    filt = filt / np.max(filt)
                 filt = np.array(filt * 255).astype(np.uint8)
                 filt = cv2.resize(filt, (size_image[1], size_image[0]))
 
