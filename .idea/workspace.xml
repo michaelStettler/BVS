@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/configs/simple_config.json" beforeDir="false" afterPath="$PROJECT_DIR$/configs/simple_config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/img/saliency_test1.jpeg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/t10_test_feature_saliency.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t10_test_feature_saliency.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -79,7 +76,7 @@
       <workItem from="1585144123607" duration="5700000" />
       <workItem from="1585208710570" duration="4468000" />
       <workItem from="1585567610994" duration="8766000" />
-      <workItem from="1585637652297" duration="49254000" />
+      <workItem from="1585637652297" duration="51818000" />
     </task>
     <servers />
   </component>

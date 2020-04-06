@@ -86,11 +86,11 @@ num_row = math.ceil(num_kernels / num_column)
 print("num column", num_column, "num_row", num_row)
 multi_frame = create_multi_frame(kernels, num_row, num_column, (256, 256))
 cv2.imwrite("bvs/video/gabor_filters.jpeg", multi_frame.astype(np.uint8))
-gb0 = kernels[:, :, :, 0]
-gb0 = np.expand_dims(gb0, axis=3)
-print("shape gb0", np.shape(gb0))
-gb0 = create_multi_frame(gb0, 1, 1, (256, 256))
-cv2.imwrite("bvs/video/gabor_filter_hori.jpeg", gb0.astype(np.uint8))
+# gb0 = kernels[:, :, :, 0]
+# gb0 = np.expand_dims(gb0, axis=3)
+# print("shape gb0", np.shape(gb0))
+# gb0 = create_multi_frame(gb0, 1, 1, (256, 256))
+# cv2.imwrite("bvs/video/gabor_filter_hori.jpeg", gb0.astype(np.uint8))
 
 
 model = Model(inputs=input, outputs=x)
@@ -143,8 +143,6 @@ activations = activations - np.min(activations)
 activations = activations / np.max(activations)
 
 # declare variables
-
-
 def gx(x, Tx=1):
     if x < Tx:
         return 0
@@ -173,37 +171,24 @@ def psi(theta, K):
         return 0.7
     else:
         return 0
-
-# W = np.zeros((np.shape(img)[0], n_rot))
-# W = np.zeros((11, 11))
-# print("shape W", np.shape(W))
-# for i in range(W.shape[0]):
-# for i in range(10):
-#     # for j in range(W.shape[0]):
-#     for j in range(10):
-#         d = np.sqrt(i**2 + j**2)
-#         print("i, j, d", i, j, d, d == 0)
-#         if d != 0:
-#             for theta in range(W.shape[1]):
-#                 for theta_p in range(W.shape[1]):
-#                     beta = 2 * np.abs(theta*np.pi/n_rot) + 2 * np.sin(np.abs(theta*np.pi/n_rot + theta_p*np.pi/n_rot))
-#                     d_theta = np.abs(theta - theta_p) * np.pi / n_rot
-#                     if d < 10 / np.cos(beta/4) or beta > np.pi / 1.1:
-#                         W[i, theta] = 0.141 * (1 - np.exp(-0.4 * np.power(beta/d, 1.5)))*np.exp(-np.power(d_theta/(np.pi/4), 1.5))
+# --------------------------------- W/J Matrix --------------------------------
 i_range = 15
 translate = int(i_range/2)
 n = 0
 m = 0
-k = 0
+k = 6
 theta = k * np.pi / n_rot
 print("theta", theta)
 max_theta = np.pi / (n_rot - 0.001)
-min_beta = np.pi / 1.1
+max_beta = np.pi / 1.1
 max_d_theta = np.pi / 3
+max_theta2 = np.pi / (n_rot / 2 - 0.1)
 Ic_control = 0
 Ic = 1 + Ic_control
 
 W = np.zeros((i_range, i_range, n_rot))
+J = np.zeros((i_range, i_range, n_rot))
+print("shape J", np.shape(J))
 print("shape W", np.shape(W))
 for i in range(i_range):
     for j in range(i_range):
@@ -233,17 +218,26 @@ for i in range(i_range):
                     theta2 -= np.pi
             beta = 2 * np.abs(theta1) + 2 * np.sin(np.abs(theta1 + theta2))
             d_max = 10 * np.cos(beta/4)
-            if d != 0 and d <= d_max and beta >= min_beta and np.abs(theta1) >= max_theta and d_theta <= max_d_theta:
-                # W[i, j, dp] = 1
+            if d != 0 and d <= d_max and beta >= max_beta and np.abs(theta1) >= max_theta and d_theta <= max_d_theta:
                 W[i, j, dp] = 0.141 * (1 - np.exp(-0.4 * np.power(beta/d, 1.5)))*np.exp(-np.power(d_theta/(np.pi/4), 1.5))
+
+            if np.abs(theta2) < max_theta2:
+                max_beta_J = max_beta
+            else:
+                max_beta_J = np.pi / 2.69
+
+            if d > 0 and d <= 10 and beta < max_beta_J:
+                # J[i, j, dp] = 1
+                b_div_d = beta/d
+                J[i, j, dp] = 0.126 * np.exp(-np.power(b_div_d, 2) - 2 * np.power(b_div_d, 7) - d**2/90)
 
 np.set_printoptions(precision=3, linewidth=200)
 for dp in range(n_rot):
     print()
-    print(W[:, :, dp])
+    print(J[:, :, dp])
     print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
 
-# save inhibition filters
+# save W inhibition filters
 W_print = np.expand_dims(W, axis=2)  # expand axis of W to fit multi_frame function
 num_filters = np.shape(W)[-1]
 num_column = min(num_filters, max_column)
@@ -251,6 +245,13 @@ num_row = math.ceil(num_filters / num_column)
 multi_frame = create_multi_frame(W_print, num_row, num_column, (256, 256))
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
 cv2.imwrite("bvs/video/W_inibition_filter.jpeg", heatmap.astype(np.uint8))
+
+# save J exitatory filters
+J_print = np.expand_dims(J, axis=2)  # expand axis of W to fit multi_frame function
+multi_frame = create_multi_frame(J_print, num_row, num_column, (256, 256))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/J_exitatory_filter.jpeg", heatmap.astype(np.uint8))
+
 
 
 
