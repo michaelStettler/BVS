@@ -142,14 +142,15 @@ cv2.imwrite("bvs/video/saliency.jpeg", saliency.astype(np.uint8))
 # normalize outputs
 activations = activations - np.min(activations)
 activations = activations / np.max(activations)
+activations = np.expand_dims(activations, axis=0)
 
 
 # declare variables
 def gx(x, Tx=1):
     x = np.array(x)
-    x[x < Tx] = 0
     x = x - Tx
-    x[x > Tx + 1] = 1
+    x[x < 0] = 0
+    x[x > 1] = 1
     return x
     # if x < Tx:
     #     return 0
@@ -163,14 +164,14 @@ def gy(y, Ly=1.2, g1=0.21, g2=2.5):
     y = np.array(y)
     y[y < 0] = 0
     y[y <= Ly] = g1 * y[y <= Ly]
-    y[y > Ly] = g1 * Ly * g2 * (y[y > Ly] - Ly)
+    y[y > Ly] = g1 * Ly + g2 * (y[y > Ly] - Ly)
     return y
     # if y < 0:
     #     return 0
     # elif y <= Ly:
     #     return g1 * y
     # else:
-    #     return g1 * Ly * g2 * (y - Ly)
+    #     return g1 * Ly + g2 * (y - Ly)
 
 
 def psi(theta, K, epsilon=0.001):
@@ -273,34 +274,31 @@ for k in range(n_rot):
 #     print(J[:, :, 0, dp])
 #     print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
 
-# save W inhibition filters
-idx = 11
-W_print = W[:, :, idx, :]
-W_print = np.expand_dims(W_print, axis=2)
-num_filters = np.shape(W)[-1]
-num_column = min(num_filters, max_column)
-num_row = math.ceil(num_filters / num_column)
-print("shape W_print", np.shape(W_print))
-multi_frame = create_multi_frame(W_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/W"+str(idx)+"_inibition_filter.jpeg", heatmap.astype(np.uint8))
-
-# save J exitatory filters
-J_print = J[:, :, idx, :]
-J_print = np.expand_dims(J_print, axis=2)
-multi_frame = create_multi_frame(J_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/J"+str(idx)+"_exitatory_filter.jpeg", heatmap.astype(np.uint8))
+# # save W inhibition filters
+# idx = 11
+# W_print = W[:, :, idx, :]
+# W_print = np.expand_dims(W_print, axis=2)
+# num_filters = np.shape(W)[-1]
+# num_column = min(num_filters, max_column)
+# num_row = math.ceil(num_filters / num_column)
+# print("shape W_print", np.shape(W_print))
+# multi_frame = create_multi_frame(W_print, num_row, num_column, (256, 256))
+# heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+# cv2.imwrite("bvs/video/W"+str(idx)+"_inibition_filter.jpeg", heatmap.astype(np.uint8))
+#
+# # save J exitatory filters
+# J_print = J[:, :, idx, :]
+# J_print = np.expand_dims(J_print, axis=2)
+# multi_frame = create_multi_frame(J_print, num_row, num_column, (256, 256))
+# heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+# cv2.imwrite("bvs/video/J"+str(idx)+"_exitatory_filter.jpeg", heatmap.astype(np.uint8))
 
 # save all W inhibition filters
 num_input_channel = np.shape(W)[-2]
 num_filters = num_input_channel * np.shape(W)[-1]
-print("num_filters", num_filters)
 num_column = min(num_filters, max_column)
 num_row = math.ceil(num_filters / num_column)
-print("num_row", num_row, "num_colum", num_column)
 multi_frame = create_multi_frame_from_multi_channel(W, num_row, num_column, (256, 256), num_input_channel)
-print("shape mulit_frame", np.shape(multi_frame))
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
 cv2.imwrite("bvs/video/W_inibition_filter.jpeg", heatmap.astype(np.uint8))
 
@@ -309,92 +307,154 @@ multi_frame = create_multi_frame_from_multi_channel(J, num_row, num_column, (256
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
 cv2.imwrite("bvs/video/J_exitatory_filter.jpeg", heatmap.astype(np.uint8))
 
-# convolutions
-activations = np.expand_dims(activations, axis=0)
-inhib = tf.nn.conv2d(activations, W, strides=1, padding='SAME')
-inhib_print = np.expand_dims(inhib[0], axis=2)  # todo make it times the gx!
+# start dynamic
+# ----------------------------------------------------------------------------------------------------------------------
+# save activations
+I_i_theta = activations
+# x = activations.copy()  # todo x0 as activations, zeros or ones ?
+x = np.zeros(np.shape(activations))
+y = np.zeros(np.shape(activations))
+i_norm_k = np.ones((5, 5, n_rot, n_rot))
+print("[declaration] shape x", np.shape(x), "min max x", np.min(x), np.max(x))
+print("[declaration] shape y", np.shape(y), "min max y", np.min(y), np.max(y))
+print()
 
-excit = tf.nn.conv2d(activations, J, strides=1, padding='SAME')
-excit_print = np.expand_dims(excit[0], axis=2)  # todo make it times the gx!
-
-
-print("shape inhib", np.shape(inhib))
-print("shape inhib_print", np.shape(inhib_print))
-print("shape excit_print", np.shape(excit_print))
-num_filters = np.shape(inhib)[-1]
+num_filters = np.shape(I_i_theta)[-1]
 num_column = min(num_filters, max_column)
 num_row = math.ceil(num_filters / num_column)
-# save inhibition
-multi_frame = create_multi_frame(inhib_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/inibition_response.jpeg", heatmap.astype(np.uint8))
-# save excitation
-multi_frame = create_multi_frame(excit_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/exitatory_response.jpeg", heatmap.astype(np.uint8))
-
-# save activations
-activations_print = np.expand_dims(activations[0], axis=2)
-multi_frame = create_multi_frame(activations_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/activations_x_response.jpeg", heatmap.astype(np.uint8))
-
-# neural response
-x = activations.copy()  # todo x0 as activations or zeors ?
-# x = np.zeros(np.shape(activations))
-y = np.zeros(np.shape(activations))
-print("min max activations", np.min(activations), np.max(activations))
-y = -alphaY * y + gx(x) + inhib + Ic
-print("shape y", np.shape(y))
-print("min max y", np.min(y), np.max(y))
-
-# print y neuronal response (inhibitory)
-y = y - np.min(y)
-y = y / np.max(y)
-y_print = np.expand_dims(y[0], axis=2)
-multi_frame = create_multi_frame(y_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/V1_y_response.jpeg", heatmap.astype(np.uint8))
-# print gy(y)
-gy_print = np.expand_dims(gy(y)[0], axis=2)
-multi_frame = create_multi_frame(gy_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/gy(y)_response.jpeg", heatmap.astype(np.uint8))
-
-# build inhibitory psi matrix
-inhib_psi = np.zeros(np.shape(y))
-print("shape inhib_psi", np.shape(inhib_psi))
-for t in range(n_rot):
-    psi_tmp = []
-    for t_p in range(n_rot):
-        if t != t_p:
-            theta = t * np.pi / n_rot
-            theta_p = t_p * np.pi / n_rot
-            a = np.abs(theta - theta_p)
-            dt = min(a, np.pi - a)
-
-            psi_tmp.append(psi(dt, n_rot) * gy(y[:, :, :, t_p]))
-    inhib_psi[:, :, :, t] = np.sum(psi_tmp, axis=0)
-
-# save inhib psi
-inhib_psi_print = np.expand_dims(inhib_psi[0], axis=2)
-multi_frame = create_multi_frame(inhib_psi_print, num_row, num_column, (256, 256))
-heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/inibition_psi.jpeg", heatmap.astype(np.uint8))
-
-# x = -alphaX * x - gy(y) - inhib_psi + J0 * gx(x) + excit  # term, I_{I, theta} and I0
-x = -alphaX * x - gy(y) - inhib_psi + J0 * gx(x) + excit
-print("shape x", np.shape(x))
-print("min max x", np.min(x), np.max(x))
-
-
-# plot V1 response
-x = x - np.min(x)
-x = x / np.max(x)
-x_print = np.expand_dims(x[0], axis=2)
+x_print = np.expand_dims(I_i_theta[0], axis=2)
 multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/V1_x_response.jpeg", heatmap.astype(np.uint8))
+cv2.imwrite("bvs/video/0_00_I_i_theta.jpeg", heatmap.astype(np.uint8))
+
+for t in range(6):
+    print()
+    print("----------------------------------------------------------")
+    print("t", t)
+    # i_noise_y = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
+    # i_noise_x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
+    i_noise_y = 0
+    i_noise_x = 0
+
+    num_filters = np.shape(x)[-1]
+    num_column = min(num_filters, max_column)
+    num_row = math.ceil(num_filters / num_column)
+    x_print = np.expand_dims(x[0], axis=2)
+    multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_01_x.jpeg", heatmap.astype(np.uint8))
+    # save gx activations
+    gx_print = np.expand_dims(gx(x)[0], axis=2)
+    multi_frame = create_multi_frame(gx_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_02_gx(x)_response.jpeg", heatmap.astype(np.uint8))
+
+
+    # convolutions
+    print("[convolution] shape W, np.shape(W)", np.shape(W))
+    print("[convolution] shape gx(activations)", np.shape(gx(x)))
+    print("[convolution] min max gx(activations)", np.min(gx(x)), np.max(gx(x)))
+    inhib = tf.nn.conv2d(gx(x), W, strides=1, padding='SAME')
+    excit = tf.nn.conv2d(gx(x), J, strides=1, padding='SAME')
+    print("[convolution] 04")
+    print("[convolution] shape inhib", np.shape(inhib))
+    print("[convolution] min max inhib", np.min(inhib), np.max(inhib))
+    print("[convolution] 05")
+    print("[convolution] shape excit", np.shape(excit))
+    print("[convolution] min max excit", np.min(excit), np.max(excit))
+    print()
+    i_norm = 0.85 - 2 * np.power(tf.nn.conv2d(gx(x), i_norm_k, strides=1, padding='SAME') / (np.shape(i_norm_k)[0]**2), 2)
+    print("shape i_norm", np.shape(i_norm))
+
+
+    # save inhibition
+    inhib_print = np.expand_dims(inhib[0], axis=2)
+    num_filters = np.shape(inhib)[-1]
+    num_column = min(num_filters, max_column)
+    num_row = math.ceil(num_filters / num_column)
+    multi_frame = create_multi_frame(inhib_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_04_inibition_response.jpeg", heatmap.astype(np.uint8))
+    # save excitation
+    excit_print = np.expand_dims(excit[0], axis=2)
+    multi_frame = create_multi_frame(excit_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_05_exitatory_response.jpeg", heatmap.astype(np.uint8))
+
+    # neural response
+    y = -alphaY * y + gx(x) + inhib + Ic + i_noise_y
+    print("[Y response] 06")
+    print("[Y response] shape y", np.shape(y))
+    print("[Y response] min max y", np.min(y), np.max(y))
+    print("[Y response] 07")
+    print("[Y response] shape gy(y)", np.shape(gy(y)))
+    print("[Y response] min max gy(y)", np.min(gy(y)), np.max(gy(y)))
+    print()
+
+    # print y neuronal response (inhibitory)
+    y_print = np.expand_dims(y[0], axis=2)
+    multi_frame = create_multi_frame(y_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_06_y_responses.jpeg", heatmap.astype(np.uint8))
+    # print gy(y)
+    gy_print = np.expand_dims(gy(y)[0], axis=2)
+    multi_frame = create_multi_frame(gy_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_07_gy(y)_response.jpeg", heatmap.astype(np.uint8))
+
+    # build inhibitory psi matrix
+    inhib_psi = np.zeros(np.shape(y))
+    print("[psi matrix] 08")
+    print("[psi matrix] shape inhib_psi", np.shape(inhib_psi))
+    for th in range(n_rot):
+        psi_tmp = []
+        for t_p in range(n_rot):
+            if th != t_p:
+                theta = th * np.pi / n_rot
+                theta_p = t_p * np.pi / n_rot
+                a = np.abs(theta - theta_p)
+                dth = min(a, np.pi - a)
+
+                psi_tmp.append(psi(dth, n_rot) * gy(y[:, :, :, t_p]))
+        inhib_psi[:, :, :, th] = np.sum(psi_tmp, axis=0)
+    print("[psi matrix] min man inhib_psi", np.min(inhib_psi), np.max(inhib_psi))
+
+    # save inhib psi
+    inhib_psi_print = np.expand_dims(inhib_psi[0], axis=2)
+    multi_frame = create_multi_frame(inhib_psi_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_08_inibition_psi.jpeg", heatmap.astype(np.uint8))
+
+    x_inhib = -alphaX * x - gy(y) - inhib_psi
+    x_excit = J0 * gx(x) + excit + I_i_theta + i_norm + i_noise_x
+    # x = -alphaX * x - gy(y) - inhib_psi + J0 * gx(x) + excit  # term, I_{I, theta} and I0
+    x = x_inhib + x_excit
+    print("[X response] 09 min max x_inhib", np.min(x_inhib), np.max(x_inhib))
+    print("[X response] 10 min max x_excit", np.min(x_excit), np.max(x_excit))
+    print("[X response] 11 min max x", np.min(x), np.max(x))
+
+
+    # plot V1 response
+    x_inhib_print = np.expand_dims(x_inhib[0], axis=2)
+    multi_frame = create_multi_frame(x_inhib_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_09_x_inhib_response.jpeg", heatmap.astype(np.uint8))
+
+    x_excit_print = np.expand_dims(x_excit[0], axis=2)
+    multi_frame = create_multi_frame(x_excit_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_10_x_excit_response.jpeg", heatmap.astype(np.uint8))
+
+    x_print = np.expand_dims(x[0], axis=2)
+    multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_11_V1_x_response.jpeg", heatmap.astype(np.uint8))
+
+    x_print = np.expand_dims(gx(x)[0], axis=2)
+    multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
+    heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+    cv2.imwrite("bvs/video/"+str(t)+"_12_V1_gx(x)_response.jpeg", heatmap.astype(np.uint8))
+
 
 saliency_map = np.expand_dims(np.squeeze(np.max(x, axis=3)), axis=2)
 saliency_map = np.array(saliency_map * 255).astype(np.uint8)
