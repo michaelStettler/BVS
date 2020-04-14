@@ -71,7 +71,7 @@ x = gabor_layer(input)
 bu_saliency = BotUpSaliency((15, 15),
                             K=n_rot,
                             verbose=4)
-# x = bu_saliency(x)
+x = bu_saliency(x)
 
 kernels = gabor_layer.kernel
 num_kernels = np.shape(kernels)[-1]
@@ -132,17 +132,15 @@ cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8)
 # print("shape saliency", np.shape(saliency))
 # cv2.imwrite("bvs/video/saliency.jpeg", saliency.astype(np.uint8))
 #
-# # --------------------- Zhaoping li's V1 Saliency Model --------------------- #
-# # start from activation of each filter
-# # normalize outputs
-# activations = activations - np.min(activations)
-# activations = activations / np.max(activations)
-# activations = np.expand_dims(activations, axis=0)
+# --------------------- Zhaoping li's V1 Saliency Model --------------------- #
+# start from activation of each filter
+# normalize outputs
+activations = activations - np.min(activations)
+activations = activations / np.max(activations)
+activations = np.expand_dims(activations, axis=0)
 #
 # Ic_control = 0
 # Ic = 1 + Ic_control
-# alphaX = 1
-# alphaY = 1
 # J0 = 0.8
 # mirror_idx = 2
 ##
@@ -151,39 +149,6 @@ cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8)
 # #     print()
 # #     print(J[:, :, 0, dp])
 # #     print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
-#
-# # # save W inhibition filters
-# # idx = 11
-# # W_print = W[:, :, idx, :]
-# # W_print = np.expand_dims(W_print, axis=2)
-# # num_filters = np.shape(W)[-1]
-# # num_column = min(num_filters, max_column)
-# # num_row = math.ceil(num_filters / num_column)
-# # print("shape W_print", np.shape(W_print))
-# # multi_frame = create_multi_frame(W_print, num_row, num_column, (256, 256))
-# # heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-# # cv2.imwrite("bvs/video/W"+str(idx)+"_inibition_filter.jpeg", heatmap.astype(np.uint8))
-# #
-# # # save J exitatory filters
-# # J_print = J[:, :, idx, :]
-# # J_print = np.expand_dims(J_print, axis=2)
-# # multi_frame = create_multi_frame(J_print, num_row, num_column, (256, 256))
-# # heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-# # cv2.imwrite("bvs/video/J"+str(idx)+"_exitatory_filter.jpeg", heatmap.astype(np.uint8))
-#
-# # save all W inhibition filters
-# num_input_channel = np.shape(W)[-2]
-# num_filters = num_input_channel * np.shape(W)[-1]
-# num_column = min(num_filters, max_column)
-# num_row = math.ceil(num_filters / num_column)
-# multi_frame = create_multi_frame_from_multi_channel(W, num_row, num_column, (256, 256), num_input_channel)
-# heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-# cv2.imwrite("bvs/video/W_inibition_filter.jpeg", heatmap.astype(np.uint8))
-#
-# # save J exitatory filters
-# multi_frame = create_multi_frame_from_multi_channel(J, num_row, num_column, (256, 256), num_input_channel)
-# heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-# cv2.imwrite("bvs/video/J_exitatory_filter.jpeg", heatmap.astype(np.uint8))
 #
 # # start dynamic
 # # ----------------------------------------------------------------------------------------------------------------------
