@@ -1,0 +1,10 @@
+* Bottom-up saliency map layer
+
+**test 1 - layer building W**
+W and J connections kernel for K = 12 orientations
+
+J_{m,n,theta,i,j,theta'} with i,j = -7,-6,...7 and theta' = 0,1,...,12. 
+<img src='../../img/J_exitatory_filter.jpeg' height="220">
+
+W_{m,n,theta,i,j,theta'} with i,j = -7,-6,...7 and theta' = 0,1,...,12. 
+<img src='../../img/W_inibition_filter.jpeg' height="220">
