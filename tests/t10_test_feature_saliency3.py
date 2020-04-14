@@ -4,6 +4,7 @@ import json
 import math
 import matplotlib.pyplot as plt
 from bvs.layers import GaborFilters
+from bvs.layers import BotUpSaliency
 from bvs.utils.create_preds_seq import create_multi_frame
 from bvs.utils.create_preds_seq import create_multi_frame_heatmap
 from bvs.utils.create_preds_seq import create_multi_frame_from_multi_channel
@@ -66,6 +67,8 @@ gabor_layer = GaborFilters((15, 15),
                            per_channel=per_channel,
                            per_color_channel=per_color_channel)
 x = gabor_layer(input)
+
+bu_saliency = BotUpSaliency((15, 15))
 
 # g_kernels = np.moveaxis(gabor_layer.kernel, -1, 0)
 # for gb in g_kernels:
