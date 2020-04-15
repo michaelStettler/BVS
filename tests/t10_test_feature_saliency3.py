@@ -73,21 +73,6 @@ bu_saliency = BotUpSaliency((15, 15),
                             verbose=4)
 x = bu_saliency(x)
 
-kernels = gabor_layer.kernel
-num_kernels = np.shape(kernels)[-1]
-print("shape kernels", np.shape(kernels))
-max_column = 6
-num_column = min(num_kernels, max_column)
-num_row = math.ceil(num_kernels / num_column)
-print("num column", num_column, "num_row", num_row)
-multi_frame = create_multi_frame(kernels, num_row, num_column, (256, 256))
-cv2.imwrite("bvs/video/gabor_filters.jpeg", multi_frame.astype(np.uint8))
-# gb0 = kernels[:, :, :, 0]
-# gb0 = np.expand_dims(gb0, axis=3)
-# print("shape gb0", np.shape(gb0))
-# gb0 = create_multi_frame(gb0, 1, 1, (256, 256))
-# cv2.imwrite("bvs/video/gabor_filter_hori.jpeg", gb0.astype(np.uint8))
-
 
 model = Model(inputs=input, outputs=x)
 model.compile(optimizer='rmsprop',
@@ -99,86 +84,44 @@ test_img = np.expand_dims(img, axis=0)
 pred = model.predict(x=test_img)
 print("shape pred", np.shape(pred))
 
-activations = pred[0]
-print("shape activations", np.shape(activations))
 
-num_activations = np.shape(activations)[-1]
-num_column = min(num_activations, max_column)
-num_row = math.ceil(num_activations / num_column)
-print("num column", num_column, "num_row", num_row)
-multi_frame = create_multi_frame_heatmap(img, activations, num_row, num_column, (np.shape(img)[1], np.shape(img)[0]))
+# control layer
+# ----------------------------------------------------------------------------------------------------------------------
+I_i_theta = pred[0]
+I_i_theta = I_i_theta[0]
+x = pred[1]
+x = x[0]
+print("shape I_i_theta", np.shape(I_i_theta))
+print("shape x", np.shape(x))
 
-# plt.figure()
-# plt.imshow(multi_frame)
-# plt.show()
-cv2.imwrite("bvs/video/heatmap_gabor_filters.jpeg", multi_frame.astype(np.uint8))
+max_column = 6
 
-# print("shape activations", np.shape(activations))
-# saliency_type = "max"
-# if saliency_type == 'max':
-#     saliency = activations.max(axis=2)
-# elif saliency_type == 'sum':
-#     saliency = np.sum(activations, axis=2)
-# elif saliency_type == "ReLu_sum":
-#     activations[activations < 0] = 0
-#     saliency = np.sum(activations, axis=2)
-# else:
-#     raise NotImplementedError("please chose a valid saliency type!")
-#
-# # normalize saliency
-# saliency = saliency - np.min(saliency)
-# saliency = saliency / np.max(saliency)
-# saliency *= 255
-# print("shape saliency", np.shape(saliency))
-# cv2.imwrite("bvs/video/saliency.jpeg", saliency.astype(np.uint8))
-#
-# --------------------- Zhaoping li's V1 Saliency Model --------------------- #
-# start from activation of each filter
-# normalize outputs
-activations = activations - np.min(activations)
-activations = activations / np.max(activations)
-activations = np.expand_dims(activations, axis=0)
-#
-# Ic_control = 0
-# Ic = 1 + Ic_control
-# J0 = 0.8
-# mirror_idx = 2
-##
-# # np.set_printoptions(precision=3, linewidth=200)
-# # for dp in range(n_rot):
-# #     print()
-# #     print(J[:, :, 0, dp])
-# #     print("theta prime:", dp * np.pi / n_rot / np.pi * 180)
-#
-# # start dynamic
-# # ----------------------------------------------------------------------------------------------------------------------
-# # save activations
-# save_intermediate_img = False
-# I_i_theta = activations
-# print("[declaration] shape I_i_theta", np.shape(I_i_theta))
-# # x = activations.copy() + 0.5  # todo x0 as activations, zeros or ones ?
-# x = np.zeros(np.shape(activations))
-# y = np.zeros(np.shape(activations))
-# i_norm_k = np.ones((5, 5, n_rot, n_rot))
-# print("[declaration] shape x", np.shape(x), "min max x", np.min(x), np.max(x))
-# print("[declaration] shape y", np.shape(y), "min max y", np.min(y), np.max(y))
-# print()
-#
-# num_filters = np.shape(I_i_theta)[-1]
-# num_column = min(num_filters, max_column)
-# num_row = math.ceil(num_filters / num_column)
-# x_print = np.expand_dims(I_i_theta[0], axis=2)
-# multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
-# heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
-# cv2.imwrite("bvs/video/0_00_I_i_theta.jpeg", heatmap.astype(np.uint8))
-#
-# # reshape W and J
-# print("shape W", np.shape(W))
-# W = np.expand_dims(np.moveaxis(W, 2, 0), axis=4)
-# J = np.expand_dims(np.moveaxis(J, 2, 0), axis=4)
-# print("shape W", np.shape(W))
-#
-# # epsilon = 0.01
+num_filters = np.shape(I_i_theta)[-1]
+num_column = min(num_filters, max_column)
+num_row = math.ceil(num_filters / num_column)
+x_print = np.expand_dims(I_i_theta, axis=2)
+print("shape x_print", np.shape(x_print))
+multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/a0_00_I_i_theta.jpeg", heatmap.astype(np.uint8))
+
+# save x activations
+num_filters = np.shape(x)[-1]
+num_column = min(num_filters, max_column)
+num_row = math.ceil(num_filters / num_column)
+x_print = np.expand_dims(x, axis=2)
+multi_frame = create_multi_frame(x_print, num_row, num_column, (256, 256))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/a01_x.jpeg", heatmap.astype(np.uint8))
+# save gx activations
+gx = bu_saliency._gx(x)
+gx_print = np.expand_dims(gx, axis=2)
+multi_frame = create_multi_frame(gx_print, num_row, num_column, (256, 256))
+heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/a02_gx(x)_response.jpeg", heatmap.astype(np.uint8))
+
+
+# epsilon = 0.01
 # epsilon = 0.1
 # for t in range(15):
 #     print()

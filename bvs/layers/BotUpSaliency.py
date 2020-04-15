@@ -58,44 +58,44 @@ class BotUpSaliency(tf.keras.layers.Layer):
         self.max_column = K  # option for saving images
 
     def build(self, input_shape):
-        print("build", input_shape)
         # build interconnections kernels, shape: (ksize[0], ksize[1], K, K)  # todo change to (K, ksize[0], ksize[1], K, num_outputs+1)? -> figure out conv4D
         self.W, self.J = self._build_interconnection()
-        # self.x = np.zeros(tf.shape(input_shape))
-        self.x = tf.zeros(input_shape)  # todo declare TensorArray ?
-        self.y = np.zeros(input_shape)
+        self.i_norm_k = self._build_i_norm_k()
+
+        self.W = tf.convert_to_tensor(self.W, dtype=tf.float32, name='inhibition_kernel')
+        self.J = tf.convert_to_tensor(self.J, dtype=tf.float32, name='excitatory_kernel')
+        self.i_norm_k = tf.convert_to_tensor(self.i_norm_k, dtype=tf.float32, name='i_norm_k')
 
     def call(self, input):
-        print("call")
-        # for t in range(15):
-        #
-        #     print()
-        #     print("----------------------------------------------------------")
-        #     print("t", t)
-        #     # i_noise_y = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
-        #     # i_noise_x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
-        #     i_noise_y = 0
-        #     i_noise_x = 0
-        #
-        #     if self.verbose >= 4:
-        #         self._save_multi_frame(self.x, "bvs/video/"+str(t)+"_01_x.jpeg")
-        #         self._save_multi_frame(self._gx(self.x)[0], "bvs/video/"+str(t)+"_02_gx(x)_response.jpeg")
-        #
-        #     # # convolutions
-            # print("[convolution] shape W, np.shape(W)", np.shape(W))
-            # print("[convolution] shape gx(activations)", np.shape(gx(x)))
-            # print("[convolution] min max gx(activations)", np.min(gx(x)), np.max(gx(x)))
-            # i_norm = 0.85 - 2 * np.power(tf.nn.conv2d(gx(x), i_norm_k, strides=1, padding='SAME') / (np.shape(i_norm_k)[0]**2), 2)
-            # print("[convolution] 03")
-            # print("[convolution] shape i_norm", np.shape(i_norm))
-            # print("[convolution] min max i_norm", np.min(i_norm), np.max(i_norm))
-            # inhibs = []
-            # excits = []
-            # for i in range(self.K):
-            #     inhib = tf.nn.conv2d(gx(x), W[i], strides=1, padding='SAME')
-            #     excit = tf.nn.conv2d(gx(x), J[i], strides=1, padding='SAME')
-            #     inhibs.append(inhib)
-            #     excits.append(excit)
+        x = tf.zeros_like(input)
+        y = tf.zeros_like(input)
+
+        for t in range(1):
+
+            print()
+            print("----------------------------------------------------------")
+            print("t", t)
+            print("shape W", tf.shape(self.W))
+            print("shape J", tf.shape(self.J))
+            # i_noise_y = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
+            # i_noise_x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
+            i_noise_y = 0
+            i_noise_x = 0
+
+            # if self.verbose >= 4:
+            #     self._save_multi_frame(x, "bvs/video/"+str(t)+"_01_x.jpeg")
+            #     self._save_multi_frame(self._gx(x)[0], "bvs/video/"+str(t)+"_02_gx(x)_response.jpeg")
+            i_norm = 0.85 - 2 * tf.pow(tf.divide(tf.nn.conv2d(self._gx(x), self.i_norm_k, strides=1, padding='SAME'),
+                                                 (tf.pow(tf.shape(self.i_norm_k, out_type=self.i_norm_k.dtype)[0], 2))),
+                                       2)
+
+            inhibs = []
+            excits = []
+            for i in range(self.K):
+                inhib = tf.nn.conv2d(self._gx(x), self.W[i], strides=1, padding='SAME')
+                excit = tf.nn.conv2d(self._gx(x), self.J[i], strides=1, padding='SAME')
+                inhibs.append(inhib)
+                excits.append(excit)
             #
             # print("shape inhibs", np.shape(inhibs))
             # inhibs = np.swapaxes(np.expand_dims(np.squeeze(inhibs), axis=3), 3, 0)
@@ -218,7 +218,7 @@ class BotUpSaliency(tf.keras.layers.Layer):
             # heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
             # cv2.imwrite("bvs/video/"+str(t)+"_12_V1_gx(x)_response.jpeg", heatmap.astype(np.uint8))
 
-        return input
+        return input, x
 
     def _build_interconnection(self):
         # declare filters
@@ -290,12 +290,15 @@ class BotUpSaliency(tf.keras.layers.Layer):
 
         return W, J
 
+    def _build_i_norm_k(self):
+        return np.ones((5, 5, self.K, self.K))
+
     def _gx(self, x):
         # todo: basically an activation function, move it as a class ?
-        x = np.array(x)  # todo make it as tensor!
-        x[x <= self.Tx] = 0
-        x[x > self.Tx] = x[x > self.Tx] - self.Tx
-        x[x > 1] = 1
+        tf.where(tf.math.less_equal(x, self.Tx), x, tf.zeros_like(x))
+        tx = tf.multiply(tf.ones_like(x), tf.constant(self.Tx, dtype=x.dtype))
+        tf.where(tf.math.greater(x, self.Tx), x, tf.subtract(x, tx))
+        tf.where(tf.math.greater(x, 1), x, tf.ones_like(x))
         return x
 
     def _gy(self, y):
