@@ -271,7 +271,7 @@ for k in range(n_rot):
 # save all W inhibition filters
 num_input_channel = np.shape(W)[-2]
 num_filters = num_input_channel * np.shape(W)[-1]
-num_column = min(num_filters, max_column)
+num_column = min(num_filters, 12)
 num_row = math.ceil(num_filters / num_column)
 multi_frame = create_multi_frame_from_multi_channel(W, num_row, num_column, (256, 256), num_input_channel)
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
@@ -282,13 +282,15 @@ multi_frame = create_multi_frame_from_multi_channel(J, num_row, num_column, (256
 heatmap = cv2.applyColorMap(multi_frame, cv2.COLORMAP_VIRIDIS)
 cv2.imwrite("bvs/video/J_exitatory_filter.jpeg", heatmap.astype(np.uint8))
 
+
 # start dynamic
 # ----------------------------------------------------------------------------------------------------------------------
 # save activations
-save_intermediate_img = False
+save_intermediate_img = True
 I_i_theta = activations
 print("[declaration] shape I_i_theta", np.shape(I_i_theta))
-# x = activations.copy() + 0.5  # todo x0 as activations, zeros or ones ?
+print("[declaration] min max I_i_theta", np.min(I_i_theta), np.max(I_i_theta))
+# x = activations.copy() + 0.5
 x = np.zeros(np.shape(activations))
 y = np.zeros(np.shape(activations))
 i_norm_k = np.ones((5, 5, n_rot, n_rot))
@@ -462,6 +464,7 @@ for t in range(15):
 
                 psi_tmp.append(psi(dth, n_rot) * gy(y[:, :, :, t_p]))
         inhibs_psi[:, :, :, th] = np.sum(psi_tmp, axis=0)
+    print("[psi matrix] shape inhibs_psi", np.shape(inhibs_psi))
     print("[psi matrix] min man inhibs_psi", np.min(inhibs_psi), np.max(inhibs_psi))
 
     # save inhib psi
