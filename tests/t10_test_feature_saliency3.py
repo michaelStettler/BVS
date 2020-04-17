@@ -3,11 +3,9 @@ import cv2
 import json
 import math
 import matplotlib.pyplot as plt
+from bvs.utils.create_examples import *
 from bvs.layers import GaborFilters
 from bvs.layers import BotUpSaliency
-from bvs.utils.create_preds_seq import create_multi_frame
-from bvs.utils.create_preds_seq import create_multi_frame_heatmap
-from bvs.utils.create_preds_seq import create_multi_frame_from_multi_channel
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input
@@ -17,7 +15,8 @@ from tensorflow.keras.models import Model
 print("Visualize saliency")
 
 config = 'configs/config_test2.json'
-image_type = 'simple_vertical_bar'
+# image_type = 'half_vert_hori_pattern'
+image_type = 'half_vert_hori_pattern_small'
 # load data
 if image_type == 'monkey':
     img_path = '../data/02_FearGrin_1.0_120fps/02_FearGrin_1.0_120fps.0000.jpeg'  # monkey face
@@ -26,8 +25,16 @@ if image_type == 'monkey':
     img = img[:, 280:1000, :]
     img = cv2.resize(img, (256, 256))
 elif image_type == 'simple_vertical_bar':
-    img = np.zeros((50, 50, 1))
-    img[10:40, 25, :] = 255
+    img = get_simple_vertical_bar()
+    config = 'configs/simple_config.json'
+elif image_type == 'double_simple_vertical_bar':
+    img = get_double_simple_vertical_bar()
+    config = 'configs/simple_config.json'
+elif image_type == 'half_vert_hori_pattern':
+    img = get_half_vert_hori_pattern()
+    config = 'configs/simple_config.json'
+elif image_type == 'half_vert_hori_pattern_small':
+    img = get_half_vert_hori_pattern_small()
     config = 'configs/simple_config.json'
 else:
     raise NotImplementedError("Please select a valid image_type to test!")
@@ -70,9 +77,9 @@ x = gabor_layer(input)
 
 bu_saliency = BotUpSaliency((15, 15),
                             K=n_rot,
-                            steps=16,
+                            steps=32,
                             epsilon=0.1,
-                            verbose=0)
+                            verbose=2)
 x = bu_saliency(x)
 
 
@@ -86,6 +93,10 @@ test_img = np.expand_dims(img, axis=0)
 pred = model.predict(x=test_img)
 print("shape pred", np.shape(pred))
 
+# save input
+input_print = img.astype(np.uint8)
+cv2.imwrite("bvs/video/input.jpeg", input_print)
+
 # plot saliency
 saliency = pred[0]
 print("shape saliency", np.shape(saliency))
@@ -95,8 +106,8 @@ saliency = saliency / np.max(saliency)
 saliency_map = np.expand_dims(saliency, axis=2)
 saliency_map = np.array(saliency_map * 255).astype(np.uint8)
 print("shape saliency map", np.shape(saliency_map))
-heatmap = cv2.applyColorMap(saliency_map, cv2.COLORMAP_VIRIDIS)
-cv2.imwrite("bvs/video/V1_saliency_map.jpeg", heatmap.astype(np.uint8))
+# saliency_map = cv2.applyColorMap(saliency_map, cv2.COLORMAP_VIRIDIS)
+cv2.imwrite("bvs/video/V1_saliency_map.jpeg", saliency_map.astype(np.uint8))
 
 # # control layer -> uncomment the return line of the BotUpSaliency call method
 # # ----------------------------------------------------------------------------------------------------------------------

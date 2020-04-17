@@ -63,7 +63,6 @@ class BotUpSaliency(tf.keras.layers.Layer):
         self.W, self.J = self._build_interconnection()
         self.i_norm_kernel = self._build_i_norm_kernel()
         self.psi_kernel = self._build_psi_kernel()
-        print("shape psi_kernel", np.shape(self.psi_kernel))
 
         self.W = tf.convert_to_tensor(self.W, dtype=tf.float32, name='inhibition_kernel')
         self.J = tf.convert_to_tensor(self.J, dtype=tf.float32, name='excitatory_kernel')
@@ -77,17 +76,17 @@ class BotUpSaliency(tf.keras.layers.Layer):
 
         x = tf.zeros_like(input)
         # x = input + 0.5  # for test purposes
+        gx = self._gx(x)
         y = tf.zeros_like(input)
+        gy = self._gy(y)
         shape_i_norm_k = tf.shape(self.i_norm_kernel, out_type=self.i_norm_kernel.dtype)
 
-        # i_noise_y = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
+        # i_noise_y = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1  # todo add paremeter to decide to add noise
         # i_noise_x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
         i_noise_y = 0
         i_noise_x = 0
 
         for t in range(self.steps):
-            gx = self._gx(x)
-
             # compute i_norm
             i_norm = 0.85 - 2 * tf.pow(tf.divide(tf.nn.conv2d(gx, self.i_norm_kernel, strides=1, padding='SAME'),
                                                  (tf.pow(shape_i_norm_k[0], 2))), 2)
@@ -96,19 +95,23 @@ class BotUpSaliency(tf.keras.layers.Layer):
             inhib = tf.nn.conv2d(gx, self.W, strides=1, padding='SAME')
             excit = tf.nn.conv2d(gx, self.J, strides=1, padding='SAME')
 
+            # compute psi inhibition
+            inhibs_psi = tf.nn.conv2d(gy, self.psi_kernel, strides=1, padding='SAME')
+
             # compute inhibitory response (interneuron y)
             y += self.epsilon * (-self.alphaY * y + gx + inhib + self.Ic + i_noise_y)
-            gy = self._gy(y)
-
-            # build inhibitory psi matrix
-            inhibs_psi = tf.nn.conv2d(gy, self.psi_kernel, strides=1, padding='SAME')
 
             # compute excitatory repsonse (interneuron x)
             x_inhib = -self.alphaX * x - gy - inhibs_psi
             x_excit = self.J0 * gx + excit + input + i_norm + i_noise_x
             x += self.epsilon * (x_inhib + x_excit)
 
-        saliency = tf.math.reduce_sum(self._gx(x), axis=3)
+            # update activations
+            gx = self._gx(x)
+            gy = self._gy(y)
+
+        # saliency = tf.math.reduce_sum(x, axis=3)
+        saliency = tf.math.reduce_sum(self._gx(x), axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
         # return input, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit  # for debug purposes
         return saliency
 
@@ -198,7 +201,8 @@ class BotUpSaliency(tf.keras.layers.Layer):
                     a = np.abs(theta - theta_p)
                     dth = min(a, np.pi - a)
 
-                    psi_kernel[:, :, th, th_p] = self._psi(dth)
+                    # psi_kernel[:, :, th, th_p] = self._psi(dth)
+                    psi_kernel[:, :, th_p, th] = self._psi(dth)
 
         return psi_kernel
 
