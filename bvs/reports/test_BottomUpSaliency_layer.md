@@ -19,11 +19,11 @@ script: t11_test_BotUp_saliency_layer
   "n_rot": 6,  
   "lamdas": [2],  
   "gamma": 0.5,  
-  "phi": [-0.5, 0.5],  
+  "phi": [0],  
   "use_octave": true,  
   "octave": 1.6,  
   "per_channel": false,  
-  "per_color_channel": true  
+  "per_color_channel": false    
 }
 
 image_type: half_vert_hori_pattern_small
