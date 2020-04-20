@@ -64,20 +64,20 @@ Gabor filters and stimuli with heatmap Gabor Filter activation
 ## Edge filters
 **test 9 - sigma/lambda effect:** n_orient = 4, sigma = 1, lamda = 2.5, gamma = 1, phi = +/- pi/2
 
-<img src='../../img/gabor_filters_sig1_lam1.5_phi_pi:2.jpeg' height="440">
-<img src='../../img/heatmap_gabor_filters_sig1_lam1.5_phi_pi:2.jpeg' height="440">
+<img src='../../img/gabor_filters_sig1_lam1.5_phi_pi_2.jpeg' height="440">
+<img src='../../img/heatmap_gabor_filters_sig1_lam1.5_phi_pi_2.jpeg' height="440">
 Gabor filters and stimuli with heatmap Gabor Filter activation
 
 **test 10 - sigma/lambda effect:** n_orient = 4, sigma = 2, lamda = 2.5, gamma = 1, phi = +/- pi/2
 
-<img src='../../img/gabor_filters_sig2_lam2.5_phi_pi:2.jpeg' height="440">
-<img src='../../img/heatmap_gabor_filters_sig2_lam2.5_phi_pi:2.jpeg' height="440">
+<img src='../../img/gabor_filters_sig2_lam2.5_phi_pi_2.jpeg' height="440">
+<img src='../../img/heatmap_gabor_filters_sig2_lam2.5_phi_pi_2.jpeg' height="440">
 Gabor filters and stimuli with heatmap Gabor Filter activation
 
 **test 11 - sigma/lambda effect:** n_orient = 4, sigma = 3, lamda = 3.5, gamma = 1, phi = +/- pi/2
 
-<img src='../../img/gabor_filters_sig3_lam3.5_phi_pi:2.jpeg' height="440">
-<img src='../../img/heatmap_gabor_filters_sig3_lam3.5_phi_pi:2.jpeg' height="440">
+<img src='../../img/gabor_filters_sig3_lam3.5_phi_pi_2.jpeg' height="440">
+<img src='../../img/heatmap_gabor_filters_sig3_lam3.5_phi_pi_2.jpeg' height="440">
 Gabor filters and stimuli with heatmap Gabor Filter activation
 
 ## Color filters
