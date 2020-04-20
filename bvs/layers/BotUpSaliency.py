@@ -111,8 +111,8 @@ class BotUpSaliency(tf.keras.layers.Layer):
             gy = self._gy(y)
 
         # saliency = tf.math.reduce_sum(x, axis=3)
-        saliency = tf.math.reduce_sum(self._gx(x), axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
-        # return input, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit  # for debug purposes
+        saliency = tf.math.reduce_sum(gx, axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
+        # return input, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit, saliency  # for debug purposes
         return saliency
 
     def _build_interconnection(self):

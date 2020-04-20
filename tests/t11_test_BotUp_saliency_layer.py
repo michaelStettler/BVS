@@ -4,6 +4,7 @@ import json
 import math
 import matplotlib.pyplot as plt
 from bvs.utils.create_examples import *
+from bvs.utils.draw_on_grid import draw_on_grid
 from bvs.layers import GaborFilters
 from bvs.layers import BotUpSaliency
 
@@ -13,10 +14,12 @@ from tensorflow.keras.layers import MaxPool2D
 from tensorflow.keras.models import Model
 
 print("Visualize saliency")
+bypass_gabor_filters = False
 
 config = 'configs/config_test2.json'
 # image_type = 'half_vert_hori_pattern'
-image_type = 'half_vert_hori_pattern_small'
+# image_type = 'half_vert_hori_pattern_small'
+image_type = 'fig5.14F'
 # load data
 if image_type == 'monkey':
     img_path = '../data/02_FearGrin_1.0_120fps/02_FearGrin_1.0_120fps.0000.jpeg'  # monkey face
@@ -36,24 +39,19 @@ elif image_type == 'half_vert_hori_pattern':
 elif image_type == 'half_vert_hori_pattern_small':
     img = get_half_vert_hori_pattern_small()
     config = 'configs/simple_config.json'
+elif image_type == 'mnist':
+    img = get_mnist()
+    config = 'configs/simple_config.json'
+elif image_type == 'fig5.14F':
+    img = get_fig_5_14F()
+    config = 'configs/simple_config.json'
+    bypass_gabor_filters = True
 else:
     raise NotImplementedError("Please select a valid image_type to test!")
 
 # load config
-# config = 'config.json'
 with open(config) as f:
   config = json.load(f)
-
-# # test case img
-# img = np.zeros((256, 256, 3))
-# img[:128, :128, 0] = 255
-# img[128:, 128:, 1] = 255
-# plt.imshow(img)
-
-print("Num orientations {}, lambda {}, gamma {}".format(config['n_rot'], config['lamdas'], config['gamma']))
-
-# build model
-input = Input(shape=np.shape(img))
 
 n_rot = config['n_rot']
 thetas = np.array(range(n_rot)) * np.pi / n_rot
@@ -64,22 +62,32 @@ use_octave = config['use_octave']
 octave = config['octave']
 per_channel = config['per_channel']
 per_color_channel = config['per_color_channel']
-gabor_layer = GaborFilters((15, 15),
-                           theta=thetas,
-                           lamda=lamdas,
-                           gamma=gamma,
-                           phi=phi,
-                           use_octave=use_octave,
-                           octave=octave,
-                           per_channel=per_channel,
-                           per_color_channel=per_color_channel)
-x = gabor_layer(input)
+
+print("Num orientations {}, lambda {}, gamma {}".format(config['n_rot'], config['lamdas'], config['gamma']))
+
+# build model
+input = Input(shape=np.shape(img))
+
+if not bypass_gabor_filters:
+    gabor_layer = GaborFilters((15, 15),
+                               theta=thetas,
+                               lamda=lamdas,
+                               gamma=gamma,
+                               phi=phi,
+                               use_octave=use_octave,
+                               octave=octave,
+                               per_channel=per_channel,
+                               per_color_channel=per_color_channel)
+    x = gabor_layer(x)
+else:
+    x = input
 
 bu_saliency = BotUpSaliency((15, 15),
                             K=n_rot,
                             steps=32,
                             epsilon=0.1,
-                            verbose=2)
+                            verbose=0)
+
 x = bu_saliency(x)
 
 
@@ -94,7 +102,10 @@ pred = model.predict(x=test_img)
 print("shape pred", np.shape(pred))
 
 # save input
-input_print = img.astype(np.uint8)
+if bypass_gabor_filters:
+    input_print = draw_on_grid(img)
+else:
+    input_print = img.astype(np.uint8)
 cv2.imwrite("bvs/video/input.jpeg", input_print)
 
 # plot saliency

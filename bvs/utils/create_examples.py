@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 
 def get_simple_vertical_bar():
@@ -62,3 +63,18 @@ def get_half_vert_hori_pattern_small():
     img[54:57, vert_pos, :] = 255
     img[59:62, vert_pos, :] = 255
     return img
+
+
+def get_mnist():
+    mnist = tf.keras.datasets.mnist
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    img0 = x_train[1]
+    img0 = np.expand_dims(img0, 2)  # fit to the 3 channel convention
+    return img0
+
+
+def get_fig_5_14F():
+    input = np.zeros((11, 27, 12))
+    input[:, 13:, 3] = 1  # 45 degree
+    input[:, :13, 9] = 1  # 125 degree
+    return input
