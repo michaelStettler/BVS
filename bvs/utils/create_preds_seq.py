@@ -6,8 +6,8 @@ import cv2
 def create_multi_frame(filters, num_row, num_column, size_image, border=5):
     num_filters = np.shape(filters)[-1]
     # compute size of frame
-    width_img = num_column * size_image[0] + (num_column - 1) * border
-    height_img = num_row * size_image[1] + (num_row - 1) * border
+    width_img = num_column * size_image[1] + (num_column - 1) * border
+    height_img = num_row * size_image[0] + (num_row - 1) * border
     multi_frame = np.zeros((height_img, width_img, np.shape(filters)[2]))
 
     # stack images into the frame
@@ -15,10 +15,10 @@ def create_multi_frame(filters, num_row, num_column, size_image, border=5):
         for c in range(num_column):
             f = r * num_column + c
             if f < num_filters:
-                startX = c * (size_image[0] + border)
-                stopX = startX + size_image[0]
-                startY = r * (size_image[1] + border)
-                stopY = startY + size_image[1]
+                startX = c * (size_image[1] + border)
+                stopX = startX + size_image[1]
+                startY = r * (size_image[0] + border)
+                stopY = startY + size_image[0]
 
                 filt = filters[:, :, :, f]  # linearized the double loop argument into a single arg
                 filt = (filt - np.min(filt))
@@ -54,10 +54,10 @@ def create_multi_frame_heatmap(image, filters, num_row, num_column, size_image, 
         for c in range(num_column):
             f = r * num_column + c
             if f < num_filters:
-                startX = c * (size_image[0] + border)
-                stopX = startX + size_image[0]
-                startY = r * (size_image[1] + border)
-                stopY = startY + size_image[1]
+                startX = c * (size_image[1] + border)
+                stopX = startX + size_image[1]
+                startY = r * (size_image[0] + border)
+                stopY = startY + size_image[0]
 
                 filter = filters[:, :, r * num_column + c]
                 filter = (filter - np.min(filter))

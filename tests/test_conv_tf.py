@@ -10,9 +10,10 @@ print(input[0, :, :, 1])
 print(input[0, :, :, 2])
 print()
 
-kernel = np.zeros((5, 5, 3, 3))
-kernel[2, 2, 0, 1] = 1
-kernel[2, 2, 1, 1] = 2
+# kernel = np.zeros((5, 5, 3, 3))
+kernel = np.zeros((1, 1, 3, 3))
+kernel[0, 0, 0, 1] = 1
+kernel[0, 0, 1, 1] = 2
 print("shape kernel", np.shape(kernel))
 # kernel = np.repeat(kernel, 3, axis=4)
 # print("shape kernel", np.shape(kernel))

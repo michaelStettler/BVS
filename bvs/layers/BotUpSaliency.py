@@ -69,15 +69,15 @@ class BotUpSaliency(tf.keras.layers.Layer):
         self.i_norm_kernel = tf.convert_to_tensor(self.i_norm_kernel, dtype=tf.float32, name='i_norm_kernel')
         self.psi_kernel = tf.convert_to_tensor(self.psi_kernel, dtype=tf.float32, name='psi_kernel')
 
-    def call(self, input):
+    def call(self, inputs, **kwargs):
         # normalize input # todo should I do it with a BN layer ?
-        input = input - tf.reduce_min(input)
-        input = input / tf.reduce_max(input)
+        inputs = inputs - tf.reduce_min(inputs)
+        inputs = inputs / tf.reduce_max(inputs)
 
-        x = tf.zeros_like(input)
+        x = tf.zeros_like(inputs)
         # x = input + 0.5  # for test purposes
         gx = self._gx(x)
-        y = tf.zeros_like(input)
+        y = tf.zeros_like(inputs)
         gy = self._gy(y)
         shape_i_norm_k = tf.shape(self.i_norm_kernel, out_type=self.i_norm_kernel.dtype)
 
@@ -102,18 +102,19 @@ class BotUpSaliency(tf.keras.layers.Layer):
             y += self.epsilon * (-self.alphaY * y + gx + inhib + self.Ic + i_noise_y)
 
             # compute excitatory repsonse (interneuron x)
-            x_inhib = -self.alphaX * x - gy - inhibs_psi
-            x_excit = self.J0 * gx + excit + input + i_norm + i_noise_x
-            x += self.epsilon * (x_inhib + x_excit)
+            x_inhib = self.alphaX * x + gy + inhibs_psi
+            x_excit = self.J0 * gx + excit + inputs + i_norm + i_noise_x
+            x += self.epsilon * (x_excit - x_inhib)
 
             # update activations
             gx = self._gx(x)
             gy = self._gy(y)
 
         # saliency = tf.math.reduce_sum(x, axis=3)
-        saliency = tf.math.reduce_sum(gx, axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
-        # return input, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit, saliency  # for debug purposes
-        return saliency
+        # saliency = tf.math.reduce_sum(gx, axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
+        saliency = tf.math.reduce_max(gx, axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
+        return inputs, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit, saliency  # for debug purposes
+        # return saliency
 
     def _build_interconnection(self):
         # declare filters
@@ -201,8 +202,14 @@ class BotUpSaliency(tf.keras.layers.Layer):
                     a = np.abs(theta - theta_p)
                     dth = min(a, np.pi - a)
 
-                    # psi_kernel[:, :, th, th_p] = self._psi(dth)
-                    psi_kernel[:, :, th_p, th] = self._psi(dth)
+                    psi_kernel[:, :, th, th_p] = self._psi(dth)
+                    # psi_kernel[:, :, th_p, th] = self._psi(dth)
+
+        if self.verbose >= 2:
+            print("min max psi", np.min(psi_kernel), np.max(psi_kernel))
+            print("shape psi_kernel", np.shape(psi_kernel))
+            print(psi_kernel[0,0])
+            self._save_multi_frame_from_multi_channel(psi_kernel, "bvs/video/PsiBotUp_filter.jpeg")
 
         return psi_kernel
 
@@ -230,7 +237,6 @@ class BotUpSaliency(tf.keras.layers.Layer):
             return 0.7
         else:
             return 0
-
 
     def _save_multi_frame_from_multi_channel(self, x, name):
         num_input_channel = np.shape(x)[-2]
