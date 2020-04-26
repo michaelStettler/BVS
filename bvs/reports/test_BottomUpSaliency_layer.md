@@ -12,7 +12,8 @@ W_{m,n,theta,theta'} i,j = 0...15 and theta' = 0,pi/K pi,...,11/K pi
 <img src='../../img/W_inibition_filter.jpeg' height="660">
 
 
-**test 2 - simple two patterns **
+**test 2 - simple vert line **
+
 script: t11_test_BotUp_saliency_layer
  config:
  {
@@ -26,9 +27,43 @@ script: t11_test_BotUp_saliency_layer
   "per_color_channel": false    
 }
 
-image_type: half_vert_hori_pattern_small
+image_type: code_example
 
-Simulation run for 32 steps with epsilon=0.1
+bu_saliency = BotUpSaliency((9, 9),   
+                            K=n_rot,  
+                            steps=200,  
+                            epsilon=0.1,  
+                            verbose=2)  
+
+
  
-<img src='../../img/input_half_vert_hori_pattern_small.jpeg' height="330"><img src='../../img/V1_saliency_map_half_vert_hori_pattern_small.jpeg' height="330">  
+<img src='../../img/vert_line.jpeg' height="330"> <img src='../../img/saliency_vert_line.jpeg' height="330">  
+Input and Saliency map image
+
+**test 3 - Figure 5.14F **
+
+script: t11_test_BotUp_saliency_layer
+ config:
+ {
+  "n_rot": 6,  
+  "lamdas": [2],  
+  "gamma": 0.5,  
+  "phi": [0],  
+  "use_octave": true,  
+  "octave": 1.6,  
+  "per_channel": false,  
+  "per_color_channel": false    
+}
+
+image_type: 'fig5.14F'
+
+bu_saliency = BotUpSaliency((9, 9),   
+                            K=n_rot,  
+                            steps=200,  
+                            epsilon=0.1,  
+                            verbose=2)  
+
+
+ 
+<img src='../../img/5.14F.jpeg' height="330"> <img src='../../img/saliency_5.14.F.jpeg' height="330">  
 Input and Saliency map image
