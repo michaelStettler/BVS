@@ -12,7 +12,7 @@ W_{m,n,theta,theta'} i,j = 0...15 and theta' = 0,pi/K pi,...,11/K pi
 <img src='../../img/W_inibition_filter.jpeg' height="660">
 
 
-**test 2 - simple vert line **
+**test 2 - simple vert line**
 
 script: t11_test_BotUp_saliency_layer
  config:
@@ -40,7 +40,7 @@ bu_saliency = BotUpSaliency((9, 9),
 <img src='../../img/vert_line.jpeg' height="330"> <img src='../../img/saliency_vert_line.jpeg' height="330">  
 Input and Saliency map image
 
-**test 3 - Figure 5.14F **
+**test 3 - Figure 5.14F**
 
 script: t11_test_BotUp_saliency_layer
  config:
