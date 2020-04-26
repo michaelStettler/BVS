@@ -73,7 +73,7 @@ def get_mnist():
     return img0
 
 
-def code_example():
+def get_code_example():
     img = np.zeros((8, 8, 12))
     img[:, 3, 5] = 0.62
     img[:, 3, 6] = 1.2
@@ -82,10 +82,27 @@ def code_example():
 
 
 def get_fig_5_14F():
-    # img = np.zeros((11, 27, 12))
-    img = np.zeros((41, 57, 12))
-    # img[:, 13:, 3] = 1  # 45 degree
-    img[15:26, 15:28, 3] = 1  # 45 degree
-    # img[:, :13, 9] = 1  # 125 degree
-    img[15:26, 28:42, 9] = 1  # 125 degree
+    img = np.zeros((11, 27, 12))
+    # img = np.zeros((41, 57, 12))
+    img[:, 13:, 2] = 0.62  # 45 degree
+    img[:, 13:, 3] = 1.2  # 45 degree
+    img[:, 13:, 4] = 0.62  # 45 degree
+    # img[15:26, 15:28, 3] = 1  # 45 degree
+    img[:, :13, 8] = 0.62  # 125 degree
+    img[:, :13, 9] = 1.2  # 125 degree
+    img[:, :13, 10] = 0.62  # 125 degree
+    # img[15:26, 28:42, 9] = 1  # 125 degree
     return img
+
+# def get_fig_5_14F():
+#     img = np.zeros((8, 8, 12))
+#     # img = np.zeros((41, 57, 12))
+#     img[:, 4:, 2] = 0.62  # 45 degree
+#     img[:, 4:, 3] = 1.2  # 45 degree
+#     img[:, 4:, 4] = 0.62  # 45 degree
+#     # img[15:26, 15:28, 3] = 1  # 45 degree
+#     img[:, :4, 8] = 0.62  # 125 degree
+#     img[:, :4, 9] = 1.2  # 125 degree
+#     img[:, :4, 10] = 0.62  # 125 degree
+#     # img[15:26, 28:42, 9] = 1  # 125 degree
+#     return img

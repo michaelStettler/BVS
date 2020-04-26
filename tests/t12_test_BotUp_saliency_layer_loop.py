@@ -1,4 +1,5 @@
 import numpy as np
+np.set_printoptions(precision=4, linewidth=150)
 import cv2
 import json
 from bvs.utils.create_examples import *
@@ -15,14 +16,14 @@ print("Visualize saliency")
 config = 'configs/config_test2.json'
 # image_type = 'half_vert_hori_pattern'
 # image_type = 'half_vert_hori_pattern_small'
-image_type = 'code_example'
-# image_type = 'fig5.14F'
+# image_type = 'code_example'
+image_type = 'fig5.14F'
 # load data
 if image_type == 'code_example':
-    img = code_example()
+    img = get_code_example()
     config = 'configs/simple_config.json'
     custom_img_size = True
-if image_type == 'fig5.14F':
+elif image_type == 'fig5.14F':
     img = get_fig_5_14F()
     config = 'configs/simple_config.json'
     custom_img_size = True
@@ -49,13 +50,14 @@ print("Num orientations {}, lambda {}, gamma {}".format(config['n_rot'], config[
 input_print = draw_on_grid(img)
 cv2.imwrite("bvs/video/input.jpeg", input_print)
 
-for t in range(1):
+# for t in range(174, 175):
+for t in range(199, 200):
     print()
     print("-----------------------------------------")
     print("t", t)
     # build model
     inp = Input(shape=np.shape(img))
-    bu_saliency = BotUpSaliency((15, 15),
+    bu_saliency = BotUpSaliency((9, 9),
                                 K=n_rot,
                                 steps=t + 1,
                                 epsilon=0.1,
@@ -72,7 +74,7 @@ for t in range(1):
     test_img = np.expand_dims(img, axis=0)
     pred = model.predict(x=test_img)
 
-    save_debugg_BotUp_output(pred, t, custom_img_size)
+    save_debugg_BotUp_output(pred, t, custom_img_size, idx=9)
 
 
 

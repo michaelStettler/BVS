@@ -59,6 +59,10 @@ class BotUpSaliency(tf.keras.layers.Layer):
         self.tol = 0.001  # tolerance for angle computations
         self.max_column = K  # option for saving images
 
+        padX = int(self.ksize[1]/2)
+        padY = int(self.ksize[0]/2)
+        self.padding = [[0, 0], [padY, padY], [padX, padX], [0, 0]]
+
     def build(self, input_shape):
         self.W, self.J = self._build_interconnection()
         self.i_norm_kernel = self._build_i_norm_kernel()
@@ -70,16 +74,17 @@ class BotUpSaliency(tf.keras.layers.Layer):
         self.psi_kernel = tf.convert_to_tensor(self.psi_kernel, dtype=tf.float32, name='psi_kernel')
 
     def call(self, inputs, **kwargs):
-        # normalize input # todo should I do it with a BN layer ?
-        inputs = inputs - tf.reduce_min(inputs)
-        inputs = inputs / tf.reduce_max(inputs)
+        # # normalize input # todo should I do it with a BN layer ?
+        # inputs = inputs - tf.reduce_min(inputs)
+        # inputs = inputs / tf.reduce_max(inputs)
 
-        x = tf.zeros_like(inputs)
-        # x = input + 0.5  # for test purposes
+        # init x and y
+        x = tf.ones_like(inputs) * 0.01
         gx = self._gx(x)
-        y = tf.zeros_like(inputs)
+        y = tf.ones_like(inputs)
         gy = self._gy(y)
         shape_i_norm_k = tf.shape(self.i_norm_kernel, out_type=self.i_norm_kernel.dtype)
+        out = tf.zeros_like(inputs)
 
         # i_noise_y = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1  # todo add paremeter to decide to add noise
         # i_noise_x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3]) / 10 + 0.1
@@ -92,8 +97,9 @@ class BotUpSaliency(tf.keras.layers.Layer):
                                                  (tf.pow(shape_i_norm_k[0], 2))), 2)
 
             # compute excitatory and inhibitory connections
-            inhib = tf.nn.conv2d(gx, self.W, strides=1, padding='SAME')
-            excit = tf.nn.conv2d(gx, self.J, strides=1, padding='SAME')
+            gx_padded = tf.pad(gx, self.padding, "SYMMETRIC")
+            inhib = tf.nn.conv2d(gx_padded, self.W, strides=1, padding='VALID')
+            excit = tf.nn.conv2d(gx_padded, self.J, strides=1, padding='VALID')
 
             # compute psi inhibition
             inhibs_psi = tf.nn.conv2d(gy, self.psi_kernel, strides=1, padding='SAME')
@@ -102,6 +108,13 @@ class BotUpSaliency(tf.keras.layers.Layer):
             y += self.epsilon * (-self.alphaY * y + gx + inhib + self.Ic + i_noise_y)
 
             # compute excitatory repsonse (interneuron x)
+
+            # as ZhaoPing Li's implementation
+            # force = i_norm + inputs - self.alphaX * x + self.J0 * gx - gy - inhibs_psi
+            # force_excit = force + excit
+            # x += self.epsilon * force_excit
+
+            # as me: split between excitatory and inhibitory responses
             x_inhib = self.alphaX * x + gy + inhibs_psi
             x_excit = self.J0 * gx + excit + inputs + i_norm + i_noise_x
             x += self.epsilon * (x_excit - x_inhib)
@@ -110,11 +123,16 @@ class BotUpSaliency(tf.keras.layers.Layer):
             gx = self._gx(x)
             gy = self._gy(y)
 
-        # saliency = tf.math.reduce_sum(x, axis=3)
-        # saliency = tf.math.reduce_sum(gx, axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
-        saliency = tf.math.reduce_max(gx, axis=3)  # todo ask or find if I should take the activation, result seems quite good as well...
-        return inputs, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit, saliency  # for debug purposes
-        # return saliency
+            out = out + gx
+
+        out /= self.steps
+
+        # for debugg purposes
+        # return inputs, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, force, force_excit, out  # for debug purposes
+        # return inputs, x, gx, i_norm, inhib, excit, y, gy, inhibs_psi, x_inhib, x_excit, out  # for debug purposes
+
+        saliency = tf.math.reduce_max(out, axis=3)
+        return saliency
 
     def _build_interconnection(self):
         # declare filters
@@ -124,30 +142,30 @@ class BotUpSaliency(tf.keras.layers.Layer):
         # compute filters for each orientation (K)
         translate = int(self.ksize[0]/2)
         for k in range(self.K):
-            theta = k * np.pi / self.K
+            theta = np.pi/2 - k * np.pi / self.K
             for i in range(self.ksize[0]):
                 for j in range(self.ksize[1]):
                     # built kernel with center at the middle
                     di = i - translate
                     dj = j - translate
-                    alpha = np.arctan2(-di, dj)  # -di because in x,y coordinate and not a matrix
-                    # therefore axes i should goes up
-                    if np.abs(alpha) > np.pi / 2:
-                        if alpha < 0:
-                            alpha += np.pi
-                        else:
-                            alpha -= np.pi
+                    if np.abs(di) > 0:
+                        alpha = np.arctan(dj/di)
+                    elif dj != 0:
+                        alpha = np.pi/2
+                    else:
+                        alpha = 0
+
                     d = np.sqrt(di**2 + dj**2)
 
                     for dp in range(self.K):
                         # compute delta theta
-                        theta_p = dp * np.pi / self.K  # convert dp index to theta_prime in radians
+                        theta_p = np.pi/2 - dp * np.pi / self.K  # convert dp index to theta_prime in radians
                         a = np.abs(theta - theta_p)
                         d_theta = min(a, np.pi - a)
 
                         # compute theta1 and theta2 according to the axis from i, j
                         theta1 = theta - alpha
-                        theta2 = np.pi - (theta_p - alpha)
+                        theta2 = theta_p - alpha
 
                         # condition: |theta1| <= |theta2| <= pi/2
                         if np.abs(theta1) > np.pi / 2:  # condition1
@@ -161,6 +179,11 @@ class BotUpSaliency(tf.keras.layers.Layer):
                                 theta2 += np.pi
                             else:
                                 theta2 -= np.pi
+
+                        if np.abs(theta1) > np.abs(theta2):
+                            tmp = theta1
+                            theta1 = theta2
+                            theta2 = tmp
 
                         # compute beta
                         beta = 2 * np.abs(theta1) + 2 * np.sin(np.abs(theta1 + theta2))

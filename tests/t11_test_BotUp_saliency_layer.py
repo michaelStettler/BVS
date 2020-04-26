@@ -14,14 +14,17 @@ from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import MaxPool2D
 from tensorflow.keras.models import Model
 
+np.set_printoptions(precision=4, linewidth=150)
+
 print("Visualize saliency")
-bypass_gabor_filters = False
-debug = True
+bypass_gabor_filters = True
+debug = False
 
 config = 'configs/config_test2.json'
 # image_type = 'half_vert_hori_pattern'
 # image_type = 'half_vert_hori_pattern_small'
-image_type = 'fig5.14F'
+# image_type = 'fig5.14F'
+image_type = 'code_example'
 # load data
 if image_type == 'monkey':
     img_path = '../data/02_FearGrin_1.0_120fps/02_FearGrin_1.0_120fps.0000.jpeg'  # monkey face
@@ -41,13 +44,17 @@ elif image_type == 'half_vert_hori_pattern':
 elif image_type == 'half_vert_hori_pattern_small':
     img = get_half_vert_hori_pattern_small()
     config = 'configs/simple_config.json'
-elif image_type == 'mnist':
-    img = get_mnist()
-    config = 'configs/simple_config.json'
 elif image_type == 'fig5.14F':
     img = get_fig_5_14F()
     config = 'configs/simple_config.json'
     bypass_gabor_filters = True
+elif image_type == 'code_example':
+    img = get_code_example()
+    config = 'configs/simple_config.json'
+    bypass_gabor_filters = True
+elif image_type == 'mnist':
+    img = get_mnist()
+    config = 'configs/simple_config.json'
 else:
     raise NotImplementedError("Please select a valid image_type to test!")
 
@@ -84,8 +91,8 @@ if not bypass_gabor_filters:
 else:
     x = input
 
-steps = 32
-bu_saliency = BotUpSaliency((15, 15),
+steps = 200
+bu_saliency = BotUpSaliency((9, 9),
                             K=n_rot,
                             steps=steps,
                             epsilon=0.1,
@@ -109,6 +116,8 @@ if bypass_gabor_filters:
     input_print = draw_on_grid(img)
 else:
     input_print = img.astype(np.uint8)
+print("shape input_print", np.shape(input_print))
+print("min max input_print", np.min(input_print), np.max(input_print))
 cv2.imwrite("bvs/video/input.jpeg", input_print)
 
 # plot saliency
@@ -116,6 +125,9 @@ if not debug:
     saliency = pred[0]
     print("shape saliency", np.shape(saliency))
     print("min max saliency", np.min(saliency), np.max(saliency))
+    print(saliency)
+
+    # normalize saliency
     saliency = saliency - np.min(saliency)
     saliency = saliency / np.max(saliency)
     saliency_map = np.expand_dims(saliency, axis=2)
@@ -123,6 +135,7 @@ if not debug:
     print("shape saliency map", np.shape(saliency_map))
     # saliency_map = cv2.applyColorMap(saliency_map, cv2.COLORMAP_VIRIDIS)
     cv2.imwrite("bvs/video/V1_saliency_map.jpeg", saliency_map.astype(np.uint8))
+
 
 else:
     save_debugg_BotUp_output(pred, steps)

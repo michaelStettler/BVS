@@ -20,6 +20,11 @@ def draw_on_grid(img):
     img_size = np.shape(img)
     print("[draw on grid] img_size", img_size)
 
+    # normalize img
+    img -= np.min(img)
+    if np.max(img != 0):
+        img /= np.max(img)
+
     # define image grid
     grid_img = np.zeros((img_size[0]*(box_size+gap) + gap, img_size[1]*(box_size+gap) + gap))
 
@@ -39,6 +44,8 @@ def draw_on_grid(img):
 def get_line(n):
     if n == 3:
        box = get_45_line()
+    elif n == 6:
+       box = get_90_line()
     elif n == 9:
        box = get_125_line()
     else:
@@ -55,6 +62,16 @@ def get_45_line():
                      [0, 0, 255, 0, 0, 0, 0],
                      [0, 255, 0, 0, 0, 0, 0],
                      [255, 0, 0, 0, 0, 0, 0]])
+
+
+def get_90_line():
+    return np.array([[0, 0, 0, 255, 0, 0, 0],
+                     [0, 0, 0, 255, 0, 0, 0],
+                     [0, 0, 0, 255, 0, 0, 0],
+                     [0, 0, 0, 255, 0, 0, 0],
+                     [0, 0, 0, 255, 0, 0, 0],
+                     [0, 0, 0, 255, 0, 0, 0],
+                     [0, 0, 0, 255, 0, 0, 0]])
 
 
 def get_125_line():

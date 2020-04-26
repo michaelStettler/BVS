@@ -5,7 +5,7 @@ import math
 from bvs.utils.create_preds_seq import create_multi_frame
 
 
-def save_debugg_BotUp_output(pred, t=None, custom_img_size=False):
+def save_debugg_BotUp_output(pred, t=None, custom_img_size=False, idx=0):
     # remember to change the output in BotUp_saliency_layer
     if t is None:
         path = 'bvs/video/a_'
@@ -54,6 +54,26 @@ def save_debugg_BotUp_output(pred, t=None, custom_img_size=False):
     print("min max x_excit", np.min(x_excit), np.max(x_excit))
     # print("shape saliency", np.shape(saliency))
     print("min max saliency", np.min(saliency), np.max(saliency))
+
+    print()
+    print("x")
+    print(x[:, :, idx])
+    print("y")
+    print(y[:, :, idx])
+    print("gx")
+    print(gx[:, :, idx])
+    # print("gy")
+    # print(gy[:, :, 6])
+    print("excit")
+    print(excits[:, :, idx])
+    # print("inhibs_psi[0,0,0]", inhibs_psi[0,0,0])
+    # print("force")
+    # print(x_inhib[:, :, 6])  #modified x_inhib to be like the force
+    # print("force excit")
+    # print(x_excit[:, :, 6])  #modified x_excit to be like the force with excitation
+    print("saliency")
+    # print(saliency[:, :, 6])
+    print(saliency[:, :, idx])
 
 
     max_column = 6

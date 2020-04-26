@@ -2,15 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/bvs/utils/save_debugg_BotUpSaliency_output.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/t10_test_feature_saliency3.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/t12_test_BotUp_saliency_layer_loop.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bvs/layers/BotUpSaliency.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/BotUpSaliency.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bvs/utils/create_examples.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_examples.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_preds_seq.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/utils/draw_on_grid.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/draw_on_grid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/utils/save_debugg_BotUpSaliency_output.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/save_debugg_BotUpSaliency_output.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_conv_tf.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_conv_tf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/t12_test_BotUp_saliency_layer_loop.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t12_test_BotUp_saliency_layer_loop.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +83,7 @@
       <workItem from="1585567610994" duration="8766000" />
       <workItem from="1585637652297" duration="138023000" />
       <workItem from="1587386337678" duration="8328000" />
-      <workItem from="1587449626770" duration="10765000" />
+      <workItem from="1587449626770" duration="29194000" />
     </task>
     <servers />
   </component>
@@ -93,9 +91,10 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="442" y="235" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1587133820764">
-      <screen x="0" y="23" width="1920" height="1125" />
+    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1587906608225">
+      <screen x="0" y="0" width="1920" height="1200" />
     </state>
+    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1200@0.0.1920.1200" timestamp="1587906608225" />
     <state x="442" y="235" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1920.1125@0.23.1920.1125" timestamp="1587133820764" />
     <state x="742" y="383" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1584628063335">
       <screen x="0" y="23" width="1920" height="1125" />
@@ -117,9 +116,9 @@
       <screen x="0" y="23" width="1920" height="1125" />
     </state>
     <state x="801" y="497" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1920.1125@0.23.1920.1125" timestamp="1585155729130" />
-    <state x="676" y="294" width="670" height="676" key="search.everywhere.popup" timestamp="1586848424644">
+    <state x="676" y="294" width="670" height="676" key="search.everywhere.popup" timestamp="1587731207267">
       <screen x="0" y="23" width="1920" height="1125" />
     </state>
-    <state x="676" y="294" width="670" height="676" key="search.everywhere.popup/0.23.1920.1125@0.23.1920.1125" timestamp="1586848424644" />
+    <state x="676" y="294" width="670" height="676" key="search.everywhere.popup/0.23.1920.1125@0.23.1920.1125" timestamp="1587731207267" />
   </component>
 </project>
