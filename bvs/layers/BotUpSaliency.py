@@ -229,9 +229,6 @@ class BotUpSaliency(tf.keras.layers.Layer):
                     # psi_kernel[:, :, th_p, th] = self._psi(dth)
 
         if self.verbose >= 2:
-            print("min max psi", np.min(psi_kernel), np.max(psi_kernel))
-            print("shape psi_kernel", np.shape(psi_kernel))
-            print(psi_kernel[0,0])
             self._save_multi_frame_from_multi_channel(psi_kernel, "bvs/video/PsiBotUp_filter.jpeg")
 
         return psi_kernel

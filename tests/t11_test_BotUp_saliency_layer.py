@@ -96,7 +96,7 @@ bu_saliency = BotUpSaliency((9, 9),
                             K=n_rot,
                             steps=steps,
                             epsilon=0.1,
-                            verbose=0)
+                            verbose=2)
 
 x = bu_saliency(x)
 
