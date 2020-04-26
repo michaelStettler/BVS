@@ -65,5 +65,5 @@ bu_saliency = BotUpSaliency((9, 9),
 
 
  
-<img src='../../img/5.14F.jpeg' height="330"> <img src='../../img/saliency_5.14.F.jpeg' height="330">  
+<img src='../../img/5.14F.jpeg' width="500"> <img src='../../img/saliency_5.14.F.jpeg' width="500">  
 Input and Saliency map image
