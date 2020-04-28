@@ -15,25 +15,25 @@ W_{m,n,theta,theta'} i,j = 0...15 and theta' = 0,pi/K pi,...,11/K pi
 **test 2 - simple vert line**
 
 script: t11_test_BotUp_saliency_layer
- config:
- {
-  "n_rot": 6,  
-  "lamdas": [2],  
-  "gamma": 0.5,  
-  "phi": [0],  
-  "use_octave": true,  
-  "octave": 1.6,  
-  "per_channel": false,  
-  "per_color_channel": false    
-}
+ config:  
+ {  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "n_rot": 6,  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "lamdas": [2],  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "gamma": 0.5,  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "phi": [0],  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "use_octave": true,  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "octave": 1.6,  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "per_channel": false,  
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "per_color_channel": false    
+}  
 
 image_type: code_example
 
 bu_saliency = BotUpSaliency((9, 9),   
-                            K=n_rot,  
-                            steps=200,  
-                            epsilon=0.1,  
-                            verbose=2)  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                            K=n_rot,  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                            steps=200,  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                            epsilon=0.1,  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                            verbose=2)  
 
 
  
@@ -42,28 +42,68 @@ Input and Saliency map image
 
 **test 3 - Figure 5.14F**
 
-script: t11_test_BotUp_saliency_layer
- config:
- {
-  "n_rot": 6,  
-  "lamdas": [2],  
-  "gamma": 0.5,  
-  "phi": [0],  
-  "use_octave": true,  
-  "octave": 1.6,  
-  "per_channel": false,  
-  "per_color_channel": false    
+script: t11_test_BotUp_saliency_layer  
+ config:  
+ {  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"n_rot": 6,  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"lamdas": [2],  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"gamma": 0.5,  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"phi": [0],  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"use_octave": true,  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"octave": 1.6,  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"per_channel": false,  
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"per_color_channel": false    
 }
 
 image_type: 'fig5.14F'
 
 bu_saliency = BotUpSaliency((9, 9),   
-                            K=n_rot,  
-                            steps=200,  
-                            epsilon=0.1,  
-                            verbose=2)  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; K=n_rot,  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; steps=200,  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; epsilon=0.1,  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; verbose=2)  
 
 
  
 <img src='../../img/5.14F.jpeg' width="500"> <img src='../../img/saliency_5.14.F.jpeg' width="500">  
+Input and Saliency map image
+
+**test 4 - Figure 5.18A**
+
+script: t11_test_BotUp_saliency_layer  
+config: same as test3  
+
+image_type: 'fig_5.18A'
+ 
+<img src='../../img/5_18A.jpeg' width="500"> <img src='../../img/5_18A_saliency.jpeg' width="500">  
+Input and Saliency map image
+
+**test 5 - Figure 5.18B**
+
+script: t11_test_BotUp_saliency_layer  
+config: same as test3 
+
+image_type: 'fig_5.18B'
+ 
+<img src='../../img/5_18B.jpeg' width="500"> <img src='../../img/5_18B_saliency.jpeg' width="500">  
+Input and Saliency map image
+
+**test 6 - Figure 5.18D**
+
+script: t11_test_BotUp_saliency_layer  
+config: same as test3
+
+image_type: 'fig_5.18D'
+ 
+<img src='../../img/5_18D.jpeg' width="500"> <img src='../../img/5_18D_saliency.jpeg' width="500">  
+Input and Saliency map image
+
+**test 7 - Figure 5.18G**
+
+script: t11_test_BotUp_saliency_layer  
+config: same as test3 
+
+image_type: 'fig_5.18G'
+ 
+<img src='../../img/5_18G.jpeg' width="500"> <img src='../../img/5_18G_saliency.jpeg' width="500">  
 Input and Saliency map image
