@@ -32,53 +32,68 @@ def draw_on_grid(img):
         y_gap = gap + y * (box_size + gap)
         for x in range(img_size[1]):
             x_gap = gap + x * (box_size + gap)
-            for n in range(img_size[2]):
-                if img[y, x, n] == 1:
-                    line = get_line(n)
-                    grid_img[y_gap:y_gap+box_size, x_gap:x_gap+box_size] = line
+
+            # get values
+            pix_value = np.max(img[y, x, :])
+            n = np.argmax(img[y, x, :])
+            if pix_value > 0:
+                line = get_line(n, pix_value)
+                grid_img[y_gap:y_gap+box_size, x_gap:x_gap+box_size] = line
 
     grid_img = np.expand_dims(grid_img, axis=2)
     return grid_img.astype(np.uint8)
 
 
-def get_line(n):
-    if n == 3:
-       box = get_45_line()
+def get_line(n, value):
+    if n == 0:
+        box = get_0_line(value)
+    elif n == 3:
+       box = get_45_line(value)
     elif n == 6:
-       box = get_90_line()
+       box = get_90_line(value)
     elif n == 9:
-       box = get_125_line()
+       box = get_125_line(value)
     else:
-       raise NotImplementedError
+       raise NotImplementedError("Need to implement in draw_on_grid for other angles!")
 
-    return box
-
-
-def get_45_line():
-    return np.array([[0, 0, 0, 0, 0, 0, 255],
-                     [0, 0, 0, 0, 0, 255, 0],
-                     [0, 0, 0, 0, 255, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 255, 0, 0, 0, 0],
-                     [0, 255, 0, 0, 0, 0, 0],
-                     [255, 0, 0, 0, 0, 0, 0]])
+    return box * 255
 
 
-def get_90_line():
-    return np.array([[0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0]])
+def get_0_line(x):
+    return np.array([[0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0],
+                     [x, x, x, x, x, x, x],
+                     [0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0]])
 
 
-def get_125_line():
-    return np.array([[255, 0, 0, 0, 0, 0, 0],
-                     [0, 255, 0, 0, 0, 0, 0],
-                     [0, 0, 255, 0, 0, 0, 0],
-                     [0, 0, 0, 255, 0, 0, 0],
-                     [0, 0, 0, 0, 255, 0, 0],
-                     [0, 0, 0, 0, 0, 255, 0],
-                     [0, 0, 0, 0, 0, 0, 255]])
+def get_45_line(x):
+    return np.array([[0, 0, 0, 0, 0, 0, x],
+                     [0, 0, 0, 0, 0, x, 0],
+                     [0, 0, 0, 0, x, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, x, 0, 0, 0, 0],
+                     [0, x, 0, 0, 0, 0, 0],
+                     [x, 0, 0, 0, 0, 0, 0]])
+
+
+def get_90_line(x):
+    return np.array([[0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0]])
+
+
+def get_125_line(x):
+    return np.array([[x, 0, 0, 0, 0, 0, 0],
+                     [0, x, 0, 0, 0, 0, 0],
+                     [0, 0, x, 0, 0, 0, 0],
+                     [0, 0, 0, x, 0, 0, 0],
+                     [0, 0, 0, 0, x, 0, 0],
+                     [0, 0, 0, 0, 0, x, 0],
+                     [0, 0, 0, 0, 0, 0, x]])
