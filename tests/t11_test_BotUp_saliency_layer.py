@@ -16,8 +16,6 @@ print("Test BotUpSaliency Layer")
 debug = False
 
 # load example -> IMPORTANT! HERE THE INPUT IS DIRECTLY FED INTO THE LAYER
-# image_type = 'code_example'
-# image_type = 'fig5.14F'
 image_type = 'fig5.18G'
 # load data
 if image_type == 'code_example':

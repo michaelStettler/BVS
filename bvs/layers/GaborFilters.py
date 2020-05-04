@@ -4,6 +4,7 @@ import numpy as np
 
 # todo gaborfilter: colorcoding -> is it correct ? (see negative value comment in _build_color_kernel)
 
+
 class GaborFilters(tf.keras.layers.Layer):
     def __init__(self, ksize,
                  sigma=[1],
@@ -19,7 +20,7 @@ class GaborFilters(tf.keras.layers.Layer):
         self.ksize = ksize
         self.sigmas = sigma  # standard deviation of the gaussian envelope  -> usually computed with the octave
         self.theta = theta  # orientation of the normal to the parallel stripes of a Gabor function
-        self.lamdas = lamda  # wavelength of the sinusoidal factor
+        self.lamdas = np.array(lamda)  # wavelength of the sinusoidal factor
         self.gamma = gamma  # spatial aspect ratio.
         self.phi = phi  # phase offset
         self.per_channel = per_channel  # apply a Gabor filter per channel (duplicate for RGB channel)

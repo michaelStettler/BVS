@@ -65,10 +65,10 @@ def get_half_vert_hori_pattern_small():
     return img
 
 
-def get_mnist():
+def get_mnist(n=0):
     mnist = tf.keras.datasets.mnist
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    img0 = x_train[1]
+    img0 = x_train[n]
     img0 = np.expand_dims(img0, 2)  # fit to the 3 channel convention
     return img0
 

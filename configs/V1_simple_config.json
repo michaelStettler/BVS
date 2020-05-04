@@ -1,0 +1,12 @@
+{
+  "n_rot": 12,
+  "lamdas": [2],
+  "gamma": 0.5,
+  "phi": [0],
+  "use_octave": true,
+  "octave": 1.6,
+  "per_channel": false,
+  "per_color_channel": false,
+  "n_steps": 200,
+  "epsilon": 0.1
+}
