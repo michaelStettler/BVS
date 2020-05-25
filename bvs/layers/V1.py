@@ -9,6 +9,9 @@ class V1(tf.keras.layers.Layer):
     def __init__(self, ksize, K,
                  n_steps=32,
                  epsilon=0.01,
+                 lambda0=3,
+                 num_scales=4,
+                 alpha=3,
                  use_octave=True):
 
         """
@@ -21,6 +24,14 @@ class V1(tf.keras.layers.Layer):
         self.n_steps = n_steps
         self.epsilon = epsilon
         self.use_octave = use_octave
+
+        # todo build gabor with the bandwith
+        # lamda0 = 3 -> 3 - 9 - 27 - 81
+        self.lambdas = []
+        self.lambdas.append(lambda0)
+        for i in range(1, num_scales):
+            self.lambdas.append(self.lambdas[i] * alpha)
+
 
     def build(self, input_shape):
         theta = np.array(range(self.K)) / self.K * np.pi

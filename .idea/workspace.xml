@@ -2,14 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/MNIST/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/layers/V1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/configs/V1_simple_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/t12_test_V1_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MNIST/train_mixedP.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MNIST/train_simple_CNN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/utils/create_examples.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_examples.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MNIST/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bvs/layers/V1.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/V1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/fit_MNIST/20200504-111730/train/events.out.tfevents.1588583850.MacBookMichael2.27896.313.v2" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +34,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/configs" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/MNIST" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -48,16 +47,17 @@
     </option>
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/bvs/layers" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/bvs" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Michael\PycharmProjects\BVS\MNIST" />
       <recent name="$PROJECT_DIR$/configs" />
       <recent name="$PROJECT_DIR$/bvs/layers" />
       <recent name="$PROJECT_DIR$/tests" />
       <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/bvs/layers" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/bvs" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -86,6 +86,8 @@
       <workItem from="1587386337678" duration="8328000" />
       <workItem from="1587449626770" duration="30451000" />
       <workItem from="1588076749144" duration="10748000" />
+      <workItem from="1589892437253" duration="1316000" />
+      <workItem from="1589976931568" duration="8267000" />
     </task>
     <servers />
   </component>
