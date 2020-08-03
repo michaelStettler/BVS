@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
 <<<<<<< HEAD
+<<<<<<< HEAD
       <change afterPath="$PROJECT_DIR$/tests/t13_test_v2_connection_filters.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" afterDir="false" />
@@ -15,6 +16,9 @@
       <change beforePath="$PROJECT_DIR$/bvs/layers/V1.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/V1.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/fit_MNIST/20200504-111730/train/events.out.tfevents.1588583850.MacBookMichael2.27896.313.v2" beforeDir="false" />
 >>>>>>> 9961bb9de3eabf145e2867dce7a06049fee611de
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+>>>>>>> 82fd241... commit mnist changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,8 +102,12 @@
 =======
       <workItem from="1588076749144" duration="10748000" />
       <workItem from="1589892437253" duration="1316000" />
+<<<<<<< HEAD
       <workItem from="1589976931568" duration="8267000" />
 >>>>>>> 9961bb9de3eabf145e2867dce7a06049fee611de
+=======
+      <workItem from="1589976931568" duration="8826000" />
+>>>>>>> 82fd241... commit mnist changes
     </task>
     <servers />
   </component>
