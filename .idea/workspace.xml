@@ -4,6 +4,7 @@
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       <change afterPath="$PROJECT_DIR$/tests/t13_test_v2_connection_filters.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" afterDir="false" />
@@ -19,6 +20,10 @@
 =======
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
 >>>>>>> 82fd241... commit mnist changes
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/t13_test_norm_base_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t13_test_norm_base_layer.py" afterDir="false" />
+>>>>>>> 7708956... added nrm base layer
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +39,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="MERGE" />
   </component>
   <component name="ProjectId" id="1ZGDnlxrlGerfGNJZHwR34Qcfc3" />
   <component name="ProjectViewState">
@@ -107,7 +113,11 @@
 >>>>>>> 9961bb9de3eabf145e2867dce7a06049fee611de
 =======
       <workItem from="1589976931568" duration="8826000" />
+<<<<<<< HEAD
 >>>>>>> 82fd241... commit mnist changes
+=======
+      <workItem from="1596441842700" duration="1605000" />
+>>>>>>> 7708956... added nrm base layer
     </task>
     <servers />
   </component>
@@ -118,6 +128,7 @@
     <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1593777080106">
       <screen x="0" y="0" width="1920" height="1200" />
     </state>
+<<<<<<< HEAD
     <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1200@0.0.1920.1200" timestamp="1593777080106" />
     <state x="442" y="235" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1920.1125@0.23.1920.1125" timestamp="1587133820764" />
     <state x="629" y="150" key="CommitChangelistDialog2" timestamp="1594381669035">
@@ -139,5 +150,16 @@
     <state x="676" y="289" width="670" height="722" key="search.everywhere.popup/0.0.1920.1200@0.0.1920.1200" timestamp="1594064512027" />
     <state x="676" y="294" width="670" height="677" key="search.everywhere.popup/0.23.1920.1124@0.23.1920.1124" timestamp="1594392320313" />
     <state x="676" y="294" width="670" height="676" key="search.everywhere.popup/0.23.1920.1125@0.23.1920.1125" timestamp="1587731207267" />
+=======
+    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1200@0.0.1920.1200" timestamp="1588078100192" />
+    <state x="2405" y="620" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1596449051894">
+      <screen x="0" y="0" width="3440" height="1400" />
+    </state>
+    <state x="2405" y="620" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.3440.1400@0.0.3440.1400" timestamp="1596449051894" />
+    <state x="676" y="289" width="670" height="722" key="search.everywhere.popup" timestamp="1588085445349">
+      <screen x="0" y="0" width="1920" height="1200" />
+    </state>
+    <state x="676" y="289" width="670" height="722" key="search.everywhere.popup/0.0.1920.1200@0.0.1920.1200" timestamp="1588085445349" />
+>>>>>>> 7708956... added nrm base layer
   </component>
 </project>
