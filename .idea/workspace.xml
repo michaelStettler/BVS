@@ -2,13 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/MNIST/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bvs/layers/V1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/configs/V1_simple_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/t12_test_V1_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/t13_test_v2_connection_filters.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/GaborFilters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/utils/create_examples.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/utils/create_examples.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/t11_test_BotUp_saliency_layer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -85,7 +80,9 @@
       <workItem from="1585637652297" duration="138023000" />
       <workItem from="1587386337678" duration="8328000" />
       <workItem from="1587449626770" duration="30451000" />
-      <workItem from="1588076749144" duration="10748000" />
+      <workItem from="1588076749144" duration="10991000" />
+      <workItem from="1593613494006" duration="57202000" />
+      <workItem from="1594486595896" duration="8545000" />
     </task>
     <servers />
   </component>
@@ -93,23 +90,16 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1588078100192">
+    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1593777080106">
       <screen x="0" y="0" width="1920" height="1200" />
     </state>
-    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1200@0.0.1920.1200" timestamp="1588078100192" />
+    <state x="442" y="226" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1200@0.0.1920.1200" timestamp="1593777080106" />
     <state x="442" y="235" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1920.1125@0.23.1920.1125" timestamp="1587133820764" />
-    <state x="742" y="383" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1584628063335">
-      <screen x="0" y="23" width="1920" height="1125" />
+    <state x="629" y="150" key="CommitChangelistDialog2" timestamp="1594381669035">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
-    <state x="742" y="383" key="#com.intellij.fileTypes.FileTypeChooser/0.23.1920.1125@0.23.1920.1125" timestamp="1584628063335" />
-    <state x="629" y="150" key="CommitChangelistDialog2" timestamp="1586425451926">
-      <screen x="0" y="23" width="1920" height="1125" />
-    </state>
+    <state x="629" y="150" key="CommitChangelistDialog2/0.23.1920.1124@0.23.1920.1124" timestamp="1594381669035" />
     <state x="629" y="150" key="CommitChangelistDialog2/0.23.1920.1125@0.23.1920.1125" timestamp="1586425451926" />
-    <state x="469" y="224" key="SettingsEditor" timestamp="1584456751666">
-      <screen x="0" y="23" width="1920" height="1125" />
-    </state>
-    <state x="469" y="224" key="SettingsEditor/0.23.1920.1125@0.23.1920.1125" timestamp="1584456751666" />
     <state x="294" y="148" width="1445" height="800" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1586244731267">
       <screen x="0" y="23" width="1920" height="1125" />
     </state>
@@ -118,10 +108,11 @@
       <screen x="0" y="23" width="1920" height="1125" />
     </state>
     <state x="801" y="497" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1920.1125@0.23.1920.1125" timestamp="1585155729130" />
-    <state x="676" y="289" width="670" height="722" key="search.everywhere.popup" timestamp="1588085445349">
-      <screen x="0" y="0" width="1920" height="1200" />
+    <state x="676" y="294" width="670" height="677" key="search.everywhere.popup" timestamp="1594392320313">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
-    <state x="676" y="289" width="670" height="722" key="search.everywhere.popup/0.0.1920.1200@0.0.1920.1200" timestamp="1588085445349" />
+    <state x="676" y="289" width="670" height="722" key="search.everywhere.popup/0.0.1920.1200@0.0.1920.1200" timestamp="1594064512027" />
+    <state x="676" y="294" width="670" height="677" key="search.everywhere.popup/0.23.1920.1124@0.23.1920.1124" timestamp="1594392320313" />
     <state x="676" y="294" width="670" height="676" key="search.everywhere.popup/0.23.1920.1125@0.23.1920.1125" timestamp="1587731207267" />
   </component>
 </project>
