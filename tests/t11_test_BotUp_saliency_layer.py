@@ -10,6 +10,12 @@ from bvs.layers import BotUpSaliency
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 
+"""
+test Zhaoping's Li bottoom-up saliency model of V1 on different stimuli
+
+run: python -m tests.t11_test_BotUp_saliency_layer
+"""
+
 np.set_printoptions(precision=4, linewidth=150)
 
 print("Test BotUpSaliency Layer")
