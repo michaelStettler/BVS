@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d7030cf9-1fd0-4557-bd7f-be981a9f1c13" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/MNIST/train_mixedP.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/MNIST/train_simple_CNN.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MNIST/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bvs/layers/V1.py" beforeDir="false" afterPath="$PROJECT_DIR$/bvs/layers/V1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/fit_MNIST/20200504-111730/train/events.out.tfevents.1588583850.MacBookMichael2.27896.313.v2" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,7 +81,7 @@
       <workItem from="1587449626770" duration="30451000" />
       <workItem from="1588076749144" duration="10748000" />
       <workItem from="1589892437253" duration="1316000" />
-      <workItem from="1589976931568" duration="8267000" />
+      <workItem from="1589976931568" duration="8826000" />
     </task>
     <servers />
   </component>
