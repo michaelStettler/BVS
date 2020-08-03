@@ -130,3 +130,9 @@ dmypy.json
 
 # result video folder
 bvs/video/
+
+logs/
+
+
+# other folders:
+.idea/
