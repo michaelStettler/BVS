@@ -1,4 +1,4 @@
-class NormBaseEncoding:
+class NB:
 
     def __init__(self):
-        print("NB_encoding class")
+        print("NB_encoding layer")

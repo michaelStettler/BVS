@@ -5,4 +5,4 @@ from .GaborFiltersCircle import GaborFiltersCircle
 from .MaxPoolDepths import MaxPoolDepths
 from .RBF import RBF
 from .NeuralField import NeuralField
-from .NormBaseEncoding import NormBaseEncoding
+from .NormBase import NormBase

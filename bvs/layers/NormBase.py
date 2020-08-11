@@ -3,7 +3,7 @@ from tensorflow.keras.layers import Conv2D
 import numpy as np
 
 
-class GaborFilters(tf.keras.layers.Layer):
+class NormBase(tf.keras.layers.Layer):
     def __init__(self):
         print("coucou")
 
