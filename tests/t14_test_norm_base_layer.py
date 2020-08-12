@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from bvs.layers import NormBase
 
 import tensorflow as tf
@@ -67,6 +68,7 @@ print("retained ", np.shape(pca_r)[1], " components, corresponding to ", np.sum(
 
 # transofrm pca projected data back to initial 3 axis tensor
 training = np.reshape(pca_p, (n_features, n_frames, n_training_data), order='F')
+print("shape training", np.shape(training))
 
 # ------------------------------------------------------------------------
 # -----------------           Norm Base model         --------------------
@@ -88,9 +90,9 @@ print(ref_pattern)
 print()
 
 # compute differences to reference patterns and average direction vectors
-input = training # create input array for training  # todo change training to be once neutral pose, then for n_classes
+input = training  # create input array for training  # todo change training to be once neutral pose, then for n_classes
 n_frames = 3  # number of time steps for direction vectors
-dir_tuning = np.zeros(((n_features, n_classes)))
+dir_tuning = np.zeros((n_features, n_classes))
 for c in range(n_classes):
     # print(input[:, :, c])
     # print("shape ref_pattern", np.shape(ref_pattern[:, c]))
@@ -102,3 +104,35 @@ for c in range(n_classes):
 print("shape dir tuning", np.shape(dir_tuning))
 print(dir_tuning)
 print()
+
+# -----------------               Evaluate            --------------------
+# compute response of norm-reference
+f_itp = np.zeros((n_classes, n_frames, n_classes))
+for c in range(n_classes):
+    ref_rep = np.repeat(np.expand_dims(ref_pattern[:, c], axis=1), n_frames, axis=1)  # repeat references to match size of input
+    diff = input[:, :, c] - ref_rep  # compute difference
+    diag = np.diag(diff.T.dot(diff))
+    diag_sqrt = np.sqrt(diag)
+    resp = diff.dot(np.diag(np.power(diag_sqrt, -1)))
+    f = dir_tuning.T.dot(resp)
+    f[f < 0] = 0  # keep only positive values
+    f = np.power(f, n_classes).dot(np.diag(diag_sqrt))
+    f = f / np.max(f)  # normalize
+    f_itp[:, :, c] = f
+
+print()
+print(f_itp[:, :, 0])
+print(f_itp[:, :, 1])
+
+plt.figure()
+plt.subplot(211)
+plt.plot(f_itp[0, :, 0], label="class1")
+plt.plot(f_itp[1, :, 0], label="class2")
+plt.title("class 1")
+plt.legend()
+plt.subplot(212)
+plt.plot(f_itp[0, :, 1], label="class1")
+plt.plot(f_itp[1, :, 1], label="class2")
+plt.title("class 2")
+plt.legend()
+plt.show()
