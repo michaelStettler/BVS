@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from bvs.layers import NormBase
 
 import tensorflow as tf
+# print(tf.test.is_gpu_available())
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 
