@@ -36,7 +36,7 @@ print("shape train_label", np.shape(train_label))
 
 # -----------------               Training            --------------------
 print()
-print("------------ validation ------------")
+print("------------ reference ------------")
 # compute references pattern m
 m = np.mean(train_data[train_label == 0], axis=0)
 print("m")
@@ -70,9 +70,10 @@ print(n)
 print()
 print("----------- cumulative batch computing ------------")
 batch_size = 12
+num_iter = int(n_samples/batch_size)
 m = np.zeros(n_features)
 m_cumul = 0
-for b in range(3):
+for b in range(num_iter):
     # -----------------------------------------------------------------------------
     # get batch entry
     start = b * batch_size
@@ -93,7 +94,6 @@ print()
 n_mean = np.zeros((n_category, n_features))
 n = np.zeros((n_category, n_features))
 n_cumul = np.zeros(n_category)
-num_iter = int(n_samples/batch_size)
 m_batch = np.repeat(np.expand_dims(m, axis=1), batch_size, axis=1).T
 for b in range(num_iter):
     # -----------------------------------------------------------------------------
