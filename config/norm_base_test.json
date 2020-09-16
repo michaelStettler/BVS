@@ -1,3 +1,6 @@
 {
-  "train_data": "test"
+  "train_data": "test",
+  "model": "VGG16",
+  "weights": "imagenet",
+  "v4_layer": "block3_pool"
 }
