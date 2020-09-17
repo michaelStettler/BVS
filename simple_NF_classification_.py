@@ -10,8 +10,8 @@ from tensorflow.keras.models import Model
 
 print("Simple Neural Field Classification Model")
 
-# load config
-with open('config.json') as f:
+# load model_config
+with open('model_config.json') as f:
   config = json.load(f)
 
 # load data

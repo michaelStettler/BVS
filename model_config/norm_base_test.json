@@ -2,5 +2,6 @@
   "train_data": "test",
   "model": "VGG16",
   "weights": "imagenet",
-  "v4_layer": "block3_pool"
+  "v4_layer": "block3_pool",
+  "batch_size": 12
 }
