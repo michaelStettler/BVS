@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from models.NormBase import NormBase
 
-congig_path = 'model_config'
+congig_path = 'configs'
 config_name = 'norm_base_test.json'
 config_file_path = os.path.join(congig_path, config_name)
 print("config_file_path", config_file_path)
@@ -19,7 +19,7 @@ if config['train_data'] == 'test':
     print("generate random training data")
     np.random.seed(0)
     n_data = 36
-    n_classes = 3
+    n_classes = config['n_category']
     dataX = np.random.rand(n_data, 224, 224, 3)
     dataY = np.random.randint(n_classes, size=n_data)
     # dataY = np.eye(n_classes)[dataY.reshape(-1)]   # transform to one hot encoding
@@ -34,5 +34,19 @@ print("[Data] shape dataY", np.shape(dataY))
 
 # create model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
+# norm_base.print_v4_summary()
+
 # train model
-norm_base.fit(x=dataX, y=dataY, batch_size=int(config['batch_size']))
+m, n = norm_base.fit(x=dataX, y=dataY, batch_size=config['batch_size'])
+
+print("shape m", np.shape(m))
+print("shape n", np.shape(n))
+
+
+# save_folder = os.path.join("models/saved", config['save_name'])
+# if not os.path.exists(save_folder):
+#     os.mkdir(save_folder)
+# np.save(os.path.join(save_folder, "ref_vector"), m)
+# np.save(os.path.join(save_folder, "tuning_vector"), n)
+
+
