@@ -3,5 +3,10 @@
   "model": "VGG16",
   "weights": "imagenet",
   "v4_layer": "block3_pool",
+<<<<<<< HEAD:model_config/norm_base_test.json
   "batch_size": 12
+=======
+  "ref_idx": "0",
+  "batch_size": "32"
+>>>>>>> d5ba680... started building normBase class:config/norm_base_test.json
 }
