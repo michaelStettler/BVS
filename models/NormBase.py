@@ -74,6 +74,12 @@ class NormBase:
     def print_v4_summary(self):
         print(self.v4.summary())
 
+    def set_ref_vector(self, m):
+        self.m = m
+
+    def set_tuning_vector(self, n):
+        self.n = n
+
     def fit(self, x, y, batch_size=32, shuffle=False):
         """
         The fit function allows to learn both the reference vector (m) and the tuning vector (n).
@@ -153,3 +159,24 @@ class NormBase:
                         self.n[i] = self.n_mean[i] / np.linalg.norm(self.n_mean[i])
 
         return self.m, self.n
+
+    def predict(self, x, batch_size=32):
+        num_data = np.shape(x)[0]
+        indices = np.arange(num_data)
+
+        # predict data
+        for b in tqdm(range(0, num_data, batch_size)):
+            # built batch
+            end = min(b + batch_size, num_data)
+            batch_idx = indices[b:end]
+            batch_data = x[batch_idx]
+            len_batch = len(batch_idx)  # take care of last epoch if size is not equal as the batch_size
+
+            # predict images
+            preds = self.v4.predict(batch_data)
+            preds = np.reshape(preds, (len_batch, -1))
+
+            # compute batch diff
+            batch_diff = preds - np.repeat(np.expand_dims(self.m, axis=1), len_batch, axis=1).T
+
+            # todo what to do with the tuning vector?
