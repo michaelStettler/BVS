@@ -139,15 +139,17 @@ class NormBase:
                 if i != self.ref_cat:
                     # get data for each category
                     cat_diff = batch_diff[batch_label == i]
+
                     # get num_of data
                     n_cat_diff = np.shape(cat_diff)[0]
-                    # update cumulative mean for each category
-                    self.n_mean[i] = (self.n_cumul[i] * self.n_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
-                                     (self.n_cumul[i] + n_cat_diff)
-                    # update cumulative counts
-                    self.n_cumul[i] += n_cat_diff
+                    if n_cat_diff > 0:
+                        # update cumulative mean for each category
+                        self.n_mean[i] = (self.n_cumul[i] * self.n_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
+                                         (self.n_cumul[i] + n_cat_diff)
+                        # update cumulative counts
+                        self.n_cumul[i] += n_cat_diff
 
-                    # update tuning vector n
-                    self.n[i] = self.n_mean[i] / np.linalg.norm(self.n_mean[i])
+                        # update tuning vector n
+                        self.n[i] = self.n_mean[i] / np.linalg.norm(self.n_mean[i])
 
         return self.m, self.n
