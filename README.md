@@ -28,7 +28,7 @@ performance score, but also keeping in mind the complexity of the model and
 especially the explainability of each of its components. Of course there's 
 no free lunch, and such models add lots of induces biased which will hardly
 compete with state of the art end-to-end deep learning architectures. But, 
-understanding what components may affect the system could shed light to better
+understanding how components may affect the system could shed light to better
 end-to-end system. 
 
 In such, I would like to follow the idea of a "brain score" mechanism but 
