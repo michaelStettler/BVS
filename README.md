@@ -4,7 +4,7 @@ Brain Visual System modelling toolbox
 <h2>Introduction</h2>
 The toolbox aim to model the different visual pathway of the human brain. 
 The toolbox is built to help putting different submodules as to try different 
-theoretical approches and study their implication as a system on different task; 
+theoretical approaches and study their implication as a system on different task; 
 i.e. categorization, classification etc. 
 
 The motivation lies since many early work in machine learning and computer
@@ -12,8 +12,8 @@ vision were focused on building specific features but has been faded since
 deep learning methods shows a fantastic increase of performance. Yet systems
 using deep learning methods have become treated as black box, in such, 
 we lost in expandability of the components while favoring a general 
-performance score. With this tooldbox, I hope to leverage the power and 
-scalability of common deep learning framework such as Tensorflow to implement 
+performance score. With this toolbox, I hope to leverage the power and 
+scalability of common deep learning framework such as TensorFlow to implement 
 basic theoretical component of our visual system and allow to merge/combine 
 these components with state of the art architecture and study more in depth 
 their implication. 
@@ -47,8 +47,8 @@ its bottom-up saliency map describe in the book:
 
 >Zhaoping, L., & Li, Z. (2014). Understanding vision: theory, models, and data. Oxford University Press, USA.
 
-And, you will also find find an implemntation of the norm base 
-mechanism: 
+And, you will also find an implementation of the norm base mechanism: 
+
 > Giese, M. A., & Leopold, D. A. (2005). Physiologically inspired neural model for the encoding of face spaces. Neurocomputing, 65, 93-101
 
 > Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
