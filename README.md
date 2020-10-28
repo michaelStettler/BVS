@@ -43,16 +43,21 @@ study will draw the general line to compute the a "BVS" scores.
 
 <h2>What to find</h2>
 In this repository, you will find a complete implementation of the V1 model and 
-its bottom-up saliency map describe in the book:
+its bottom-up saliency map (bvs.layers.BotUpSaliency.py) as a TensorFlow layer such 
+as describe in the book:
 
 >Zhaoping, L., & Li, Z. (2014). Understanding vision: theory, models, and data. Oxford University Press, USA.
 
-And, you will also find an implementation of the norm base mechanism: 
+An implementation of the norm base mechanism (models.NormBase.py): 
 
-> Giese, M. A., & Leopold, D. A. (2005). Physiologically inspired neural model for the encoding of face spaces. Neurocomputing, 65, 93-101
+>Giese, M. A., & Leopold, D. A. (2005). Physiologically inspired neural model for the encoding of face spaces. Neurocomputing, 65, 93-101
 
-> Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
+>Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
 
+And a face-selective index (FSI) unit extraction as explain in the methods of:
+
+>Raman, R., & Hosoya, H. (2020). Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex. Communications biology, 3(1), 1-14.
+ 
 <h2>Acknowledgments</h2>
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
 model and the very interesting discussion about what it means to have a V1 

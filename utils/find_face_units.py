@@ -6,13 +6,21 @@ from utils.load_data import load_data
 
 
 def found_face_units(model, config):
+    """
+    Implement the method "Face-selective population estimation" from the paper :
+    ""Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex
+
+    :param model:
+    :param config:
+    :return:
+    """
     x, y = load_data(config)
 
     x_face = x[:50]
     x_object = x[50:]
     print("shape x", np.shape(x))
     FSI_list = []
-    for layer in model.layers[:2]:
+    for layer in model.layers:
         if "conv" in layer.name:
             print("layer:", layer.name)
 
@@ -29,7 +37,7 @@ def found_face_units(model, config):
 
             # compute FSI
             FSI = (r_face - r_object) / (r_face + r_object)
-            
+
             # set FSI to 1 or -1 in function of R_face and R_object
             for i in range(len(FSI)):
                 if r_face[i] > 0 > r_object[i]:
@@ -37,15 +45,19 @@ def found_face_units(model, config):
                 elif r_face[i] < 0 < r_object[i]:
                     FSI[i] = -1
 
-            FSI_list.append(FSI)
+            # save index and values of face units
+            idx = np.arange(len(FSI))
+            FSI_idx = idx[FSI > 1/3]
+            FSI_val = FSI[FSI_idx]
+            FSI_list.append([FSI_idx, FSI_val])
 
-    print("Shape FSI_list", np.shape(FSI_list))
+    return FSI_list
 
 
 if __name__ == "__main__":
     config_file_path = 'configs/face_units/find_face_units_test.json'
 
-    np.set_printoptions(precision=3, suppress=True, linewidth=200)
+    np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
     # -----------------------------------------------------------------
     # limit GPU memory as it appear windows have an issue with this, from:
@@ -71,4 +83,11 @@ if __name__ == "__main__":
     # print(model.summary())
 
     # compute face units
-    found_face_units(model, config)
+    face_units = found_face_units(model, config)
+    print("Shape face_units", np.shape(face_units))
+
+    for f, face_unit in enumerate(face_units):
+        num_face_units = len(face_unit[0])
+        if num_face_units > 0:
+            print(f, "num face units:", num_face_units)
+            print(face_unit[0])
