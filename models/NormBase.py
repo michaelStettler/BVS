@@ -8,14 +8,14 @@ class NormBase:
     NormBase class define the functions to train a norm base mechanism with a front end extracting features
 
     r:= reference vector (n_features, )
-    v:= tuning vector (n_category, n_features)
+    t:= tuning vector (n_category, n_features)
 
     with
     n_features:= height * width * channels of the input_shape
 
     """
 
-    def __init__(self, config, input_shape):
+    def __init__(self, config, input_shape, nu=2):
         """
         The init function is responsible to declare the front end model of the norm base mechanism declared in the
         config file
@@ -40,6 +40,7 @@ class NormBase:
         # -----------------------------------------------------------------
 
         # declare parameters
+        self.nu = nu
         self.n_category = config['n_category']
         self.ref_cat = config['ref_category']
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
@@ -53,9 +54,9 @@ class NormBase:
         shape_v4 = np.shape(self.v4.layers[-1].output)
         self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
         self.r = np.zeros(self.n_features)
-        self.v = np.zeros((self.n_category, self.n_features))
-        self.v_cumul = np.zeros(self.n_category)
-        self.v_mean = np.zeros((self.n_category, self.n_features))
+        self.t = np.zeros((self.n_category, self.n_features))
+        self.t_cumul = np.zeros(self.n_category)
+        self.t_mean = np.zeros((self.n_category, self.n_features))
         print("[INIT] n_features:", self.n_features)
         print()
 
@@ -77,8 +78,8 @@ class NormBase:
     def set_ref_vector(self, r):
         self.r = r
 
-    def set_tuning_vector(self, v):
-        self.v = v
+    def set_tuning_vector(self, t):
+        self.t = t
 
     def fit(self, x, y, batch_size=32, shuffle=False):
         """
@@ -95,7 +96,7 @@ class NormBase:
         :param y: label (n_samples, )
         :param batch_size:
         :param shuffle:
-        :return: r, v
+        :return: r, t
         """
         num_data = np.shape(x)[0]
         indices = np.arange(num_data)
@@ -150,15 +151,15 @@ class NormBase:
                     n_cat_diff = np.shape(cat_diff)[0]
                     if n_cat_diff > 0:
                         # update cumulative mean for each category
-                        self.v_mean[i] = (self.v_cumul[i] * self.v_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
-                                         (self.v_cumul[i] + n_cat_diff)
+                        self.t_mean[i] = (self.t_cumul[i] * self.t_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
+                                         (self.t_cumul[i] + n_cat_diff)
                         # update cumulative counts
-                        self.v_cumul[i] += n_cat_diff
+                        self.t_cumul[i] += n_cat_diff
 
                         # update tuning vector n
-                        self.v[i] = self.v_mean[i] / np.linalg.norm(self.v_mean[i])
+                        self.t[i] = self.t_mean[i] / np.linalg.norm(self.t_mean[i])
 
-        return self.r, self.v
+        return self.r, self.t
 
     def predict(self, x, batch_size=32):
         num_data = np.shape(x)[0]
@@ -180,14 +181,12 @@ class NormBase:
 
             # compute batch diff
             batch_diff = preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
-            print("shape batch_diff", np.shape(batch_diff))
 
             # compute norm-reference neurons
-            for i in range(self.n_category):
-                print("i", i)
-                # todo -> look line 257 of matlab script "train_model_seq.m"
-                # ZCARR (n_features, frames, n_category)
-                # ZC_tmp (n_features, frames) => batch_diff (batch_size, n_features)
-                ZCnm = 0 # todo!!!!! and find a name...
+            v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
+            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+            f[f < 0] = 0
+            f = np.power(f, self.nu)
+            it_resp[batch_idx] = np.diag(v)@ f.T
 
         return it_resp
