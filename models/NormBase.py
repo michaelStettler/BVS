@@ -22,6 +22,7 @@ class NormBase:
 
         :param config: JSON file
         :param input_shape: Tuple with the input size of the model (height, width, channels)
+        :param nu: tuning width
         """
         # -----------------------------------------------------------------
         # limit GPU memory as it appear windows have an issue with this, from:

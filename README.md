@@ -53,7 +53,7 @@ And, you will also find an implementation of the norm base mechanism:
 
 > Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
 
-<h2>Acknowledgment</h2>
+<h2>Acknowledgments</h2>
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
 model and the very interesting discussion about what it means to have a V1 
 area responsible to compute a bottom-up saliency map.  

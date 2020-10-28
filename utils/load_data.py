@@ -28,7 +28,7 @@ def load_data(config, train=True, sort_by=None):
         # keep only the 100% conditions
         num_data = len(df.index)
         print("[DATA] Found {} images".format(num_data))
-        print(df.head())
+        # print(df.head())
 
         #  declare x and y
         x = np.zeros((num_data, 224, 224, 3))
@@ -55,6 +55,54 @@ def load_data(config, train=True, sort_by=None):
                 category = 2
             elif row['category'] == "LipSmacking":
                 category = 3
+            else:
+                warnings.warn("WARNING! image: '{}' category '{}' seems not to exists!".format(row['image'], row['category']))
+            y[idx] = category
+
+            idx += 1
+    elif config['train_data'] == 'FEI':
+        # get csv
+        df = pd.read_csv(config['csv'])
+        num_data = len(df.index)
+        print("[DATA] Found {} images".format(num_data))
+        # print(df.head())
+
+        #  declare x and y
+        x = np.zeros((num_data, 224, 224, 3))
+        y = np.zeros(num_data)
+
+        # create training and label data
+        idx = 0
+        for index, row in tqdm(df.iterrows()):
+            # load img
+            im = cv2.imread(os.path.join(row['path'], row['image']))
+            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+            # resize image
+            height, width, depths = im.shape
+            if height > width:
+                ratio = height / 224
+                dim = (int(width/ratio), 224)
+            else:
+                ratio = width / 224
+                dim = (224, int(height/ratio))
+            im = cv2.resize(im, dim)
+            # pad image
+            height, width, depths = im.shape
+            img = np.zeros((224, 224, 3))
+            if height > width:
+                pad = int((224 - width) / 2)
+                img[:, pad:pad+width, :] = im
+            else:
+                pad = int((224 - height) / 2)
+                img[pad:pad+height, :, :] = im
+            x[idx, :, :, :] = img
+
+            category = -1
+            if row['category'] == "face":
+                category = 0
+            elif row['category'] == "non_face":
+                category = 1
             else:
                 warnings.warn("WARNING! image: '{}' category '{}' seems not to exists!".format(row['image'], row['category']))
             y[idx] = category
