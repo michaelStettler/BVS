@@ -44,6 +44,7 @@ study will draw the general line to compute the a "BVS" scores.
 <h2>What to find</h2>
 In this repository, you will find a complete implementation of the V1 model and 
 its bottom-up saliency map describe in the book:
+
 >Zhaoping, L., & Li, Z. (2014). Understanding vision: theory, models, and data. Oxford University Press, USA.
 
 And, you will also find find an implemntation of the norm base 
