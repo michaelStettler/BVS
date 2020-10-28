@@ -6,7 +6,7 @@ import warnings
 from tqdm import tqdm
 
 
-def load_data(config, train=True):
+def load_data(config, train=True, sort_by=None):
     if config['train_data'] == 'test':
         print("[DATA] Generate random training data")
         np.random.seed(0)
@@ -21,6 +21,9 @@ def load_data(config, train=True):
             df = pd.read_csv(config['csv_train'])
         else:
             df = pd.read_csv(config['csv_val'])
+
+        if sort_by is not None:
+            df = df.sort_values(by=sort_by)
 
         # keep only the 100% conditions
         num_data = len(df.index)

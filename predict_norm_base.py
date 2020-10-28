@@ -15,7 +15,7 @@ with open(config_file_path) as json_file:
     config = json.load(json_file)
 
 # load data
-x, y = load_data(config, train=False)
+x, y = load_data(config, train=False, sort_by=['image'])
 print("[Data] -- Data loaded --")
 print("[Data] shape dataX", np.shape(x))
 print("[Data] shape dataY", np.shape(y))
@@ -31,3 +31,7 @@ norm_base.set_ref_vector(m)
 norm_base.set_tuning_vector(n)
 print("[MODEL] Set ref vector", np.shape(m))
 print("[MODEL] Set tuning vector", np.shape(n))
+
+# predict tuning vector
+n = norm_base.predict(x)
+print("shape n", np.shape(n))

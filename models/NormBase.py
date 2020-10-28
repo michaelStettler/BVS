@@ -7,8 +7,8 @@ class NormBase:
     """
     NormBase class define the functions to train a norm base mechanism with a front end extracting features
 
-    m:= reference vector (n_features, )
-    n:= tuning vector (n_category, n_features)
+    r:= reference vector (n_features, )
+    v:= tuning vector (n_category, n_features)
 
     with
     n_features:= height * width * channels of the input_shape
@@ -52,10 +52,10 @@ class NormBase:
 
         shape_v4 = np.shape(self.v4.layers[-1].output)
         self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
-        self.m = np.zeros(self.n_features)
-        self.n = np.zeros((self.n_category, self.n_features))
-        self.n_cumul = np.zeros(self.n_category)
-        self.n_mean = np.zeros((self.n_category, self.n_features))
+        self.r = np.zeros(self.n_features)
+        self.v = np.zeros((self.n_category, self.n_features))
+        self.v_cumul = np.zeros(self.n_category)
+        self.v_mean = np.zeros((self.n_category, self.n_features))
         print("[INIT] n_features:", self.n_features)
         print()
 
@@ -74,11 +74,11 @@ class NormBase:
     def print_v4_summary(self):
         print(self.v4.summary())
 
-    def set_ref_vector(self, m):
-        self.m = m
+    def set_ref_vector(self, r):
+        self.r = r
 
-    def set_tuning_vector(self, n):
-        self.n = n
+    def set_tuning_vector(self, v):
+        self.v = v
 
     def fit(self, x, y, batch_size=32, shuffle=False):
         """
@@ -95,7 +95,7 @@ class NormBase:
         :param y: label (n_samples, )
         :param batch_size:
         :param shuffle:
-        :return: m, n
+        :return: r, v
         """
         num_data = np.shape(x)[0]
         indices = np.arange(num_data)
@@ -120,7 +120,7 @@ class NormBase:
                 preds = np.reshape(preds, (n_ref, -1))
 
                 # update ref_vector m
-                self.m = (self.ref_cumul * self.m + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
+                self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
                 self.ref_cumul += n_ref
 
         # learn tuning direction
@@ -138,7 +138,7 @@ class NormBase:
             preds = np.reshape(preds, (len_batch, -1))
 
             # compute batch diff
-            batch_diff = preds - np.repeat(np.expand_dims(self.m, axis=1), len_batch, axis=1).T
+            batch_diff = preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
 
             # compute direction tuning for each category
             for i in range(self.n_category):
@@ -150,19 +150,21 @@ class NormBase:
                     n_cat_diff = np.shape(cat_diff)[0]
                     if n_cat_diff > 0:
                         # update cumulative mean for each category
-                        self.n_mean[i] = (self.n_cumul[i] * self.n_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
-                                         (self.n_cumul[i] + n_cat_diff)
+                        self.v_mean[i] = (self.v_cumul[i] * self.v_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
+                                         (self.v_cumul[i] + n_cat_diff)
                         # update cumulative counts
-                        self.n_cumul[i] += n_cat_diff
+                        self.v_cumul[i] += n_cat_diff
 
                         # update tuning vector n
-                        self.n[i] = self.n_mean[i] / np.linalg.norm(self.n_mean[i])
+                        self.v[i] = self.v_mean[i] / np.linalg.norm(self.v_mean[i])
 
-        return self.m, self.n
+        return self.r, self.v
 
     def predict(self, x, batch_size=32):
         num_data = np.shape(x)[0]
         indices = np.arange(num_data)
+
+        it_resp = np.zeros((num_data, self.n_category))
 
         # predict data
         for b in tqdm(range(0, num_data, batch_size)):
@@ -177,6 +179,15 @@ class NormBase:
             preds = np.reshape(preds, (len_batch, -1))
 
             # compute batch diff
-            batch_diff = preds - np.repeat(np.expand_dims(self.m, axis=1), len_batch, axis=1).T
+            batch_diff = preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
+            print("shape batch_diff", np.shape(batch_diff))
 
-            # todo what to do with the tuning vector?
+            # compute norm-reference neurons
+            for i in range(self.n_category):
+                print("i", i)
+                # todo -> look line 257 of matlab script "train_model_seq.m"
+                # ZCARR (n_features, frames, n_category)
+                # ZC_tmp (n_features, frames) => batch_diff (batch_size, n_features)
+                ZCnm = 0 # todo!!!!! and find a name...
+
+        return it_resp
