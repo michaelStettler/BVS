@@ -4,7 +4,8 @@ import numpy as np
 
 np.random.seed(0)
 
-path = 'D:/Dataset/FEI'
+# path = 'D:/Dataset/FEI'  # windows
+path = '/Users/michaelstettler/PycharmProjects/BVS/data/FEI'  # personal mac
 csv_name = 'FEI_face_units.csv'
 
 df = pd.DataFrame(columns=("image", "category", "path"))

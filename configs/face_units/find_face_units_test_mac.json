@@ -3,6 +3,6 @@
   "include_top": true,
   "weights": "imagenet",
   "train_data": "FEI",
-  "csv": "D:/Dataset/FEI/FEI_face_units.csv",
+  "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/FEI_face_units.csv",
   "save_path": "models/saved/face_units/"
 }

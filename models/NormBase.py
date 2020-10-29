@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
+from utils.load_model import load_model
+
 
 class NormBase:
     """
@@ -63,9 +65,7 @@ class NormBase:
 
     def _load_model(self, config, input_shape):
         if config['model'] == 'VGG19':
-            model = tf.keras.applications.VGG19(include_top=False,
-                                                     weights=config["weights"],
-                                                     input_shape=input_shape)
+            model = load_model(config, input_shape)
             v4 = tf.keras.Model(inputs=model.input,
                                      outputs=model.get_layer(config['v4_layer']).output)
         else:

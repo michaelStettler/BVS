@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from utils.load_data import load_data
+from utils.load_model import load_model
 
 
 def found_face_units(model, config):
@@ -51,43 +52,34 @@ def found_face_units(model, config):
             FSI_val = FSI[FSI_idx]
             FSI_list.append([FSI_idx, FSI_val])
 
-    return FSI_list
+    return  np.array(FSI_list)
 
 
 if __name__ == "__main__":
-    config_file_path = 'configs/face_units/find_face_units_test.json'
+    import os
+    config_file_path = 'configs/face_units/find_face_units_test_mac.json'
+    save = True
 
     np.set_printoptions(precision=3, suppress=True, linewidth=150)
-
-    # -----------------------------------------------------------------
-    # limit GPU memory as it appear windows have an issue with this, from:
-    # https://forums.developer.nvidia.com/t/could-not-create-cudnn-handle-cudnn-status-alloc-failed/108261/3
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print(e)
-    # -----------------------------------------------------------------
 
     # load find_face config
     with open(config_file_path) as json_file:
         config = json.load(json_file)
 
-    model = tf.keras.applications.VGG19(include_top=True, weights='imagenet')
+    model = load_model(config)
     # print(model.summary())
 
     # compute face units
     face_units = found_face_units(model, config)
     print("Shape face_units", np.shape(face_units))
 
+    # save face units
+    if save:
+        np.save(os.path.join(config['save_path'], config['model']), face_units)
+
     for f, face_unit in enumerate(face_units):
         num_face_units = len(face_unit[0])
         if num_face_units > 0:
             print(f, "num face units:", num_face_units)
             print(face_unit[0])
+
