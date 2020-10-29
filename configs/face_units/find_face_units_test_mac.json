@@ -3,6 +3,9 @@
   "include_top": true,
   "weights": "imagenet",
   "train_data": "FEI",
+  "lmk_path":"/Users/michaelstettler/PycharmProjects/BVS/data/FEI/landmark_files",
+  "orig_img_path":"/Users/michaelstettler/PycharmProjects/BVS/data/FEI/face_images/originalimages",
+  "front_view": "view_11.mat",
   "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/FEI_face_units.csv",
   "save_path": "models/saved/face_units/"
 }
