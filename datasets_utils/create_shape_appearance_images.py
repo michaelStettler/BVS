@@ -2,11 +2,14 @@ import os
 import json
 import numpy as np
 import scipy.io
-import cv2
 import re
-from sklearn.decomposition import PCA
-from scipy.spatial import Delaunay
+import cv2
 import matplotlib.pyplot as plt
+
+from sklearn.decomposition import PCA
+from tqdm import tqdm
+
+from datasets_utils.warp_image import warp_image
 
 """
 run: python3 -m datasets_utils.create_shape_appearance_images
@@ -14,13 +17,13 @@ run: python3 -m datasets_utils.create_shape_appearance_images
 
 np.set_printoptions(precision=3, suppress=True, linewidth=200)
 
-config_file_path = 'configs/face_units/find_face_units_test_mac.json'
+config_file_path = 'configs/face_units/find_face_units_test.json'
 
 # load find_face config
 with open(config_file_path) as json_file:
     config = json.load(json_file)
 
-# get all front view .mat file
+# get front view .mat file
 mat = scipy.io.loadmat(os.path.join(config['lmk_path'], config['front_view']))
 # print(mat.keys())
 lmk_pos = mat['FEILandmarks']
@@ -42,38 +45,59 @@ view = re.split('[._]', config['front_view'])[1]
 #     cv2.waitKey(0)  # waits until a key is pressed
 #     cv2.destroyAllWindows()  # destroys the window showing image
 
+# -------------------------------------------------------------------------------------
+#                       construct shape features
 # perform PCA
 x = np.reshape(lmk_pos, (n_lmk * n_channel, n_particpants)).T
-pca = PCA(n_components=25)
-x_new = pca.fit_transform(x)
+pca_shape = PCA(n_components=25)
+# get 25 first face feature vectors
+pca_shape.fit(x)
 # print(pca.explained_variance_ratio_[:25])
 # print(pca.singular_values_[:25])
-print("shape x_new", np.shape(x_new))
 
+# -------------------------------------------------------------------------------------
+#                       normalize image
 # get mean_landmarks
 mean_lmk = np.mean(lmk_pos, axis=2)
-print("shape mean_lmk", np.shape(mean_lmk))
 
-# ------------------------ WARP Image ----------------------------
-# https://www.learnopencv.com/face-morph-using-opencv-cpp-python/
+# # warp test image
+# img = cv2.imread(os.path.join(config['orig_img_path'], '1-11.jpg'))
+# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+# lmks = lmk_pos[:, :, 0]
+# warp_image(img, lmks, mean_lmk, do_plot=True)
 
-# triangulate mean_lmk
-tri_mean = Delaunay(mean_lmk)
+# warp all images
+norm_images = []
+for p in tqdm(range(n_particpants)):
+    img = cv2.imread(os.path.join(config['orig_img_path'], '{}-{}.jpg'.format(p+1, view)))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    lmks = lmk_pos[:, :, p]
+    img = warp_image(img, lmks, mean_lmk, do_plot=False)
+    norm_images.append(img)
 
-# triangulate image
-p = 0
-lmks = lmk_pos[:, :, p]
-print("shape lmks", np.shape(lmks))
+print("shape images", np.shape(norm_images))
+im_width = np.shape(norm_images)[2]
+im_height = np.shape(norm_images)[1]
+im_channel = np.shape(norm_images)[3]
 
-tri = Delaunay(lmks)
+# -------------------------------------------------------------------------------------
+#                       construct appearance features
+# flatten feature space
+norm_images = np.reshape(norm_images, (n_particpants, -1))
+print("shape images", np.shape(norm_images))
+# perform PCA on the normalized images
+pca_appear = PCA(n_components=25)
+pca_appear.fit(norm_images)
 
-# plot
-# img = plt.imread(os.path.join(config['orig_img_path'], '1-11.jpg'))
-img = cv2.imread(os.path.join(config['orig_img_path'],  '1-11.jpg'))
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-for l in range(n_lmk):
-        img[int(lmks[l, 1]), int(lmks[l, 0]), :] = [0, 255, 255]
-fig, ax = plt.subplots()
-ax.imshow(img)
-ax.triplot(lmks[:,0], lmks[:,1], tri.simplices)
-plt.show()
+# -------------------------------------------------------------------------------------
+#                       generate
+# test random feature
+rand_vect = np.zeros(50)
+rand_vect[0] = 3
+# transform vector back to original dimension
+gen_shape = pca_shape.inverse_transform(rand_vect[:25])
+gen_shape = np.reshape(gen_shape, (n_lmk, n_channel))
+print("shape gen_shape", np.shape(gen_shape))
+gen_appear = pca_appear.inverse_transform(rand_vect[25:])
+gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel))
+print("shape gen_appear", np.shape(gen_appear))
