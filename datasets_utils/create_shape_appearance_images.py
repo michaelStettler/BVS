@@ -52,16 +52,20 @@ print("min max lmk_pos[:, 1]", np.amin(lmk_pos[:, 1]), np.amax(lmk_pos[:, 1]))
 #                       construct shape features
 print("[Shape] Start computing shape features")
 x_shape = np.reshape(lmk_pos, (n_particpants, -1))
-# normalize each feature
-# todo check what pre-processing to do before PCA (center data, norm, standardize?)
-x_shape_mean = np.linalg.norm(x_shape, axis=0)
-# x_shape_normalized = x_shape / np.repeat(np.expand_dims(x_shape_norm, axis=0), n_particpants, axis=0)
-x_shape_normalized = x_shape - np.repeat(np.expand_dims(x_shape_mean, axis=0), n_particpants, axis=0)
-print("[Shape] Feature normalized")
+# standardize features
+x_shape_mean = np.mean(x_shape, axis=0)
+x_shape_std = np.std(x_shape, axis=0)
+x_shape_standardize = (x_shape - x_shape_mean)/x_shape_std
+print("min max x_shape_standardize", np.amin(x_shape_standardize), np.amax(x_shape_standardize))
+x_shape_min = np.amin(x_shape, axis=0)
+x_shape_max = np.amax(x_shape, axis=0)
+x_shape_normalized = (x_shape - x_shape_min) / (x_shape_max - x_shape_min)
+print("min max x_shape_normalized", np.amin(x_shape_normalized), np.amax(x_shape_normalized))
+print("[Shape] Feature standardized")
 # perform PCA
 pca_shape = PCA(n_components=25)
 # get 25 first face feature vectors
-pca_shape.fit(x_shape_normalized)
+pca_shape.fit(x_shape_standardize)
 print("[Shape] PCA explained variance", pca_shape.explained_variance_ratio_[:5])
 print("[Shape] PCA singular values", pca_shape.singular_values_[:5])
 print("[Shape] Finished computing shape features")
@@ -102,45 +106,54 @@ print()
 print("[Appearance] Start computing appearance features")
 # flatten feature space
 x_appear = np.reshape(norm_images, (n_particpants, -1))
+x_appear_mean = np.mean(x_appear, axis=0)
+x_appear_std = np.std(x_appear, axis=0)
+x_appear_standardize = (x_appear - x_appear_mean)/x_appear_std
+print("min max x_appear_standardize", np.amin(x_appear_standardize), np.amax(x_appear_standardize))
 # normalize features
+x_appear_min = np.amin(x_appear, axis=0)
+x_appear_max = np.amax(x_appear, axis=0)
+x_appear_normalized = (x_appear - x_appear_min) / (x_appear_max - x_appear_min)
+print("min max x_appear_normalized", np.amin(x_appear_normalized), np.amax(x_appear_normalized))
 # x_appear_norm = np.linalg.norm(x_appear, axis=0)
 # x_appear_normalized = x_appear / np.repeat(np.expand_dims(x_appear_norm, axis=0), n_particpants, axis=0)
 # print("shape images", np.shape(norm_images))
 # perform PCA on the normalized images
 pca_appear = PCA(n_components=25)
-pca_appear.fit(x_appear)
+pca_appear.fit(x_appear_standardize)
 print("[Appearance] PCA explained variance", pca_appear.explained_variance_ratio_[:5])
 print("[Appearance] PCA singular values", pca_appear.singular_values_[:5])
 print("[Appearance] Finished computing appearance features")
 print()
-
-# -------------------------------------------------------------------------------------
-#                       generate
-# test random feature
-rand_vect = np.zeros(50)
-
-# for i in shape_test:
-for i in [-0.2, 0, 0.2]:
-    print("i", i)
-    rand_vect[0] = i
-    # rand_vect[25] = i
-
-    # compute shape vector
-    shape_vect = rand_vect[:25] * pca_shape.singular_values_
-    # transform vector back to original dimension
-    gen_shape = pca_shape.inverse_transform(shape_vect)
-    gen_shape = gen_shape * x_shape_norm
-    gen_shape = np.reshape(gen_shape, (n_lmk, n_channel))
-
-    # compute appearance vector
-    appear_vect = rand_vect[25:] * pca_appear.singular_values_
-    gen_appear = pca_appear.inverse_transform(appear_vect)
-    # gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel)).astype(np.uint8)
-    gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel))
-
-    # built image
-    img = warp_image(gen_appear, mean_lmk, gen_shape)
-
-    plt.figure()
-    plt.imshow(img)
-plt.show()
+#
+# # -------------------------------------------------------------------------------------
+# #                       generate
+# # test random feature
+# rand_vect = np.zeros(50)
+#
+# # for i in shape_test:
+# for i in [-0.2, 0, 0.2]:
+#     print("i", i)
+#     rand_vect[0] = i
+#     # rand_vect[25] = i
+#
+#     # compute shape vector
+#     shape_vect = rand_vect[:25] * pca_shape.singular_values_
+#     # shape_vect = rand_vect[:25]
+#     # transform vector back to original dimension
+#     gen_shape = pca_shape.inverse_transform(shape_vect)
+#     gen_shape = gen_shape * x_shape_std + x_shape_mean
+#     gen_shape = np.reshape(gen_shape, (n_lmk, n_channel))
+#
+#     # compute appearance vector
+#     appear_vect = rand_vect[25:] * pca_appear.singular_values_
+#     gen_appear = pca_appear.inverse_transform(appear_vect)
+#     # gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel)).astype(np.uint8)
+#     gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel))
+#
+#     # built image
+#     img = warp_image(gen_appear, mean_lmk, gen_shape)
+#
+#     plt.figure()
+#     plt.imshow(img)
+# plt.show()
