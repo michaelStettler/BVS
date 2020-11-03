@@ -24,10 +24,10 @@ def warp_image(img, src_lmk, dst_lmk, do_plot=False):
 
     # extend landmarks with the border landmarks
     lmks_extended = np.concatenate((src_lmk, lmk_img))
-    lmk_mean_extended = np.concatenate((dst_lmk, lmk_img))
+    lmk_dst_extended = np.concatenate((dst_lmk, lmk_img))
 
     # triangulate mean_lmk
-    tri = Delaunay(lmk_mean_extended)
+    tri = Delaunay(lmk_dst_extended)
 
     # create warp image
     warp_img = 255 * np.ones(img.shape, dtype=img.dtype)
@@ -37,13 +37,13 @@ def warp_image(img, src_lmk, dst_lmk, do_plot=False):
         fig, ax = plt.subplots()
         ax.imshow(img)
         ax.triplot(lmks_extended[:, 0], lmks_extended[:, 1], tri.simplices)
-        # ax.triplot(lmk_mean_extended[:,0], lmk_mean_extended[:,1], tri_mean.simplices)
+        # ax.triplot(lmk_dst_extended[:,0], lmk_dst_extended[:,1], tri_mean.simplices)
 
     # compute affine transform for every triangle pair
     for t in range(len(tri.simplices)):
         # built triangles
         src_tri = np.array(lmks_extended[tri.simplices[t]]).astype(np.float32)
-        dst_tri = np.array(lmk_mean_extended[tri.simplices[t]]).astype(np.float32)
+        dst_tri = np.array(lmk_dst_extended[tri.simplices[t]]).astype(np.float32)
 
         # create bounding box around the triangle
         r1 = cv2.boundingRect(src_tri)
@@ -80,6 +80,5 @@ def warp_image(img, src_lmk, dst_lmk, do_plot=False):
     if do_plot:
         plt.figure()
         plt.imshow(warp_img)
-        plt.show()
 
     return np.array(warp_img)

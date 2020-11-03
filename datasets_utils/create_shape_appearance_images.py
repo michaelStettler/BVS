@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
-from datasets_utils.warp_image import warp_image
+from utils.warp_image import warp_image
 
 """
 run: python3 -m datasets_utils.create_shape_appearance_images
@@ -47,22 +47,28 @@ view = re.split('[._]', config['front_view'])[1]
 
 # -------------------------------------------------------------------------------------
 #                       construct shape features
+print("[Shape] Start computing shape features")
 # perform PCA
-x = np.reshape(lmk_pos, (n_lmk * n_channel, n_particpants)).T
+x = np.reshape(lmk_pos, (-1, n_particpants)).T
+print("[Shape] shape x", np.shape(x))
 pca_shape = PCA(n_components=25)
 # get 25 first face feature vectors
 pca_shape.fit(x)
 # print(pca.explained_variance_ratio_[:25])
 # print(pca.singular_values_[:25])
+print("[Shape] Finished computing shape features")
+print()
 
 # -------------------------------------------------------------------------------------
 #                       normalize image
+print("[Norm Images] Start normalizing images")
 # get mean_landmarks
 mean_lmk = np.mean(lmk_pos, axis=2)
 
 # # warp test image
-# img = cv2.imread(os.path.join(config['orig_img_path'], '1-11.jpg'))
-# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+img = cv2.imread(os.path.join(config['orig_img_path'], '1-11.jpg'))
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+print("[Norm Images] type img:", img.dtype)
 # lmks = lmk_pos[:, :, 0]
 # warp_image(img, lmks, mean_lmk, do_plot=True)
 
@@ -79,25 +85,37 @@ print("shape images", np.shape(norm_images))
 im_width = np.shape(norm_images)[2]
 im_height = np.shape(norm_images)[1]
 im_channel = np.shape(norm_images)[3]
+print("[Norm Images] Finished warping all images")
+print()
 
 # -------------------------------------------------------------------------------------
 #                       construct appearance features
+print("[Appearance] Start computing appearance features")
 # flatten feature space
 norm_images = np.reshape(norm_images, (n_particpants, -1))
 print("shape images", np.shape(norm_images))
 # perform PCA on the normalized images
 pca_appear = PCA(n_components=25)
 pca_appear.fit(norm_images)
+print("[Appearance] Finished computing appearance features")
+print()
 
 # -------------------------------------------------------------------------------------
 #                       generate
 # test random feature
 rand_vect = np.zeros(50)
-rand_vect[0] = 3
-# transform vector back to original dimension
-gen_shape = pca_shape.inverse_transform(rand_vect[:25])
-gen_shape = np.reshape(gen_shape, (n_lmk, n_channel))
-print("shape gen_shape", np.shape(gen_shape))
-gen_appear = pca_appear.inverse_transform(rand_vect[25:])
-gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel))
-print("shape gen_appear", np.shape(gen_appear))
+shape_test = [-3, 0, 3]
+for i in shape_test:
+    rand_vect[0] = i
+    # transform vector back to original dimension
+    gen_shape = pca_shape.inverse_transform(rand_vect[:25])
+    # gen_shape = np.reshape(gen_shape, (n_lmk, n_channel))
+    gen_shape = np.reshape(gen_shape, (n_channel, n_lmk)).T
+    print("gen_shape", np.shape(gen_shape))
+    gen_appear = pca_appear.inverse_transform(rand_vect[25:])
+    gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel)).astype(np.uint8)
+
+    # built image
+    img = warp_image(gen_appear, mean_lmk, gen_shape, do_plot=True)
+
+plt.show()
