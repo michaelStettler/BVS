@@ -6,7 +6,8 @@ from utils.load_data import load_data
 from models.NormBase import NormBase
 
 congig_path = 'configs/norm_base_config'
-config_name = 'norm_base_monkey_test.json'
+# config_name = 'norm_base_monkey_test.json'
+config_name = 'norm_base_affectNet_sub8_4000.json'
 config_file_path = os.path.join(congig_path, config_name)
 print("config_file_path", config_file_path)
 
@@ -15,17 +16,15 @@ with open(config_file_path) as json_file:
     config = json.load(json_file)
 
 # load data
-x, y = load_data(config)
+data = load_data(config)
 print("[Data] -- Data loaded --")
-print("[Data] shape dataX", np.shape(x))
-print("[Data] shape dataY", np.shape(y))
 
 # create model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
 # norm_base.print_v4_summary()
 
 # train model
-m, n = norm_base.fit(x=x, y=y, batch_size=config['batch_size'])
+m, n = norm_base.fit(data, batch_size=config['batch_size'])
 
 print("shape m", np.shape(m))
 print("shape n", np.shape(n))

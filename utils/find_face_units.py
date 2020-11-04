@@ -15,7 +15,9 @@ def found_face_units(model, config):
     :param config:
     :return:
     """
-    x, y = load_data(config)
+    data = load_data(config)
+    x = data[0]
+    y = data[1]
 
     x_face = x[:50]
     x_object = x[50:]
