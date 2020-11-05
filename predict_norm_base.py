@@ -7,7 +7,8 @@ from models.NormBase import NormBase
 import matplotlib.pyplot as plt
 
 congig_path = 'configs/norm_base_config'
-config_name = 'norm_base_monkey_test.json'
+# config_name = 'norm_base_monkey_test.json'
+config_name = 'norm_base_affectNet_sub8_4000.json'
 config_file_path = os.path.join(congig_path, config_name)
 print("config_file_path", config_file_path)
 

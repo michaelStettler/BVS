@@ -4,6 +4,7 @@ import tensorflow as tf
 from tqdm import tqdm
 
 from utils.load_model import load_model
+from utils.data_generator import DataGen
 
 
 class NormBase:
@@ -61,7 +62,10 @@ class NormBase:
         self.t = np.zeros((self.n_category, self.n_features))
         self.t_cumul = np.zeros(self.n_category)
         self.t_mean = np.zeros((self.n_category, self.n_features))
+        threshold_divided = 50
+        self.threshold = self.n_features / threshold_divided
         print("[INIT] n_features:", self.n_features)
+        print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
         print()
 
     def _load_model(self, config, input_shape):
@@ -95,7 +99,7 @@ class NormBase:
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
             self.ref_cumul += n_ref
 
-    def _update_dir_tuning(self, data, label):
+    def _get_reference_pred(self, data):
         len_batch = len(data)  # take care of last epoch if size is not equal as the batch_size
 
         # predict images
@@ -103,7 +107,11 @@ class NormBase:
         preds = np.reshape(preds, (len_batch, -1))
 
         # compute batch diff
-        batch_diff = preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
+        return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
+
+    def _update_dir_tuning(self, data, label):
+        # compute batch diff
+        batch_diff = self._get_reference_pred(data)
 
         # compute direction tuning for each category
         for i in range(self.n_category):
@@ -113,6 +121,7 @@ class NormBase:
 
                 # get num_of data
                 n_cat_diff = np.shape(cat_diff)[0]
+
                 if n_cat_diff > 0:
                     # update cumulative mean for each category
                     self.t_mean[i] = (self.t_cumul[i] * self.t_mean[i] + n_cat_diff * np.mean(cat_diff, axis=0)) / \
@@ -122,6 +131,24 @@ class NormBase:
 
                     # update tuning vector n
                     self.t[i] = self.t_mean[i] / np.linalg.norm(self.t_mean[i])
+
+    def _get_it_resp(self, data):
+        # compute batch diff
+        batch_diff = self._get_reference_pred(data)
+
+        # compute norm-reference neurons
+        v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
+        f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+        f[f < 0] = 0
+        f = np.power(f, self.nu)
+        return np.diag(v) @ f.T
+
+    def get_correct_count(self, x, label):
+        one_hot_encoder = np.eye(self.n_category)
+        one_hot_cats = one_hot_encoder[x]
+        one_hot_label = one_hot_encoder[label]
+
+        return np.count_nonzero(np.multiply(one_hot_cats, one_hot_label))
 
     def fit(self, data, batch_size=32, shuffle=False):
         """
@@ -144,7 +171,7 @@ class NormBase:
         if isinstance(data, list):
             # train using data array
             self._fit_array(data[0], data[1], batch_size, shuffle)
-        elif isinstance(data, types.GeneratorType):
+        elif isinstance(data, DataGen):
             # train using a generator function
             self._fit_generator(data)
 
@@ -187,21 +214,20 @@ class NormBase:
     def _fit_generator(self, generator):
         # learn reference vector
         print("[FIT] Learning reference pose")
-        for data in tqdm(generator):
+        for data in tqdm(generator.generate()):
             x = data[0]
             y = data[1]
-
             ref_data = x[y == self.ref_cat]  # keep only data with ref = 0 (supposedly neutral face)
 
             self._update_ref_vector(ref_data)
 
+        # reset count of the generator for second pass
+        generator.reset()
+
         # learn tuning direction
         print("[FIT] Learning tuning direction")
-        for data in tqdm(generator):
-            x = data[0]
-            y = data[1]
-
-            self._update_dir_tuning(x, y)
+        for data in tqdm(generator.generate()):
+            self._update_dir_tuning(data[0], data[1])
 
     def predict(self, data, batch_size=32):
         x = data[0]
@@ -216,70 +242,82 @@ class NormBase:
             end = min(b + batch_size, num_data)
             batch_idx = indices[b:end]
             batch_data = x[batch_idx]
-            len_batch = len(batch_idx)  # take care of last epoch if size is not equal as the batch_size
 
-            # predict images
-            preds = self.v4.predict(batch_data)
-            preds = np.reshape(preds, (len_batch, -1))
-
-            # compute batch diff
-            batch_diff = preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
-
-            # compute norm-reference neurons
-            v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
-            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-            f[f < 0] = 0
-            f = np.power(f, self.nu)
-            it_resp[batch_idx] = np.diag(v)@ f.T
+            # get it response
+            it = self._get_it_resp(batch_data)
+            it_resp[batch_idx] = it
 
         return it_resp
 
     def evaluate(self, data, batch_size=32):
-        x = data[0]
-        y = data[1]
 
+        if isinstance(data, list):
+            # train using data array
+            it_resp = self._evaluate_array(data[0], data[1], batch_size)
+        elif isinstance(data, DataGen):
+            # train using a generator function
+            it_resp = self._evaluate_generator(data)
+
+        else:
+            raise ValueError("Type {} od data is not recognize!".format(type(data)))
+
+        return it_resp
+
+    def _evaluate_array(self, x, y, batch_size):
         num_data = np.shape(x)[0]
         indices = np.arange(num_data)
 
         it_resp = np.zeros((num_data, self.n_category))
         classification = np.zeros(num_data)
 
+        print("[EVALUATE] Evaluating IT responses")
         correct_pred = 0
-        # predict data
+        # evaluate data
         for b in tqdm(range(0, num_data, batch_size)):
             # built batch
             end = min(b + batch_size, num_data)
             batch_idx = indices[b:end]
             batch_data = x[batch_idx]
             batch_label = np.array(y[batch_idx]).astype(int)
-            len_batch = len(batch_idx)
 
-            # predict images
-            preds = self.v4.predict(batch_data)
-            preds = np.reshape(preds, (len_batch, -1))
-
-            # compute batch diff
-            batch_diff = preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
-
-            # compute norm-reference neurons
-            v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
-            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-            f[f < 0] = 0
-            f = np.power(f, self.nu)
-            it = np.diag(v)@ f.T
+            # get IT response
+            it = self._get_it_resp(batch_data)
             it_resp[batch_idx] = it
 
             # get classification
             cat = np.argmax(it, axis=1)
-            classification[batch_idx] = np.argmax(it, axis=1)
+            classification[batch_idx] = cat
 
-            # transform into one hot
-            _one_hot_encoder = np.eye(self.n_category)
-            one_hot_cats = _one_hot_encoder[cat]
-            one_hot_label = _one_hot_encoder[batch_label]
-            correct_pred += np.count_nonzero(np.multiply(one_hot_cats, one_hot_label))
+            # count correct predictions
+            correct_pred += self.get_correct_count(cat, batch_label)
 
         accuracy = correct_pred / num_data
         print("[EVALUATE] accuracy {:.4f}".format(accuracy))
         return it_resp
 
+    def _evaluate_generator(self, generator):
+        it_resp = []
+        classification = []
+        num_data = 0
+
+        print("[EVALUATE] Evaluating IT responses")
+        correct_pred = 0
+        # evaluate data
+        for data in tqdm(generator.generate()):
+            num_data += len(data[0])
+
+            # get IT response
+            it = self._get_it_resp(data[0])
+            it_resp.append(it)
+
+            # get classification
+            it[:, self.ref_cat] = self.threshold
+            cat = np.argmax(it, axis=1)
+            classification.append(cat)
+
+            # count correct predictions
+            correct_pred += self.get_correct_count(cat, np.array(data[1]).astype(np.uint8))
+
+        accuracy = correct_pred / num_data
+        print("[EVALUATE] accuracy {:.4f}".format(accuracy))
+        return np.reshape(it_resp, (-1, self.n_category))

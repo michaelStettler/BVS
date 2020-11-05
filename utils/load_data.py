@@ -6,6 +6,8 @@ import warnings
 from tqdm import tqdm
 import tensorflow as tf
 
+from utils.data_generator import DataGen
+
 
 def load_data(config, train=True, sort_by=None):
     if config['train_data'] == 'test':
@@ -149,30 +151,6 @@ def _load_affectnet(config, train):
     # print(df.head())
 
     #  declare generator
-    def generator():
-        idx = np.arange(num_data)
-        np.random.shuffle(idx)
+    dataGen = DataGen(config, df, directory)
 
-        start = 0
-        while start < num_data:
-            # get batch idx
-            end = min(start + config['batch_size'], num_data)
-            batch_idx = idx[start:end]
-
-            # declare variables
-            x = np.zeros((config['batch_size'], 224, 224, 3))
-            y = np.zeros(config['batch_size'])
-
-            for b, id in enumerate(batch_idx):
-                # load img
-                loc = df.iloc[id]
-                im = cv2.imread(os.path.join(directory, loc['subDirectory_filePath']))
-                im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-                # resize image
-                im_rgb = cv2.resize(im_rgb, (224, 224))
-                x[b, :, :, :] = im_rgb
-
-            yield x, y
-            start += config['batch_size']
-
-    return generator()
+    return dataGen
