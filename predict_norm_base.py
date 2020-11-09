@@ -7,7 +7,8 @@ from models.NormBase import NormBase
 import matplotlib.pyplot as plt
 
 congig_path = 'configs/norm_base_config'
-config_name = 'norm_base_monkey_test.json'
+# config_name = 'norm_base_monkey_test.json'
+config_name = 'norm_base_affectNet_sub8_4000.json'
 config_file_path = os.path.join(congig_path, config_name)
 print("config_file_path", config_file_path)
 
@@ -16,10 +17,8 @@ with open(config_file_path) as json_file:
     config = json.load(json_file)
 
 # load data
-x, y = load_data(config, train=False, sort_by=['image'])
+data = load_data(config, train=False, sort_by=['image'])
 print("[Data] -- Data loaded --")
-print("[Data] shape dataX", np.shape(x))
-print("[Data] shape dataY", np.shape(y))
 
 # create model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
@@ -34,7 +33,8 @@ print("[MODEL] Set ref vector", np.shape(r))
 print("[MODEL] Set tuning vector", np.shape(t))
 
 # predict tuning vector
-it_resp = norm_base.predict(x)
+# it_resp = norm_base.predict(data)
+it_resp = norm_base.evaluate(data)
 print("shape it_resp", np.shape(it_resp))
 plt.plot(it_resp)
 plt.show()
