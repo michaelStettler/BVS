@@ -6,7 +6,7 @@ from utils.load_data import load_data
 from utils.load_model import load_model
 
 
-def found_face_units(model, config):
+def find_face_units(model, data):
     """
     Implement the method "Face-selective population estimation" from the paper :
     ""Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex
@@ -15,11 +15,10 @@ def found_face_units(model, config):
     :param config:
     :return:
     """
-    x, y = load_data(config)
 
-    x_face = x[:50]
-    x_object = x[50:]
-    print("shape x", np.shape(x))
+    print("shape data", np.shape(data))
+    x_face = data[:50]
+    x_object = data[50:]
     FSI_list = []
     for layer in model.layers:
         if "conv" in layer.name:
@@ -57,7 +56,7 @@ def found_face_units(model, config):
 
 if __name__ == "__main__":
     import os
-    config_file_path = 'configs/face_units/find_face_units_test_mac.json'
+    config_file_path = 'configs/face_units/find_semantic_units_test_mac.json'
     save = True
 
     np.set_printoptions(precision=3, suppress=True, linewidth=150)
@@ -66,11 +65,15 @@ if __name__ == "__main__":
     with open(config_file_path) as json_file:
         config = json.load(json_file)
 
+    # load model
     model = load_model(config)
     # print(model.summary())
 
+    # load data
+    x, y = load_data(config)
+
     # compute face units
-    face_units = found_face_units(model, config)
+    face_units = find_face_units(model, x)
     print("Shape face_units", np.shape(face_units))
 
     # save face units

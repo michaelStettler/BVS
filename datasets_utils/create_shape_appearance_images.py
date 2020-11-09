@@ -17,7 +17,7 @@ run: python3 -m datasets_utils.create_shape_appearance_images
 
 np.set_printoptions(precision=3, suppress=True, linewidth=200)
 
-config_file_path = 'configs/face_units/find_face_units_test_mac.json'
+config_file_path = 'configs/face_units/find_semantic_units_test_mac.json'
 
 # load find_face config
 with open(config_file_path) as json_file:

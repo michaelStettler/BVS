@@ -1,0 +1,8 @@
+{
+  "model": "VGG19",
+  "weights": "imagenet",
+  "include_top": true,
+  "img_path": "",
+  "csv": "",
+  "save_path": ""
+}

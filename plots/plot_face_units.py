@@ -6,7 +6,7 @@ import seaborn as sns
 
 from utils.load_model import load_model
 
-config_file_path = 'configs/face_units/find_face_units_test_mac.json'
+config_file_path = 'configs/face_units/find_semantic_units_test_mac.json'
 
 # load find_face config
 with open(config_file_path) as json_file:
