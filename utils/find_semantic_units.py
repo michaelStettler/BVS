@@ -48,6 +48,11 @@ def find_semantic_units(model, data, label):
                 IoU[c, k] = sum_inter / sum_union
                 # print(c, k, sum_inter, sum_union, sum_inter / sum_union)
 
+        # get number of unit per category
+        IoU[IoU < 0.04] = 0
+        n_units = np.count_nonzero(IoU, axis=1)
+        print("n_units")
+        print(n_units)
     print("[IoU] finish computing IoU", np.shape(IoU))
     print()
 
