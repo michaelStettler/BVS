@@ -7,6 +7,8 @@ from tqdm import tqdm
 import tensorflow as tf
 
 from utils.data_generator import DataGen
+from utils.image_utils import resize_image
+from utils.image_utils import pad_image
 
 
 def load_data(config, train=True, sort_by=None):
@@ -25,6 +27,9 @@ def load_data(config, train=True, sort_by=None):
 
     elif config['train_data'] == 'FEI':
         data = _load_FEI(config)
+
+    elif config['train_data'] == 'FEI_semantic':
+        data = _load_FEI_semantic(config)
 
     elif config['train_data'] == 'affectnet':
         data = _load_affectnet(config, train)
@@ -101,24 +106,11 @@ def _load_FEI(config):
         im = cv2.imread(os.path.join(row['path'], row['image']))
         im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-        # resize image
-        height, width, depths = im.shape
-        if height > width:
-            ratio = height / 224
-            dim = (int(width / ratio), 224)
-        else:
-            ratio = width / 224
-            dim = (224, int(height / ratio))
-        im = cv2.resize(im, dim)
-        # pad image
-        height, width, depths = im.shape
-        img = np.zeros((224, 224, 3))
-        if height > width:
-            pad = int((224 - width) / 2)
-            img[:, pad:pad + width, :] = im
-        else:
-            pad = int((224 - height) / 2)
-            img[pad:pad + height, :, :] = im
+        # resize and pad image
+        img = resize_image(im)
+        img = pad_image(img)
+
+        # add image to data
         x[idx, :, :, :] = img
 
         category = -1
@@ -132,6 +124,37 @@ def _load_FEI(config):
         y[idx] = category
 
         idx += 1
+
+    return [x, y]
+
+
+def _load_FEI_semantic(config):
+    # get csv
+    df = pd.read_csv(config['csv'])
+    num_data = len(df.index)
+    print("[DATA] Found {} images".format(num_data))
+
+    #  declare x and y
+    x = np.zeros((num_data, 224, 224, 3))
+    y = np.zeros((num_data, 224, 224, config['num_cat']))
+
+    for idx, row in df.iterrows():
+        # load image
+        im = cv2.imread(os.path.join(config['img_path'], row['img']))
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        # resize and pad image
+        img = resize_image(im)
+        img = pad_image(img)
+        # add image to data
+        x[idx] = img
+
+        # load label
+        label = np.load(os.path.join(config['label_path'], row['label']))
+        # resize and pad label
+        label = resize_image(label)
+        label = pad_image(label, dim=(224, 224, config['num_cat']))
+        # add label to data
+        y[idx] = label
 
     return [x, y]
 

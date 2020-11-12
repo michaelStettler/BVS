@@ -2,6 +2,7 @@ import json
 import numpy as np
 import tensorflow as tf
 import cv2
+from tqdm import tqdm
 
 from utils.load_data import load_data
 from utils.load_model import load_model
@@ -13,9 +14,13 @@ def find_semantic_units(model, data, label):
     print("[IoU] num classes", n_class)
 
     # collect all predictions for each layer (discard input)
-    # for layer in model.layers[1:]:
-    for layer in model.layers[1:2]:
+    for layer in tqdm(model.layers[1:]):
         print("[IoU] layer name:", layer.name)
+
+        # stop if the layers flatten tha array since the resize won't work
+        # todo take care of flatten units for reconstruction?
+        if 'flatten' in layer.name:
+            break
 
         # cut model
         model = tf.keras.Model(inputs=model.input, outputs=layer.output)
@@ -113,17 +118,11 @@ if __name__ == "__main__":
     # print(model.summary())
 
     # load data
-    data = np.random.rand(5, 224, 224, 3)  # todo load data
-    print("[Loading] shape data", np.shape(data))
-    label = np.zeros((5, 224, 224, 2), dtype=np.int8)
-    label[0, :, 0, 0] = 1
-    label[1, :, :1, 0] = 1
-    label[2, 0, :, 0] = 1
-    label[3, :1, :, 0] = 1
-    label[4, :, -2:, 1] = 1
-    print("[Loading] shape label", np.shape(label))
+    data = load_data(config)
+    print("[Loading] shape x", np.shape(data[0]))
+    print("[Loading] shape label", np.shape(data[1]))
     print("[loading] finish loading data")
     print()
 
     # compute face units
-    find_semantic_units(model, data, label)
+    find_semantic_units(model, data[0], data[1])

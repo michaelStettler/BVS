@@ -34,7 +34,7 @@ threshold = [8, 8, 8]
 seg_images_list = glob.glob(os.path.join(path, seg_path) + '/*.png')
 
 # declare dataframe
-df = pd.DataFrame(columns=('img', 'label'))
+df = pd.DataFrame(columns=('img', 'seg_img', 'label'))
 
 # load each images
 for image_path in seg_images_list:
@@ -88,7 +88,8 @@ for image_path in seg_images_list:
         seg_mask[:, :, c] = seg
 
     # add entry to dataframe
-    df = df.append({'img': im_name, 'label': im_name.split('.')[0] + '.npy'}, ignore_index=True)
+    im_nam = im_name.split('.')[0]
+    df = df.append({'img': im_nam + '.jpg', 'seg_img': im_name, 'label': im_nam + '.npy'}, ignore_index=True)
 
     # save the segmented tensor
     np.save(os.path.join(path, save_label_path) + '/' + im_name.split('.')[0], seg_mask)

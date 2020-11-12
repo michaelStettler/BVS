@@ -51,7 +51,7 @@ def find_face_units(model, data):
             FSI_val = FSI[FSI_idx]
             FSI_list.append([FSI_idx, FSI_val])
 
-    return  np.array(FSI_list)
+    return np.array(FSI_list)
 
 
 if __name__ == "__main__":
@@ -70,7 +70,9 @@ if __name__ == "__main__":
     # print(model.summary())
 
     # load data
-    x, y = load_data(config)
+    data = load_data(config)
+    x = data[0]
+    y = data[1]
 
     # compute face units
     face_units = find_face_units(model, x)

@@ -54,11 +54,18 @@ An implementation of the norm base mechanism (models.NormBase.py):
 
 >Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
 
-And a face-selective index (FSI) unit extraction (utils.find_face_units.py) as 
+A face-selective index (FSI) unit extraction (utils.find_face_units.py) as 
 explain in the methods of:
 
 >Raman, R., & Hosoya, H. (2020). Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex. Communications biology, 3(1), 1-14.
  
+A semantic concept face-parts score, which is a derivation of the work from (utils.find_semantic_units.py):
+> Zhou, B., Oliva, A., & Torralba, A. (2018). Network Dissection: Quantifying Interpretability of Deep Visual Representation.
+
+Where I implemented the score for segmentation concept as a data-set-wide intersection over union (IoU) for the following 
+12 facial concepts: "Hair", "Left_Eye_brow", "Right_eye_brow", "Left_eye_lid", "Right_eye_lid", "Eye_pupil", "Eye_white", 
+"Nose", "Mouth" "Left_ear", "Right_ear", "Teeth". I have manually segmented (on going work) the parts on the FEI dataset. 
+
 <h2>Acknowledgments</h2>
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
 model and the very interesting discussion about what it means to have a V1 
