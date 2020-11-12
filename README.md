@@ -64,7 +64,8 @@ A semantic concept face-parts score, which is a derivation of the work from (uti
 
 Where I implemented the score for segmentation concept as a data-set-wide intersection over union (IoU) for the following 
 12 facial concepts: "Hair", "Left_Eye_brow", "Right_eye_brow", "Left_eye_lid", "Right_eye_lid", "Eye_pupil", "Eye_white", 
-"Nose", "Mouth" "Left_ear", "Right_ear", "Teeth". I have manually segmented (on going work) the parts on the FEI dataset. 
+"Nose", "Mouth" "Left_ear", "Right_ear", "Teeth". Where I have manually segmented (on going work) the parts on the 
+FEI dataset for the frontal pose. 
 
 <h2>Acknowledgments</h2>
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
