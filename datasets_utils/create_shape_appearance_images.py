@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import pandas as pd
 import scipy.io
 import re
 import cv2
@@ -15,7 +16,8 @@ from utils.warp_image import warp_image
 run: python3 -m datasets_utils.create_shape_appearance_images
 """
 
-np.set_printoptions(precision=3, suppress=True, linewidth=200)
+np.random.seed(0)
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
 
 config_file_path = 'configs/face_units/find_face_units_test_mac.json'
 
@@ -101,7 +103,7 @@ for p in tqdm(range(n_particpants)):
     img = warp_image(img, lmks, mean_lmk, do_plot=False)
     norm_images.append(img)
 
-print("shape images", np.shape(norm_images))
+# print("shape images", np.shape(norm_images))
 im_width = np.shape(norm_images)[2]
 im_height = np.shape(norm_images)[1]
 im_channel = np.shape(norm_images)[3]
@@ -113,13 +115,11 @@ print()
 print("[Appearance] Start computing appearance features")
 # flatten feature space
 x_appear = np.reshape(norm_images, (n_particpants, -1))
-x_appear_mean = np.mean(x_appear, axis=0)
-x_appear_std = np.std(x_appear, axis=0)
-x_appear_standardize = (x_appear - x_appear_mean)/x_appear_std
-print("[Appearance] min max x_appear_standardize", np.amin(x_appear_standardize), np.amax(x_appear_standardize))
+# no standardization since all pixel are from the same distributivity
+print("[Appearance] min max x_appear", np.amin(x_appear), np.amax(x_appear))
 # perform PCA on the normalized images
 pca_appear = PCA(n_components=25)
-pca_appear.fit(x_appear_standardize)
+pca_appear.fit(x_appear)
 print("[Appearance] PCA explained variance", pca_appear.explained_variance_ratio_[:5])
 print("[Appearance] PCA singular values", pca_appear.singular_values_[:5])
 print("[Appearance] Finished computing appearance features")
@@ -127,42 +127,76 @@ print()
 
 # -------------------------------------------------------------------------------------
 #                       generate
-# test random feature
-rand_vect = np.zeros(50)
 
-# for i in shape_test:
-for i in [-3, 0, 3]:
-    print("i", i)
-    rand_vect[0] = i  # test 1 component of shape features
-    # rand_vect[25] = i  # test 1 component of appearance features
 
-    # compute shape vector
-    # the sqrt comes from an answer from Rajani Raman which was not described in the paper
-    shape_vect = rand_vect[:25] * np.sqrt(pca_shape.singular_values_)
-    # transform vector back to original dimension
+def generate_image(shape_vect, appear_vect, do_plot=False, tri_on_source=False, remove_borders=False):
+    # transform shape vector back to original dimension
     gen_shape = pca_shape.inverse_transform(shape_vect)
     gen_shape = gen_shape * x_shape_std + x_shape_mean
     gen_shape = np.reshape(gen_shape, (n_lmk, n_channel))
-    print("shape gen_shape", np.shape(gen_shape))
-    print("min max gen_shape", np.min(gen_shape), np.max(gen_shape))
     # clamp values to 0 - img_width, 0 - img_height
     gen_shape[gen_shape < 0] = 0
     gen_shape[gen_shape[:, 0] >= 479] = 479
     gen_shape[gen_shape[:, 1] >= 639] = 639
 
     # compute appearance vector
-    appear_vect = rand_vect[25:] * np.sqrt(pca_appear.singular_values_)
     gen_appear = pca_appear.inverse_transform(appear_vect)
-    gen_appear = gen_appear * x_appear_std + x_appear_mean
+    gen_appear[gen_appear < 0] = 0.0
+    gen_appear[gen_appear > 1] = 1.0
     gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel))
-    # gen_appear = np.reshape(gen_appear, (im_height, im_width, im_channel)).astype(np.uint8)
-    print("shape gen_appear", np.shape(gen_appear))
-    print("min max gen appear", np.min(gen_appear), np.max(gen_appear))
 
-    print()
     # built image
-    img = warp_image(gen_appear, mean_lmk, gen_shape)
+    img = warp_image(gen_appear, src_lmk=mean_lmk, dst_lmk=gen_shape, tri_on_source=tri_on_source, remove_borders=remove_borders)
 
-    plt.figure()
-    plt.imshow(img)
-plt.show()
+    if do_plot:
+        plt.figure()
+        plt.imshow(img)
+        # cv2.imshow("figure", img)
+        # cv2.waitKey(0)
+
+    return img
+
+
+# test random feature
+rand_vect = np.zeros(50)
+
+# create Fig. 4 of the paper by testing shape appearance
+for i in [-3, 0, 3]:
+    rand_vect[0] = i  # test 1 component of shape features
+    # rand_vect[25] = i  # test 1 component of appearance features
+
+    # split shape/appearance vector
+    # the sqrt comes from an answer from Rajani Raman which was not described in the paper
+    shape_vect = rand_vect[:25] * np.sqrt(pca_shape.singular_values_)
+    appear_vect = rand_vect[25:] * np.sqrt(pca_appear.singular_values_)
+
+    # generate img
+    img = generate_image(shape_vect, appear_vect, do_plot=True, tri_on_source=True, remove_borders=True)
+
+    img *= 255.0
+    img_bgr = cv2.cvtColor(img.astype('uint8'), cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.join(config['SA_img_path'], 'test' + str(i) + '.jpg'), img_bgr)
+
+
+# create set of 200 is
+df = pd.DataFrame(columns=["img_name", "feature_vector"])
+for i in tqdm(range(2000)):
+    # generate random vector
+    rand_vect = np.random.normal(0, .4, 50)
+    # print("rand_vect")
+    # print(rand_vect)
+
+    # split shape/appearance vector
+    # the sqrt comes from an answer from Rajani Raman which was not described in the paper
+    shape_vect = rand_vect[:25] * np.sqrt(pca_shape.singular_values_)
+    appear_vect = rand_vect[25:] * np.sqrt(pca_appear.singular_values_)
+
+    img = generate_image(shape_vect, appear_vect, do_plot=False, tri_on_source=True, remove_borders=True)
+    img *= 255.0
+    img_bgr = cv2.cvtColor(img.astype('uint8'), cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.join(config['SA_img_path'], str(i)+'.jpg'), img_bgr)
+
+    df = df.append({'img_name': str(i)+'.jpg', 'feature_vector': rand_vect}, ignore_index=True)
+
+df.to_csv(config['SA_csv'])
+# plt.show()
