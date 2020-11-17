@@ -8,8 +8,9 @@ from utils.load_model import load_model
 
 def find_face_units(model, data):
     """
-    Implement the method "Face-selective population estimation" from the paper :
-    ""Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex
+    Implementation of the method "Face-selective population estimation" from the paper :
+    ""Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in
+    macaque inferotemporal cortex
 
     :param model:
     :param config:
@@ -31,6 +32,7 @@ def find_face_units(model, data):
             preds_face = m.predict(x_face)
             preds_object = m.predict(x_object)
 
+            # todo check to make it for units!
             # compute average response R_face and R_object
             r_face = np.mean(preds_face, axis=(0, 1, 2))
             r_object = np.mean(preds_object, axis=(0, 1, 2))
@@ -56,7 +58,7 @@ def find_face_units(model, data):
 
 if __name__ == "__main__":
     import os
-    config_file_path = 'configs/face_units/find_semantic_units_test_mac.json'
+    config_file_path = 'configs/face_units/find_face_units_test_mac.json'
     save = True
 
     np.set_printoptions(precision=3, suppress=True, linewidth=150)

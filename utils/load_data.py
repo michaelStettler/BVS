@@ -28,6 +28,9 @@ def load_data(config, train=True, sort_by=None):
     elif config['train_data'] == 'FEI':
         data = _load_FEI(config)
 
+    elif config['train_data'] == 'FEI_SA':
+        data = _load_FEI_SA(config)
+
     elif config['train_data'] == 'FEI_semantic':
         data = _load_FEI_semantic(config)
 
@@ -123,6 +126,50 @@ def _load_FEI(config):
                 "WARNING! image: '{}' category '{}' seems not to exists!".format(row['image'], row['category']))
         y[idx] = category
 
+        idx += 1
+
+    return [x, y]
+
+
+def _load_FEI_SA(config):
+    # get csv
+    df = pd.read_csv(config['csv'])
+    num_data = len(df.index)
+    print("[DATA] Found {} images".format(num_data))
+    # print(df.head())
+
+    #  declare x and y
+    x = np.zeros((num_data, 224, 224, 3))
+    y = np.zeros((num_data, 50))
+
+    # create training and label data
+    idx = 0
+    for index, row in tqdm(df.iterrows()):
+        # load img
+        im = cv2.imread(os.path.join(config['SA_img_path'], row['img_name']))
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+        # resize and pad image
+        img = resize_image(im)
+        img = pad_image(img)
+
+        # add image to data
+        x[idx, :, :, :] = img
+
+        # transform string back to array
+        S = row['S']
+        A = row['A']
+        # remove the [] and split with space
+        S = S[1:-1].split(' ')
+        A = A[1:-1].split(' ')
+        # transform to array and remove the empty space
+        S = [float(s) for s in S if s != '']
+        A = [float(a) for a in A if a != '']
+        # set shape and appearance index to the label
+        y[idx, :25] = S
+        y[idx, 25:] = A
+
+        # increase idx
         idx += 1
 
     return [x, y]

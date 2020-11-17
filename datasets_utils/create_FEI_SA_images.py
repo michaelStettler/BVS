@@ -14,12 +14,16 @@ from utils.warp_image import warp_image
 
 """
 run: python3 -m datasets_utils.create_shape_appearance_images
+
+Create the 2000 random shape/appearance imagges as describe in the papper: 
+'Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque
+intefrontal cortex'
 """
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=220)
 
-config_file_path = 'configs/face_units/find_face_units_test_mac.json'
+config_file_path = 'configs/face_units/find_SA_units_mac.json'
 
 # load find_face config
 with open(config_file_path) as json_file:
@@ -179,8 +183,8 @@ for i in [-3, 0, 3]:
 
 
 # create set of 200 is
-df = pd.DataFrame(columns=["img_name", "feature_vector"])
-for i in tqdm(range(2000)):
+df = pd.DataFrame(columns=["img_name", "S", "A"])
+for i in tqdm(range(20)):
     # generate random vector
     rand_vect = np.random.normal(0, .4, 50)
     # print("rand_vect")
@@ -196,7 +200,7 @@ for i in tqdm(range(2000)):
     img_bgr = cv2.cvtColor(img.astype('uint8'), cv2.COLOR_RGB2BGR)
     cv2.imwrite(os.path.join(config['SA_img_path'], str(i)+'.jpg'), img_bgr)
 
-    df = df.append({'img_name': str(i)+'.jpg', 'feature_vector': rand_vect}, ignore_index=True)
+    df = df.append({'img_name': str(i)+'.jpg', 'S': shape_vect, 'A': appear_vect}, ignore_index=True)
 
-df.to_csv(config['SA_csv'])
+df.to_csv(config['csv'])
 # plt.show()
