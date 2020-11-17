@@ -21,7 +21,7 @@ def find_face_units(model, data):
     x_face = data[:50]
     x_object = data[50:]
     FSI_list = []
-    for layer in model.layers:
+    for layer in model.layers[:2]:
         if "conv" in layer.name:
             print("layer:", layer.name)
 
@@ -32,13 +32,20 @@ def find_face_units(model, data):
             preds_face = m.predict(x_face)
             preds_object = m.predict(x_object)
 
-            # todo check to make it for units!
+            # flatten array
+            preds_face = np.reshape(preds_face, (np.shape(preds_face)[0], -1))
+            preds_object = np.reshape(preds_object, (np.shape(preds_object)[0], -1))
+
             # compute average response R_face and R_object
-            r_face = np.mean(preds_face, axis=(0, 1, 2))
-            r_object = np.mean(preds_object, axis=(0, 1, 2))
+            r_face = np.mean(preds_face, axis=0)
+            r_object = np.mean(preds_object, axis=0)
 
             # compute FSI
-            FSI = (r_face - r_object) / (r_face + r_object)
+            nume = r_face - r_object
+            denom = r_face + r_object
+            FSI = nume
+            # remove case where denom could be equal to zero
+            FSI[denom != 0] = nume[denom != 0] / denom[denom != 0]
 
             # set FSI to 1 or -1 in function of R_face and R_object
             for i in range(len(FSI)):
@@ -87,6 +94,6 @@ if __name__ == "__main__":
     for f, face_unit in enumerate(face_units):
         num_face_units = len(face_unit[0])
         if num_face_units > 0:
-            print(f, "num face units:", num_face_units)
+            print("layer", f, "num face units:", num_face_units)
             print(face_unit[0])
 
