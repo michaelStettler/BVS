@@ -71,3 +71,5 @@ FEI dataset for the frontal pose.
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
 model and the very interesting discussion about what it means to have a V1 
 area responsible to compute a bottom-up saliency map.  
+I am also thankful to Rajani Raman and Haruo Hosoya for their fruitful answers to my questions and to have accepted to 
+share their data with me. 
