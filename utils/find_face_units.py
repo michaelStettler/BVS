@@ -6,7 +6,7 @@ from utils.load_data import load_data
 from utils.load_model import load_model
 
 
-def find_face_units(model, data):
+def find_face_units(model, data, verbose=False):
     """
     Implementation of the method "Face-selective population estimation" from the paper :
     ""Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in
@@ -21,9 +21,10 @@ def find_face_units(model, data):
     x_face = data[:50]
     x_object = data[50:]
     FSI_list = []
-    for layer in model.layers[:2]:
+    for layer in model.layers:
         if "conv" in layer.name:
-            print("layer:", layer.name)
+            if verbose:
+                print("layer:", layer.name)
 
             # cut model
             m = tf.keras.Model(inputs=model.input, outputs=layer.output)
@@ -35,6 +36,7 @@ def find_face_units(model, data):
             # flatten array
             preds_face = np.reshape(preds_face, (np.shape(preds_face)[0], -1))
             preds_object = np.reshape(preds_object, (np.shape(preds_object)[0], -1))
+            n_features = np.shape(preds_face)[1]
 
             # compute average response R_face and R_object
             r_face = np.mean(preds_face, axis=0)
@@ -60,6 +62,9 @@ def find_face_units(model, data):
             FSI_val = FSI[FSI_idx]
             FSI_list.append([FSI_idx, FSI_val])
 
+            if verbose:
+                print("found:", len(FSI_idx), "face units ({:.2f}%)".format(len(FSI_idx)/n_features * 100))
+
     return np.array(FSI_list)
 
 
@@ -84,16 +89,12 @@ if __name__ == "__main__":
     y = data[1]
 
     # compute face units
-    face_units = find_face_units(model, x)
+    face_units = find_face_units(model, x, verbose=True)
     print("Shape face_units", np.shape(face_units))
 
     # save face units
     if save:
         np.save(os.path.join(config['save_path'], config['model']), face_units)
 
-    for f, face_unit in enumerate(face_units):
-        num_face_units = len(face_unit[0])
-        if num_face_units > 0:
-            print("layer", f, "num face units:", num_face_units)
-            print(face_unit[0])
+    # todo make a fice-selective feature map ?
 

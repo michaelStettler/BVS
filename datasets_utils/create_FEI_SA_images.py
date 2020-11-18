@@ -182,9 +182,9 @@ for i in [-3, 0, 3]:
     cv2.imwrite(os.path.join(config['SA_img_path'], 'test' + str(i) + '.jpg'), img_bgr)
 
 
-# create set of 200 is
+# create set of 2000 image
 df = pd.DataFrame(columns=["img_name", "S", "A"])
-for i in tqdm(range(20)):
+for i in tqdm(range(200)):
     # generate random vector
     rand_vect = np.random.normal(0, .4, 50)
     # print("rand_vect")
@@ -200,7 +200,8 @@ for i in tqdm(range(20)):
     img_bgr = cv2.cvtColor(img.astype('uint8'), cv2.COLOR_RGB2BGR)
     cv2.imwrite(os.path.join(config['SA_img_path'], str(i)+'.jpg'), img_bgr)
 
-    df = df.append({'img_name': str(i)+'.jpg', 'S': shape_vect, 'A': appear_vect}, ignore_index=True)
+    # df = df.append({'img_name': str(i)+'.jpg', 'S': shape_vect, 'A': appear_vect}, ignore_index=True)
+    df = df.append({'img_name': str(i)+'.jpg', 'S': rand_vect[:25], 'A': rand_vect[25:]}, ignore_index=True)
 
 df.to_csv(config['csv'])
 # plt.show()

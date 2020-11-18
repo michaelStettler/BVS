@@ -9,5 +9,5 @@
   "front_view": "view_11.mat",
   "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/FEI_face_units.csv",
   "SA_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/FEI_SA_features.csv",
-  "save_path": "models/saved/face_units/"
+  "save_path": "models/saved/face_units"
 }
