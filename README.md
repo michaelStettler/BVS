@@ -48,6 +48,8 @@ as describe in the book:
 
 >Zhaoping, L., & Li, Z. (2014). Understanding vision: theory, models, and data. Oxford University Press, USA.
 
+See reports: "BottomUpSaliency_layer" for main results on this part.
+
 An implementation of the norm base mechanism (models.NormBase.py): 
 
 >Giese, M. A., & Leopold, D. A. (2005). Physiologically inspired neural model for the encoding of face spaces. Neurocomputing, 65, 93-101
@@ -59,12 +61,15 @@ explain in the methods of:
 
 >Raman, R., & Hosoya, H. (2020). Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex. Communications biology, 3(1), 1-14.
  
+See reports: "Face_units" and "ShapeAppearance_units" for main results. 
+ 
 A semantic concept face-parts score, which is a derivation of the work from (utils.find_semantic_units.py):
 > Zhou, B., Oliva, A., & Torralba, A. (2018). Network Dissection: Quantifying Interpretability of Deep Visual Representation.
 
+See reports: "FaceParts_Semantic_Units".
+
 Where I implemented the score for segmentation concept as a data-set-wide intersection over union (IoU) for the following 
-12 facial concepts: "Hair", "Left_Eye_brow", "Right_eye_brow", "Left_eye_lid", "Right_eye_lid", "Eye_pupil", "Eye_white", 
-"Nose", "Mouth" "Left_ear", "Right_ear", "Teeth". Where I have manually segmented (on going work) the parts on the 
+12 facial concepts, where I have manually segmented (on going work) the parts on the 
 FEI dataset for the frontal pose. 
 
 <h2>Acknowledgments</h2>
