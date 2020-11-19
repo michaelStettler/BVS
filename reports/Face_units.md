@@ -3,7 +3,7 @@
 Implement the face selectivity unit as described in the paper "Convolutional neural networks explain tuning properties
 of anterior, but not middle, face-processing areas in macaque inferotemporal cortex"
 
-**Procedure **
+**Procedure**
 
 The FEI dataset can be obtain here: https://fei.edu.br/~cet/facedatabase.html
 
