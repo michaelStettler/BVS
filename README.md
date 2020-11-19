@@ -58,7 +58,7 @@ See reports: "BottomUpSaliency_layer" for main results on this part.
 
 >Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
 
-<h3>A face-selective index (FSI) unit extraction </h3> 
+<h3>A Face Selective Index (FSI) and Shape Preference Index (SPI) unit extraction </h3> 
 as explain in the methods of (utils.find_face_units.py):
 
 >Raman, R., & Hosoya, H. (2020). Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex. Communications biology, 3(1), 1-14.
