@@ -23,7 +23,7 @@ Each of them has a particular color that you can find in the script "create_FEI_
 
 **Face Parts segmentation Example**
 
-<img src='../img/1-11.png' height="150"><img src='../img/2-11.png' height="150"><img src='../img/3-11.png' height="150"><img src='../img/4-11.png' height="150">
+<img src='../img/1-11.jpg' height="150"><img src='../img/2-11.jpg' height="150"><img src='../img/3-11.jpg' height="150"><img src='../img/4-11.jpg' height="150">
 
 <img src='../img/segmented_1-11.png' height="150"><img src='../img/segmented_2-11.png' height="150"><img src='../img/segmented_3-11.png' height="150"><img src='../img/segmented_4-11.png' height="150">
 
