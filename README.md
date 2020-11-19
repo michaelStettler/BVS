@@ -67,6 +67,7 @@ See reports: "Face_units" and "ShapeAppearance_units" for main results.
  
 <h3>A semantic concept face-parts score </h3>
 which is a derivation of the work from (utils.find_semantic_units.py):
+
 > Zhou, B., Oliva, A., & Torralba, A. (2018). Network Dissection: Quantifying Interpretability of Deep Visual Representation.
 
 See reports: "FaceParts_Semantic_Units".
