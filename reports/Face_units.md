@@ -17,7 +17,7 @@ configuration file to fit your data path folder.
 
 config used:
 
-{
+{  
   &nbsp;&nbsp; "model": "VGG19",  
   &nbsp;&nbsp; "include_top": true,  
   &nbsp;&nbsp; "weights": "imagenet",  
@@ -25,5 +25,5 @@ config used:
   &nbsp;&nbsp; "orig_img_path":"<...data/FEI/face_images/originalimages>",  
   &nbsp;&nbsp; "front_view": "view_11.mat",  
   &nbsp;&nbsp; "csv": "<...>/data/FEI/FEI_face_units.csv>",  
-  &nbsp;&nbsp; "save_path": "models/saved/face_units". 
+  &nbsp;&nbsp; "save_path": "models/saved/face_units".  
 }
