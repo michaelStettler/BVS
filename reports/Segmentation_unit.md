@@ -29,6 +29,6 @@ Example of manual segmented face pats from the FEI dataset (image 1-4).
 
 **Face Parts Segmented Maps**
 
-<img src='../img/face_parts_segmentation.png' height="150">
+<img src='../img/face_parts_segmentation.png' height="200">
 
 Segmentation maps used as label in the implementation
