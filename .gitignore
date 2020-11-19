@@ -137,3 +137,4 @@ logs/
 # other folders:
 .idea/
 models/saved/
+logs/

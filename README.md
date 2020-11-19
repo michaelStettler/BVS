@@ -45,7 +45,7 @@ study will draw the general line to compute the a "BVS" scores.
 In this repository, you will find:
 
 <h3>A complete implementation of the V1 model and its bottom-up saliency map </h3>
-as a TensorFlow layer such as describe in the book (bvs.layers.BotUpSaliency.py):
+as a TensorFlow layer following the description of the book (bvs.layers.BotUpSaliency.py):
 
 >Zhaoping, L., & Li, Z. (2014). Understanding vision: theory, models, and data. Oxford University Press, USA.
 
