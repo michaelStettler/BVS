@@ -22,11 +22,13 @@ Each of them has a particular color that you can find in the script "create_FEI_
 "datasets_utils" folder". Each face parts is thus segmented into a map by simply segmenting individually each colors. 
 
 **Face Parts segmentation Example**
+
 <img src='../img/1-11.png' height="150"><img src='../img/2-11.png' height="150"><img src='../img/3-11.png' height="150"><img src='../img/4-11.png' height="150">
 
 Example of manual segmented face pats from the FEI dataset (image 1-4). 
 
 **Face Parts Segmented Maps**
+
 <img src='../img/face_parts_segmentation.png' height="150">
 
 Segmentation maps used as label in the implementation
