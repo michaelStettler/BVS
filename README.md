@@ -42,39 +42,42 @@ available to train model on faces, and many psychological and behavioral
 study will draw the general line to compute the a "BVS" scores. 
 
 <h2>What to find</h2>
-In this repository, you will find a complete implementation of the V1 model and 
-its bottom-up saliency map (bvs.layers.BotUpSaliency.py) as a TensorFlow layer such 
-as describe in the book:
+In this repository, you will find:
+
+<h3>A complete implementation of the V1 model and its bottom-up saliency map </h3>
+as a TensorFlow layer such as describe in the book (bvs.layers.BotUpSaliency.py):
 
 >Zhaoping, L., & Li, Z. (2014). Understanding vision: theory, models, and data. Oxford University Press, USA.
 
 See reports: "BottomUpSaliency_layer" for main results on this part.
 
-An implementation of the norm base mechanism (models.NormBase.py): 
+<h3>An implementation of the norm base mechanism </h3>
+(models.NormBase.py): 
 
 >Giese, M. A., & Leopold, D. A. (2005). Physiologically inspired neural model for the encoding of face spaces. Neurocomputing, 65, 93-101
 
 >Stettler, M., Taubert, N., Azizpour, T., Siebert, R., Spadacenta, S., Dicke, P., ... & Giese, M. A. (2020, September). Physiologically-Inspired Neural Circuits for the Recognition of Dynamic Faces. In International Conference on Artificial Neural Networks (pp. 168-179). Springer, Cham.
 
-A face-selective index (FSI) unit extraction (utils.find_face_units.py) as 
-explain in the methods of:
+<h3>A face-selective index (FSI) unit extraction </h3> 
+as explain in the methods of (utils.find_face_units.py):
 
 >Raman, R., & Hosoya, H. (2020). Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in macaque inferotemporal cortex. Communications biology, 3(1), 1-14.
  
 See reports: "Face_units" and "ShapeAppearance_units" for main results. 
  
-A semantic concept face-parts score, which is a derivation of the work from (utils.find_semantic_units.py):
+<h3>A semantic concept face-parts score </h3>
+which is a derivation of the work from (utils.find_semantic_units.py):
 > Zhou, B., Oliva, A., & Torralba, A. (2018). Network Dissection: Quantifying Interpretability of Deep Visual Representation.
 
 See reports: "FaceParts_Semantic_Units".
 
-Where I implemented the score for segmentation concept as a data-set-wide intersection over union (IoU) for the following 
-12 facial concepts, where I have manually segmented (on going work) the parts on the 
-FEI dataset for the frontal pose. 
+Where I implemented the score for segmentation concept as a data-set-wide intersection over union (IoU) for 12 facial concepts, 
+where I have manually segmented (on going work) the facial parts on the FEI dataset (frontal pose). 
 
 <h2>Acknowledgments</h2>
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
 model and the very interesting discussion about what it means to have a V1 
-area responsible to compute a bottom-up saliency map.  
+area responsible to compute a bottom-up saliency map.
+
 I am also thankful to Rajani Raman and Haruo Hosoya for their fruitful answers to my questions and to have accepted to 
 share their data with me. 
