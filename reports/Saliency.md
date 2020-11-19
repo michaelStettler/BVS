@@ -18,6 +18,6 @@ config used: {
 
 Total: 84 filters
 
-<img src='../../img/saliency_max.jpeg' height="220"><img src='../../img/saliency_reLu_sum.jpeg' height="220"><img src='../../img/saliency_sum.jpeg' height="220">
+<img src='../img/saliency_max.jpeg' height="220"><img src='../img/saliency_reLu_sum.jpeg' height="220"><img src='../img/saliency_sum.jpeg' height="220">
 
 Max(x) / Sum(ReLu(x)) / Sum(x)

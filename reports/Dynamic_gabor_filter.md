@@ -12,4 +12,4 @@ Used following config: {
   "octave": 1.6  
 }
 
-![](../../img/dynamic_gabor_filter_test1.gif)
+![](../img/dynamic_gabor_filter_test1.gif)

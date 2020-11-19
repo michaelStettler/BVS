@@ -6,10 +6,10 @@ Reconstruct the V1 hypothesis - creating a bottom-up saliency map for preattenti
 W and J connections kernel for K = 12 orientations
 
 J_{m,n,theta,theta'} with i,j = 0...15 and theta' = 0,pi/K pi,...,11/K pi   
-<img src='../../img/J_exitatory_filter.jpeg' height="660">
+<img src='../img/J_exitatory_filter.jpeg' height="660">
 
 W_{m,n,theta,theta'} i,j = 0...15 and theta' = 0,pi/K pi,...,11/K pi   
-<img src='../../img/W_inibition_filter.jpeg' height="660">
+<img src='../img/W_inibition_filter.jpeg' height="660">
 
 
 **test 2 - simple vert line**
@@ -37,7 +37,7 @@ bu_saliency = BotUpSaliency((9, 9),
 
 
  
-<img src='../../img/vert_line.jpeg' height="330"> <img src='../../img/saliency_vert_line.jpeg' height="330">  
+<img src='../img/vert_line.jpeg' height="330"> <img src='../img/saliency_vert_line.jpeg' height="330">  
 Input and Saliency map image
 
 **test 3 - Figure 5.14F**
@@ -48,7 +48,7 @@ config: same as test 2
 image_type: 'fig5.14F'
 
  
-<img src='../../img/5.14F.jpeg' width="550" height="250"> <img src='../../img/saliency_5.14.F.jpeg' width="550" height="250">  
+<img src='../img/5.14F.jpeg' width="550" height="250"> <img src='../img/saliency_5.14.F.jpeg' width="550" height="250">  
 Input and Saliency map image
 
 **test 4 - Figure 5.18A**
@@ -58,7 +58,7 @@ config: same as test2
 
 image_type: 'fig_5.18A'
  
-<img src='../../img/5_18A.jpeg' height="330"> <img src='../../img/5_18A_saliency.jpeg' height="330">  
+<img src='../img/5_18A.jpeg' height="330"> <img src='../img/5_18A_saliency.jpeg' height="330">  
 Input and Saliency map image
 
 **test 5 - Figure 5.18B**
@@ -68,7 +68,7 @@ config: same as test2
 
 image_type: 'fig_5.18B'
  
-<img src='../../img/5_18B.jpeg' height="330"> <img src='../../img/5_18B_saliency.jpeg' height="330">  
+<img src='../img/5_18B.jpeg' height="330"> <img src='../img/5_18B_saliency.jpeg' height="330">  
 Input and Saliency map image
 
 **test 6 - Figure 5.18D**
@@ -78,7 +78,7 @@ config: same as test2
 
 image_type: 'fig_5.18D'
  
-<img src='../../img/5_18D.jpeg' height="330"> <img src='../../img/5_18D_saliency.jpeg' height="330">  
+<img src='../img/5_18D.jpeg' height="330"> <img src='../img/5_18D_saliency.jpeg' height="330">  
 Input and Saliency map image
 
 **test 7 - Figure 5.18G**
@@ -88,5 +88,5 @@ config: same as test2
 
 image_type: 'fig_5.18G'
  
-<img src='../../img/5_18G.jpeg' height="330"> <img src='../../img/5_18G_saliency.jpeg' height="330">  
+<img src='../img/5_18G.jpeg' height="330"> <img src='../img/5_18G_saliency.jpeg' height="330">  
 Input and Saliency map image

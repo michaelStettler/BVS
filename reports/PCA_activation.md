@@ -11,7 +11,7 @@ Used only 1 layer with 3 gabor filters types (config_test3.json). Kept 10 princi
 
 explained variance: [0.693 0.141 0.0527 0.027 0.017 0.008 0.008 0.004 0.003 0.002]
 
-![](../../img/PCA_10c.gif)
+![](../img/PCA_10c.gif)
 
 heatmap of PCA activation over the sequence
 
@@ -30,7 +30,7 @@ explained variance:
  1.8615110e-04 1.8205361e-04 1.8060241e-04 1.7965880e-04 1.7709934e-04
  1.7651166e-04 1.7105186e-04 1.6955007e-04 1.6706037e-04 1.6635279e-04]
 
-![](../../img/PCA_50c.gif)
+![](../img/PCA_50c.gif)
 
 heatmap of PCA activation over the sequence
 
@@ -53,6 +53,6 @@ explained variance:
  6.01800821e-05 5.92212818e-05]
 
 
-![](../../img/PCA_edge_50c.gif)
+![](../img/PCA_edge_50c.gif)
 
 heatmap of PCA activation over the sequence

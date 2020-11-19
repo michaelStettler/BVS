@@ -3,7 +3,6 @@
   "include_top": true,
   "weights": "imagenet",
   "train_data": "FEI",
-  "lmk_path":"D:/Dataset/FEI/landmark_files",
   "orig_img_path":"D:/Dataset/FEI/face_images/originalimages",
   "front_view": "view_11.mat",
   "csv": "D:/Dataset/FEI/FEI_face_units.csv",
