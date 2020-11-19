@@ -4,6 +4,7 @@ Implement the face selectivity unit as described in the paper "Convolutional neu
 of anterior, but not middle, face-processing areas in macaque inferotemporal cortex"
 
 ** Procedure **
+
 The FEI dataset can be obtain here: https://fei.edu.br/~cet/facedatabase.html
 
 For the non-face images, I randomly picked 50 images from the "imagenet" dataset.
@@ -17,12 +18,12 @@ configuration file to fit your data path folder.
 config used:
 
 {
-  "model": "VGG19",
-  "include_top": true,
-  "weights": "imagenet",
-  "train_data": "FEI",
-  "orig_img_path":"<...data/FEI/face_images/originalimages>",
-  "front_view": "view_11.mat",
-  "csv": "<...>/data/FEI/FEI_face_units.csv>",
-  "save_path": "models/saved/face_units"
+  &nbsp;&nbsp; "model": "VGG19",  
+  &nbsp;&nbsp; "include_top": true,  
+  &nbsp;&nbsp; "weights": "imagenet",  
+  &nbsp;&nbsp; "train_data": "FEI",  
+  &nbsp;&nbsp; "orig_img_path":"<...data/FEI/face_images/originalimages>",  
+  &nbsp;&nbsp; "front_view": "view_11.mat",  
+  &nbsp;&nbsp; "csv": "<...>/data/FEI/FEI_face_units.csv>",  
+  &nbsp;&nbsp; "save_path": "models/saved/face_units". 
 }
