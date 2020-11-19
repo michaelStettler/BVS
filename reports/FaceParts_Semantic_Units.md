@@ -25,6 +25,8 @@ Each of them has a particular color that you can find in the script "create_FEI_
 
 <img src='../img/1-11.png' height="150"><img src='../img/2-11.png' height="150"><img src='../img/3-11.png' height="150"><img src='../img/4-11.png' height="150">
 
+<img src='../img/segmented_1-11.png' height="150"><img src='../img/segmented_2-11.png' height="150"><img src='../img/segmented_3-11.png' height="150"><img src='../img/segmented_4-11.png' height="150">
+
 Example of manual segmented face pats from the FEI dataset (image 1-4). 
 
 **Face Parts Segmented Maps**
