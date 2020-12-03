@@ -2,13 +2,14 @@ import json
 import os
 import numpy as np
 from utils.load_data import load_data
+from utils.data_generator import DataGen
 
 from models.NormBase import NormBase
 
-congig_path = 'configs/norm_base_config'
+config_path = 'configs/norm_base_config'
 # config_name = 'norm_base_monkey_test.json'
 config_name = 'norm_base_affectNet_sub8_4000_t0001.json'
-config_file_path = os.path.join(congig_path, config_name)
+config_file_path = os.path.join(config_path, config_name)
 print("config_file_path", config_file_path)
 
 # load norm_base_config file
@@ -58,18 +59,27 @@ for layer in ['block1_pool', 'block2_pool', 'block3_pool', 'block4_pool', 'block
 
     print("[LOOP] start prediction")
 
+    # load test data
+    data_test = load_data(config, train=False, sort_by=['image'])
+    print("[Data] -- Data loaded --")
+
     try:
-        it_resp = np.load(os.path.join(save_folder, "it_resp"))
+        # load results if available
+        accuracy = np.load(os.path.join(save_folder, "accuracy.npy"))
+        it_resp = np.load(os.path.join(save_folder, "it_resp.npy"))
+        labels = np.load(os.path.join(save_folder, "labels.npy"))
         print("[MODEL] it_resp is available and is loaded from {}".format(save_folder))
     except IOError:
-        # load test data
-        data_test = load_data(config, train=False, sort_by=['image'])
-        print("[Data] -- Data loaded --")
-
+        #calculate results if not available
         #evaluate
-        it_resp = norm_base.evaluate(data_test)
+        accuracy, it_resp, labels = norm_base.evaluate_accuracy(data_test)
+        np.save(os.path.join(save_folder, "accuracy"), accuracy)
         np.save(os.path.join(save_folder, "it_resp"), it_resp)
+        np.save(os.path.join(save_folder, "labels"), labels)
+
+    print("accuracy", accuracy)
     print("shape it_resp", np.shape(it_resp))
+    print("shape labels", np.shape(labels))
 
     print('[LOOP] finished with v4_layer: {}'.format(config['v4_layer']))
 

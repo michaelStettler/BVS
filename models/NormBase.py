@@ -321,3 +321,57 @@ class NormBase:
         accuracy = correct_pred / num_data
         print("[EVALUATE] accuracy {:.4f}".format(accuracy))
         return np.reshape(it_resp, (-1, self.n_category))
+
+    '''
+    This function evaluates the NormBase model on a test data set.
+    This function is similar to evaluate but returns additional results.
+    returns 
+    accuracy: fraction correct
+    it_resp: response activity
+    labels: correct labels
+    '''
+    def evaluate_accuracy(self, data, batch_size=32):
+        if isinstance(data, list):
+            # train using data array
+            accuracy, it_resp, labels = self._evaluate_accuracy_array(data[0], data[1], batch_size)
+        elif isinstance(data, DataGen):
+            # train using a generator function
+            accuracy, it_resp, labels = self._evaluate_accuracy_generator(data)
+
+        else:
+            raise ValueError("Type {} od data is not recognize!".format(type(data)))
+
+        return accuracy, it_resp, labels
+
+    def _evaluate_accuracy_array(self, x, y, batch_size):
+        # implement and return similar to function above
+        return None, None, None
+
+    def _evaluate_accuracy_generator(self, generator):
+        it_resp = []
+        classification = []
+        labels = []
+        num_data = 0
+
+        print("[EVALUATE] Evaluating IT responses")
+        correct_pred = 0
+        # evaluate data
+        for data in tqdm(generator.generate()):
+            num_data += len(data[0])
+
+            # get IT response
+            it = self._get_it_resp(data[0])
+            it_resp.append(it)
+            labels.append(data[1])
+
+            # get classification
+            it[:, self.ref_cat] = self.threshold
+            cat = np.argmax(it, axis=1)
+            classification.append(cat)
+
+            # count correct predictions
+            correct_pred += self.get_correct_count(cat, np.array(data[1]).astype(np.uint8))
+
+        accuracy = correct_pred / num_data
+        print("[EVALUATE] accuracy {:.4f}".format(accuracy))
+        return accuracy, np.reshape(it_resp, (-1, self.n_category)), np.concatenate(labels, axis=None)
