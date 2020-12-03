@@ -25,30 +25,53 @@ for layer in ['block1_pool', 'block2_pool', 'block3_pool', 'block4_pool', 'block
 
     print("[LOOP] start training")
 
-    # load train data
-    data = load_data(config)
-    print("[Data] -- Data loaded --")
-
     # create model
     norm_base = NormBase(config, input_shape=(224, 224, 3))
 
-    # train model
-    ref_vector, tun_vector = norm_base.fit(data, batch_size=config['batch_size'])
+    # folder for save and load
+    save_folder = os.path.join("models/saved", config['save_name'], config['v4_layer'])
+    if not os.path.exists(save_folder):
+        os.mkdir(save_folder)
+    try:
+        # load vectors if available
+        ref_vector = np.load(os.path.join(save_folder, "ref_vector.npy"))
+        tun_vector = np.load(os.path.join(save_folder, "tuning_vector.npy"))
+        print("[MODEL] ref_vector and tun_vector are available and loaded from {}"
+              .format(save_folder))
+
+        norm_base.set_ref_vector(ref_vector)
+        norm_base.set_tuning_vector(tun_vector)
+        print("[MODEL] Set ref vector", np.shape(ref_vector))
+        print("[MODEL] Set tuning vector", np.shape(tun_vector))
+    except IOError:
+        # calculate vectors if not available
+        # load train data
+        data_train = load_data(config)
+        print("[Data] -- Data loaded --")
+
+        # train model
+        ref_vector, tun_vector = norm_base.fit(data_train, batch_size=config['batch_size'])
+
+        # save model
+        np.save(os.path.join(save_folder, "ref_vector"), ref_vector)
+        np.save(os.path.join(save_folder, "tuning_vector"), tun_vector)
 
     print("[LOOP] start prediction")
 
-    # load test data
-    data = load_data(config, train=False, sort_by=['image'])
-    print("[Data] -- Data loaded --")
+    try:
+        it_resp = np.load(os.path.join(save_folder, "it_resp"))
+        print("[MODEL] it_resp is available and is loaded from {}".format(save_folder))
+    except IOError:
+        # load test data
+        data_test = load_data(config, train=False, sort_by=['image'])
+        print("[Data] -- Data loaded --")
 
-    #TODO check if necessary
-    norm_base.set_ref_vector(ref_vector)
-    norm_base.set_tuning_vector(tun_vector)
-    print("[MODEL] Set ref vector", np.shape(ref_vector))
-    print("[MODEL] Set tuning vector", np.shape(tun_vector))
-
-    #evaluate
-    it_resp = norm_base.evaluate(data)
+        #evaluate
+        it_resp = norm_base.evaluate(data_test)
+        np.save(os.path.join(save_folder, "it_resp"), it_resp)
     print("shape it_resp", np.shape(it_resp))
 
     print('[LOOP] finished with v4_layer: {}'.format(config['v4_layer']))
+
+#plt.save
+#cv2
