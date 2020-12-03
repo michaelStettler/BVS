@@ -1,6 +1,7 @@
 import json
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 from utils.load_data import load_data
 from utils.data_generator import DataGen
 
@@ -8,7 +9,7 @@ from models.NormBase import NormBase
 
 config_path = 'configs/norm_base_config'
 # config_name = 'norm_base_monkey_test.json'
-config_name = 'norm_base_affectNet_sub8_4000_t0001.json'
+config_name = 'norm_base_affectNet_sub8_4000_t0003.json'
 config_file_path = os.path.join(config_path, config_name)
 print("config_file_path", config_file_path)
 
@@ -16,11 +17,13 @@ print("config_file_path", config_file_path)
 with open(config_file_path) as json_file:
     config = json.load(json_file)
 
-if config['v4_layer']!='':
-    raise ValueError("v4_layer: {} is chosen, but should be empty! Please choose '' instead!"
+if not isinstance(config['v4_layer'],list):
+    raise ValueError("v4_layer: {} is chosen, but should be a list! Please choose [\"layer1\", \"layer2\"] instead!"
                      .format(config['v4_layer']))
 
-for layer in ['block1_pool', 'block2_pool', 'block3_pool', 'block4_pool', 'block5_pool']:
+v4_layers = config['v4_layer']
+accuracies = np.zeros(len(v4_layers))
+for i_layer, layer in enumerate(v4_layers):
     config['v4_layer'] = layer
     print('[LOOP] start with v4_layer: {}'.format(config['v4_layer']))
 
@@ -81,7 +84,10 @@ for layer in ['block1_pool', 'block2_pool', 'block3_pool', 'block4_pool', 'block
     print("shape it_resp", np.shape(it_resp))
     print("shape labels", np.shape(labels))
 
+    accuracies[i_layer] = accuracy
+
     print('[LOOP] finished with v4_layer: {}'.format(config['v4_layer']))
 
-#plt.save
-#cv2
+#plt.plot(np.arange(len(accuracies)), accuracies)
+plt.plot(v4_layers, accuracies)
+plt.savefig(os.path.join("models/saved", config['save_name'], "plot_accuracy_pool.png"))
