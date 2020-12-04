@@ -4,12 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils.load_data import load_data
 from utils.data_generator import DataGen
+from utils.load_model import load_model
 
 from models.NormBase import NormBase
 
 config_path = 'configs/norm_base_config'
 # config_name = 'norm_base_monkey_test.json'
-config_name = 'norm_base_affectNet_sub8_4000_t0003.json'
+config_name = 'norm_base_affectNet_sub8_4000_t0005.json'
 config_file_path = os.path.join(config_path, config_name)
 print("config_file_path", config_file_path)
 
@@ -17,11 +18,19 @@ print("config_file_path", config_file_path)
 with open(config_file_path) as json_file:
     config = json.load(json_file)
 
-if not isinstance(config['v4_layer'],list):
+if config['v4_layer'] == "all":
+    v4_layers = []
+    model = load_model(config, input_shape=(224, 224, 3))
+    for layer in model.layers[1:]:
+        v4_layers.append(layer.name)
+elif isinstance(config['v4_layer'],list):
+    v4_layers = config['v4_layer']
+else:
     raise ValueError("v4_layer: {} is chosen, but should be a list! Please choose [\"layer1\", \"layer2\"] instead!"
                      .format(config['v4_layer']))
 
-v4_layers = config['v4_layer']
+print("[LOOP] calculate for {}".format(v4_layers))
+
 accuracies = np.zeros(len(v4_layers))
 for i_layer, layer in enumerate(v4_layers):
     config['v4_layer'] = layer
@@ -32,6 +41,8 @@ for i_layer, layer in enumerate(v4_layers):
     # create model
     norm_base = NormBase(config, input_shape=(224, 224, 3))
 
+    if not os.path.join("models/saved", config['save_name']):
+        os.mkdir(os.path.join("models/saved", config['save_name']))
     # folder for save and load
     save_folder = os.path.join("models/saved", config['save_name'], config['v4_layer'])
     if not os.path.exists(save_folder):
@@ -89,5 +100,8 @@ for i_layer, layer in enumerate(v4_layers):
     print('[LOOP] finished with v4_layer: {}'.format(config['v4_layer']))
 
 #plt.plot(np.arange(len(accuracies)), accuracies)
+print(accuracies)
+print(np.argmax(accuracies))
 plt.plot(v4_layers, accuracies)
+plt.xticks(rotation=90)
 plt.savefig(os.path.join("models/saved", config['save_name'], "plot_accuracy_pool.png"))

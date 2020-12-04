@@ -69,7 +69,7 @@ class NormBase:
         print()
 
     def _load_model(self, config, input_shape):
-        if config['model'] == 'VGG19':
+        if (config['model'] == 'VGG19') | (config['model'] =='ResNet50V2'):
             model = load_model(config, input_shape)
             v4 = tf.keras.Model(inputs=model.input,
                                      outputs=model.get_layer(config['v4_layer']).output)

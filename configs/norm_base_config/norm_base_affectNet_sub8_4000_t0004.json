@@ -1,0 +1,15 @@
+{
+  "train_data": "affectnet",
+  "n_category": 8,
+  "ref_category": 0,
+  "csv_train": "/app/Downloads/AffectNet/train_sub8_4000.csv",
+  "csv_val": "/app/Downloads/AffectNet/val_sub8.csv",
+  "train_directory": "/app/Downloads/AffectNet/training",
+  "val_directory": "/app/Downloads/AffectNet/validation",
+  "model": "ResNet50V2",
+  "include_top": false,
+  "weights": "imagenet",
+  "v4_layer": "all",
+  "batch_size": 32,
+  "save_name": "norm_base_ResNet_affectnet_sub8_4000"
+}
