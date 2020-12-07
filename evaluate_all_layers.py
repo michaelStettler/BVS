@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from utils.load_data import load_data
 from utils.data_generator import DataGen
 from utils.load_model import load_model
+from utils.load_config import load_config
 
 from models.NormBase import NormBase
 
@@ -88,18 +89,7 @@ def evaluate_all_layers(config):
 
 
 if __name__ == "__main__":
-    import json
-
-    config_path = 'configs/norm_base_config'
-    # config_name = 'norm_base_monkey_test.json'
-    config_name = ['norm_base_affectNet_sub8_4000_t0004.json', 'norm_base_affectNet_sub8_4000_t0005.json']
-
-    for conf_name in config_name:
-        config_file_path = os.path.join(config_path, conf_name)
-        print("config_file_path", config_file_path)
-
-        # load norm_base_config file
-        with open(config_file_path) as json_file:
-            config = json.load(json_file)
-
+    config_names = ['norm_base_affectNet_sub8_4000_t0004.json', 'norm_base_affectNet_sub8_4000_t0005.json']
+    for config_name in config_names:
+        config = load_config(config_name)
         evaluate_all_layers(config)
