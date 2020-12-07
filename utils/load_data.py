@@ -215,9 +215,9 @@ def _load_affectnet(config, train):
         df = pd.read_csv(config['csv_val'])
         directory = config['val_directory']
     num_data = len(df.index)
-    print(df.head)
+    #print(df.head)
     print("[DATA] Found {} images".format(num_data))
-    print(df.info())
+    #print(df.info())
     # print(df.head())
 
     #  declare generator

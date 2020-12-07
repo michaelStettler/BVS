@@ -25,6 +25,7 @@ def evaluate_all_layers(config):
     for i_layer, layer in enumerate(v4_layers):
         config['v4_layer'] = layer
         print('[LOOP] start with v4_layer: {}'.format(config['v4_layer']))
+        print('[LOOP] layer %i of %i' % (i_layer+1, len(v4_layers)))
 
         if not os.path.exists(os.path.join("models/saved", config['save_name'])):
             os.mkdir(os.path.join("models/saved", config['save_name']))
