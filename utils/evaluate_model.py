@@ -4,7 +4,11 @@ from utils.load_data import load_data
 from utils.data_generator import DataGen
 from models.NormBase import NormBase
 
-
+'''
+This function runs and evaluates the model with given config.
+The model is saved to models/saved/config['save_name']/save_name.
+If already calculated the result is loaded instead of calculated.
+'''
 def evaluate_model(config, save_name):
     if not os.path.exists(os.path.join("models/saved", config['save_name'])):
         os.mkdir(os.path.join("models/saved", config['save_name']))

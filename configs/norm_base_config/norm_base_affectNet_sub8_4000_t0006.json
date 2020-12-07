@@ -1,0 +1,16 @@
+{
+  "train_data": "affectnet",
+  "n_category": 8,
+  "ref_category": 0,
+  "csv_train": "//app/Data/Dataset/AffectNet/train_sub8_4000.csv",
+  "csv_val": "/app/Data/Dataset/AffectNet/val_sub8.csv",
+  "train_directory": "/app/Data/Dataset/AffectNet/training",
+  "val_directory": "/app/Data/Dataset/AffectNet/validation",
+  "model": "VGG19",
+  "include_top": false,
+  "weights": "imagenet",
+  "v4_layer": "block3_pool",
+  "nu": [1.0, 2.0, 3.0, 4.0],
+  "batch_size": 32,
+  "save_name": "norm_base_VGG19_affectnet_sub8_4000_nus"
+}

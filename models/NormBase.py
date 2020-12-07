@@ -19,7 +19,7 @@ class NormBase:
 
     """
 
-    def __init__(self, config, input_shape, nu=2):
+    def __init__(self, config, input_shape):
         """
         The init function is responsible to declare the front end model of the norm base mechanism declared in the
         config file
@@ -45,7 +45,10 @@ class NormBase:
         # -----------------------------------------------------------------
 
         # declare parameters
-        self.nu = nu
+        try:
+            self.nu = config['nu']
+        except KeyError:
+            self.nu = 2.0
         self.n_category = config['n_category']
         self.ref_cat = config['ref_category']
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
