@@ -22,7 +22,6 @@ def evaluate_all_layers(config):
 
     print("[LOOP] calculate for {}".format(v4_layers))
 
-    accuracies = np.zeros(len(v4_layers))
     for i_layer, layer in enumerate(v4_layers):
         config['v4_layer'] = layer
         print('[LOOP] start with v4_layer: {}'.format(config['v4_layer']))
@@ -84,16 +83,8 @@ def evaluate_all_layers(config):
         print("shape it_resp", np.shape(it_resp))
         print("shape labels", np.shape(labels))
 
-        accuracies[i_layer] = accuracy
-
         print('[LOOP] finished with v4_layer: {}'.format(config['v4_layer']))
 
-    #plt.plot(np.arange(len(accuracies)), accuracies)
-    print(accuracies)
-    print(np.argmax(accuracies))
-    plt.plot(v4_layers, accuracies)
-    plt.xticks(rotation=90)
-    plt.savefig(os.path.join("models/saved", config['save_name'], "plot_accuracy_pool.png"))
 
 if __name__ == "__main__":
     import json
