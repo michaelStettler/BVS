@@ -20,7 +20,7 @@ for i, nu in enumerate(nus):
 
 # create plot
 fig = plt.figure(figsize=(15,10))
-plt.plot(nus, accuracies)
+plt.plot(nus, accuracies, marker='x')
 plt.title("Accuracy over nu")
 plt.xlabel("nu")
 plt.ylabel("accuracy")
