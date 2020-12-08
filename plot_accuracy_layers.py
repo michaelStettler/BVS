@@ -3,8 +3,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from utils.load_model import load_model
+
 config_path = 'configs/norm_base_config'
-config_name = 'norm_base_affectNet_sub8_4000_t0003.json'
+config_name = 'norm_base_affectNet_sub8_4000_t0004.json'
 config_file_path = os.path.join(config_path, config_name)
 print("config_file_path", config_file_path)
 # load norm_base_config file
@@ -31,8 +33,13 @@ for i_layer, layer in enumerate(v4_layers):
     accuracy = np.load(os.path.join(load_folder, "accuracy.npy"))
     accuracies[i_layer] = accuracy
 
+# print maximum
+print("max accuracy", np.max(accuracies))
+print("max layer no", np.argmax(accuracies))
+print("max layer", v4_layers[np.argmax(accuracies)])
+
 #create plot
-fig = plt.figure(figsize=(15,10))
+fig = plt.figure(figsize=(30,15))
 ax = plt.axes()
 plt.title("Accuracy over Layers")
 plt.plot(v4_layers, accuracies)
