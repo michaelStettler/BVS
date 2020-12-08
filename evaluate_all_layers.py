@@ -12,6 +12,7 @@ def evaluate_all_layers(config):
         model = load_model(config, input_shape=(224, 224, 3))
         for layer in model.layers[1:]:
             v4_layers.append(layer.name)
+        tf.keras.backend.clear_session()
     elif isinstance(config['v4_layer'],list):
         v4_layers = config['v4_layer']
     else:
@@ -26,6 +27,7 @@ def evaluate_all_layers(config):
         print('[LOOP] layer %i of %i' % (i_layer+1, len(v4_layers)))
 
         accuracy, it_resp, labels, ref_vector, tun_vector = evaluate_model(config, config['v4_layer'])
+        tf.keras.backend.clear_session()
 
         print("accuracy", accuracy)
         print("shape it_resp", np.shape(it_resp))
