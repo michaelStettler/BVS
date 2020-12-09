@@ -38,7 +38,8 @@ def evaluate_all_layers(config):
 
 
 if __name__ == "__main__":
-    config_names = ['norm_base_affectNet_sub8_4000_t0004.json', 'norm_base_affectNet_sub8_4000_t0005.json']
+    #config_names = ['norm_base_affectNet_sub8_4000_t0004.json', 'norm_base_affectNet_sub8_4000_t0005.json']
+    config_names = ['norm_base_affectNet_sub8_4000_t0005.json']
     for config_name in config_names:
         config = load_config(config_name)
         evaluate_all_layers(config)

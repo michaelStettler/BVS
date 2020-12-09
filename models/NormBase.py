@@ -378,3 +378,21 @@ class NormBase:
         accuracy = correct_pred / num_data
         print("[EVALUATE] accuracy {:.4f}".format(accuracy))
         return accuracy, np.reshape(it_resp, (-1, self.n_category)), np.concatenate(labels, axis=None)
+
+    '''
+    This function calculates how the data projects onto a plane.
+    It returns the projection and correct labels
+    '''
+    def projection_tuning(self, data):
+        if type(data) == DataGen:
+            projection, labels = self._projection_tuning(data)
+        else:
+            raise ValueError("Type {} od data is not recognize!".format(type(data)))
+        return projection, labels
+
+    def _projection_tuning(self, generator):
+        projection = np.zeros(self.n_category, generator.num_data, 2)
+        labels = np.zeros(generator.num_data)
+        print("projection shape", projection.shape)
+        print("labels shape", labels.shape)
+        return projection, labels
