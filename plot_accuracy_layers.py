@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from utils.load_model import load_model
 
 from utils.load_model import load_model
 
