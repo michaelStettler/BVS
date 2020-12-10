@@ -2,6 +2,7 @@ import types
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
+from sklearn.decomposition import PCA
 
 from utils.load_model import load_model
 from utils.data_generator import DataGen
@@ -49,6 +50,12 @@ class NormBase:
             self.nu = config['nu']
         except KeyError:
             self.nu = 2.0
+        try:
+            #set PCA if available in config
+            self.dim_red = config['dim_red']
+            self.pca = PCA(n_components=config['PCA'])
+        except KeyError:
+            self.dim_red = None
         self.n_category = config['n_category']
         self.ref_cat = config['ref_category']
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
@@ -58,9 +65,16 @@ class NormBase:
         print("[INIT] -- Model loaded --")
         print("[INIT] Model:", config['model'])
         print("[INIT] V4 layer:", config['v4_layer'])
+        if not (self.dim_red is None):
+            print("[INIT] dim_red:", self.dim_red)
 
-        shape_v4 = np.shape(self.v4.layers[-1].output)
-        self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
+        try:
+            # initialize n_features as number of components of PCA
+            self.n_features = config['PCA']
+        except KeyError:
+            # initialize as output of network as default
+            shape_v4 = np.shape(self.v4.layers[-1].output)
+            self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
         self.r = np.zeros(self.n_features)
         self.t = np.zeros((self.n_category, self.n_features))
         self.t_cumul = np.zeros(self.n_category)
@@ -90,13 +104,23 @@ class NormBase:
     def set_tuning_vector(self, t):
         self.t = t
 
+    '''
+    Get the computation of the whole pipeline before NormBase
+    '''
+    def _get_preds(self,data):
+        # prediction of v4 layer
+        preds = self.v4.predict(data)
+        preds = np.reshape(preds, (data.shape[0], -1))
+        if self.dim_red == 'PCA':
+            # projection by PCA
+            preds = self.pca.transform(preds)
+        return preds
+
     def _update_ref_vector(self, data):
         n_ref = np.shape(data)[0]
 
         if n_ref > 0:
-            # predict images
-            preds = self.v4.predict(data)
-            preds = np.reshape(preds, (n_ref, -1))
+            preds = self._get_preds(data)
 
             # update ref_vector m
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
@@ -105,9 +129,7 @@ class NormBase:
     def _get_reference_pred(self, data):
         len_batch = len(data)  # take care of last epoch if size is not equal as the batch_size
 
-        # predict images
-        preds = self.v4.predict(data)
-        preds = np.reshape(preds, (len_batch, -1))
+        preds = self._get_preds(data)
 
         # compute batch diff
         return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
@@ -140,9 +162,13 @@ class NormBase:
         batch_diff = self._get_reference_pred(data)
 
         # compute norm-reference neurons
-        v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
+        #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
+        v = np.linalg.norm(batch_diff, ord=2, axis=1)
+
         f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-        f[f < 0] = 0
+        f[f < 0] = 0 #ReLu activation instead of dividing by 2 and adding 0.5
+        #f = self.t @ batch_diff.T @ np.diag(np.power(v * 2, -1))
+        #f = f+0.5
         f = np.power(f, self.nu)
         return np.diag(v) @ f.T
 
@@ -170,6 +196,20 @@ class NormBase:
         :param shuffle:
         :return: r, t
         """
+
+        # in the case of dimensionality reduction set up the pipeline
+        if self.dim_red == 'PCA':
+            print("[FIT] Fitting PCA")
+            # get output on all data from self.v4
+            if isinstance(data, DataGen):
+                #data = data.getAllData()
+                raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
+            v4_predict = self.v4.predict(data[0])
+            v4_predict = np.reshape(v4_predict, (360,-1))
+            print("[FIT] v4 prediction generated", v4_predict.shape)
+            # perform PCA on this output
+            self.pca.fit(v4_predict)
+            print("explained variance",self.pca.explained_variance_ratio_)
 
         if isinstance(data, list):
             # train using data array
@@ -391,8 +431,26 @@ class NormBase:
         return projection, labels
 
     def _projection_tuning(self, generator):
-        projection = np.zeros(self.n_category, generator.num_data, 2)
-        labels = np.zeros(generator.num_data)
-        print("projection shape", projection.shape)
-        print("labels shape", labels.shape)
+        projection = [] #np.zeros((generator.num_data, 2))
+        labels = [] #np.zeros(generator.num_data)
+        for data in tqdm(generator.generate()):
+            # compute batch diff
+            batch_diff = self._get_reference_pred(data[0])
+            print("batch_diff.shape", batch_diff.shape)
+
+            # compute norm-reference neurons
+            #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
+            v = np.linalg.norm(batch_diff, ord=2, axis = 1)
+            print("v.shape",v.shape)
+            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+            print("f.shape", f.shape)
+            # TODO continue work here
+
+            #f[f < 0] = 0
+            f = f+0.5
+            print("f", f)
+
+
+            f = np.power(f, self.nu)
+            it=np.diag(v) @ f.T
         return projection, labels

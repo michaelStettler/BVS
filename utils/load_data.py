@@ -23,7 +23,7 @@ def load_data(config, train=True, sort_by=None):
         data = [x, y]
 
     elif config['train_data'] == 'monkey_test':
-        data = _loaf_monkey(config, train, sort_by)
+        data = _load_monkey(config, train, sort_by)
 
     elif config['train_data'] == 'FEI':
         data = _load_FEI(config)
@@ -43,11 +43,19 @@ def load_data(config, train=True, sort_by=None):
     return data
 
 
-def _loaf_monkey(config, train, sort_by):
+def _load_monkey(config, train, sort_by):
     if train:
         df = pd.read_csv(config['csv_train'])
+        try:
+            directory = config['train_directory']
+        except KeyError:
+            directory = None
     else:
         df = pd.read_csv(config['csv_val'])
+        try:
+            directory = config['val_directory']
+        except KeyError:
+            directory = None
 
     if sort_by is not None:
         df = df.sort_values(by=sort_by)
@@ -65,7 +73,10 @@ def _loaf_monkey(config, train, sort_by):
     idx = 0
     for index, row in tqdm(df.iterrows()):
         # load img
-        im = cv2.imread(os.path.join(row['path'], row['image']))
+        if directory is None:
+            im = cv2.imread(os.path.join(row['path'], row['image']))
+        else:
+            im = cv2.imread(os.path.join(directory, row['image']))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         # crop image
         im_crop = im_rgb[:, 280:1000, :]
