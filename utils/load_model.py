@@ -30,14 +30,14 @@ def load_model(config, input_shape=None):
         elif not config["include_top"] and input_shape is not None:
             if config['weights'] == 'imagenet':
                 model = tf.keras.applications.ResNet50V2(include_top=False, weights=config['weights'], input_shape=input_shape)
+                # fix names in layers, unnamed layers get system names which causes layers upstream
+                model.layers[37]._name = "max_pooling2d"
+                model.layers[83]._name = "max_pooling2d_1"
+                model.layers[150]._name = "max_pooling2d_2"
             else:
                 model = tf.keras.models.load_model(config['weights'])
         else:
             raise ValueError("Include top is false but input_shape is not given!")
-        # fix names in layers, unnamed layers get system names which causes layers upstream
-        model.layers[37]._name = "max_pooling2d"
-        model.layers[83]._name = "max_pooling2d_1"
-        model.layers[150]._name = "max_pooling2d_2"
     else:
         raise ValueError("Model {} not found!".format(config['model']))
 
