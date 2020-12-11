@@ -63,7 +63,7 @@ class NormBase:
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
 
         # load front end feature extraction model
-        self.v4 = self._load_v4(config, input_shape)
+        self._load_v4(config, input_shape)
         print("[INIT] -- Model loaded --")
         print("[INIT] Model:", config['model'])
         print("[INIT] V4 layer:", config['v4_layer'])
@@ -96,20 +96,19 @@ class NormBase:
     def _load_v4(self, config, input_shape):
         if (config['model'] == 'VGG19') | (config['model'] =='ResNet50V2'):
             model = load_model(config, input_shape)
-            v4 = tf.keras.Model(inputs=model.input,
+            self.v4 = tf.keras.Model(inputs=model.input,
                                      outputs=model.get_layer(config['v4_layer']).output)
         else:
             raise ValueError("model: {} does not exists! Please change config file or add the model"
                              .format(config['model']))
-        return v4
 
-    '''
-    This method saves the fitted model
-    :param config: saves under the specified path in config
-    :param save_name: subfolder name
-    can be loaded with load_model(config, save_name)
-    '''
     def save_model(self, config, save_name):
+        """
+        This method saves the fitted model
+        :param config: saves under the specified path in config
+        :param save_name: subfolder name
+        can be loaded with load_model(config, save_name)
+        """
         if not os.path.exists(os.path.join("models/saved", config['save_name'])):
             os.mkdir(os.path.join("models/saved", config['save_name']))
         save_folder = os.path.join("models/saved", config['save_name'], save_name)
@@ -123,9 +122,6 @@ class NormBase:
             #np.save(os.path.join(save_folder, "pca"), self.pca)
             pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
 
-    '''
-    requires the NormBase object to be previously created by the same config
-    '''
     def _load_model(self, config, save_name):
         load_folder = os.path.join("models/saved", config['save_name'], save_name)
         ref_vector = np.load(os.path.join(load_folder, "ref_vector.npy"))
@@ -230,8 +226,9 @@ class NormBase:
 
         n_features:= height * width * channels
 
-        :param x: training data (n_samples, height, width, channels)
-        :param y: label (n_samples, )
+        :param data: Either DataGen or list [t,y]
+        t: training data (n_samples, height, width, channels)
+        y: label (n_samples, )
         :param batch_size:
         :param shuffle:
         :return: r, t
