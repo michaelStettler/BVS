@@ -7,7 +7,7 @@ from utils.load_model import load_model
 from utils.load_model import load_model
 
 config_path = 'configs/norm_base_config'
-config_name = 'norm_base_affectNet_sub8_4000_t0004.json'
+config_name = 'norm_base_affectNet_sub8_4000_t0005.json'
 config_file_path = os.path.join(config_path, config_name)
 print("config_file_path", config_file_path)
 # load norm_base_config file
