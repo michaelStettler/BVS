@@ -1,4 +1,6 @@
 import types
+import os
+import pickle
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -20,14 +22,14 @@ class NormBase:
 
     """
 
-    def __init__(self, config, input_shape):
+    def __init__(self, config, input_shape, save_name=None):
         """
         The init function is responsible to declare the front end model of the norm base mechanism declared in the
         config file
 
         :param config: JSON file
         :param input_shape: Tuple with the input size of the model (height, width, channels)
-        :param nu: tuning width
+        :param save_name: if given the fitted model is loaded from config['save_name'] subfolder save_name
         """
         # -----------------------------------------------------------------
         # limit GPU memory as it appear windows have an issue with this, from:
@@ -51,7 +53,7 @@ class NormBase:
         except KeyError:
             self.nu = 2.0
         try:
-            #set PCA if available in config
+            #set dim_red if available in config (only option 'PCA')
             self.dim_red = config['dim_red']
             self.pca = PCA(n_components=config['PCA'])
         except KeyError:
@@ -61,7 +63,7 @@ class NormBase:
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
 
         # load front end feature extraction model
-        self.v4 = self._load_model(config, input_shape)
+        self.v4 = self._load_v4(config, input_shape)
         print("[INIT] -- Model loaded --")
         print("[INIT] Model:", config['model'])
         print("[INIT] V4 layer:", config['v4_layer'])
@@ -83,9 +85,15 @@ class NormBase:
         self.threshold = self.n_features / threshold_divided
         print("[INIT] n_features:", self.n_features)
         print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
+
+        # load model
+        if not save_name is None:
+            self._load_model(config, save_name)
+            print("[INIT] saved model is loaded from file")
+
         print()
 
-    def _load_model(self, config, input_shape):
+    def _load_v4(self, config, input_shape):
         if (config['model'] == 'VGG19') | (config['model'] =='ResNet50V2'):
             model = load_model(config, input_shape)
             v4 = tf.keras.Model(inputs=model.input,
@@ -94,6 +102,38 @@ class NormBase:
             raise ValueError("model: {} does not exists! Please change config file or add the model"
                              .format(config['model']))
         return v4
+
+    '''
+    This method saves the fitted model
+    :param config: saves under the specified path in config
+    :param save_name: subfolder name
+    can be loaded with load_model(config, save_name)
+    '''
+    def save_model(self, config, save_name):
+        if not os.path.exists(os.path.join("models/saved", config['save_name'])):
+            os.mkdir(os.path.join("models/saved", config['save_name']))
+        save_folder = os.path.join("models/saved", config['save_name'], save_name)
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+        #save reference and tuning vector
+        np.save(os.path.join(save_folder, "ref_vector"), self.r)
+        np.save(os.path.join(save_folder, "tuning_vector"), self.t)
+        #save PCA
+        if self.dim_red == 'PCA':
+            #np.save(os.path.join(save_folder, "pca"), self.pca)
+            pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
+
+    '''
+    requires the NormBase object to be previously created by the same config
+    '''
+    def _load_model(self, config, save_name):
+        load_folder = os.path.join("models/saved", config['save_name'], save_name)
+        ref_vector = np.load(os.path.join(load_folder, "ref_vector.npy"))
+        tun_vector = np.load(os.path.join(load_folder, "tuning_vector.npy"))
+        self.set_ref_vector(ref_vector)
+        self.set_tuning_vector(tun_vector)
+        if self.dim_red == 'PCA':
+            self.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
 
     def print_v4_summary(self):
         print(self.v4.summary())
