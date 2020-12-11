@@ -6,8 +6,8 @@ from utils.load_config import load_config
 from models.NormBase import NormBase
 
 
-config = load_config("norm_base_expressivityLevels_t0001.json")
-save_name = "test_save"
+config = load_config("norm_base_expressivityLevels_t0003.json")
+save_name = "simplified"
 
 data_train = load_data(config)
 

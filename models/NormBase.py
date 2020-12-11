@@ -53,6 +53,10 @@ class NormBase:
         except KeyError:
             self.nu = 2.0
         try:
+            self.tun_func = config['tun_func']
+        except KeyError:
+            self.tun_func = '2-norm'
+        try:
             #set dim_red if available in config (only option 'PCA')
             self.dim_red = config['dim_red']
             self.pca = PCA(n_components=config['PCA'])
@@ -199,14 +203,26 @@ class NormBase:
 
         # compute norm-reference neurons
         #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
-        v = np.linalg.norm(batch_diff, ord=2, axis=1)
+        if self.tun_func == '2-norm':
+            v = np.linalg.norm(batch_diff, ord=2, axis=1)
 
-        f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-        f[f < 0] = 0 #ReLu activation instead of dividing by 2 and adding 0.5
-        #f = self.t @ batch_diff.T @ np.diag(np.power(v * 2, -1))
-        #f = f+0.5
-        f = np.power(f, self.nu)
-        return np.diag(v) @ f.T
+            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+            f[f < 0] = 0 #ReLu activation instead of dividing by 2 and adding 0.5
+            #f = self.t @ batch_diff.T @ np.diag(np.power(v * 2, -1))
+            #f = f+0.5
+            f = np.power(f, self.nu)
+            return np.diag(v) @ f.T
+        elif self.tun_func == '1-norm':
+            v = np.linalg.norm(batch_diff, ord=1, axis=1)
+            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+            f[f < 0] = 0  # ReLu activation instead of dividing by 2 and adding 0.5
+            f = np.power(f, self.nu)
+            return np.diag(v) @ f.T
+        elif self.tun_func == 'simplified':
+            # this is the function published in the ICAAN paper with 1-norm and nu=1
+            return 0.5 * (np.linalg.norm(batch_diff, ord=1, axis=1) + (self.t @ batch_diff.T)).T
+        else:
+            raise ValueError("{} is no valid choice for tun_func".format(self.tun_func))
 
     def get_correct_count(self, x, label):
         one_hot_encoder = np.eye(self.n_category)
