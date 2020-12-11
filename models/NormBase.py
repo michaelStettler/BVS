@@ -424,8 +424,38 @@ class NormBase:
         return accuracy, it_resp, labels
 
     def _evaluate_accuracy_array(self, x, y, batch_size):
-        # implement and return similar to function above
-        return None, None, None
+        num_data = np.shape(x)[0]
+        indices = np.arange(num_data)
+
+        it_resp = np.zeros((num_data, self.n_category))
+        labels = np.zeros(num_data)
+        classification = np.zeros(num_data)
+
+        print("[EVALUATE] Evaluating IT responses")
+        correct_pred = 0
+        # evaluate data
+        for b in tqdm(range(0, num_data, batch_size)):
+            # built batch
+            end = min(b + batch_size, num_data)
+            batch_idx = indices[b:end]
+            batch_data = x[batch_idx]
+            batch_label = np.array(y[batch_idx]).astype(int)
+            labels[batch_idx] = batch_label
+
+            # get IT response
+            it = self._get_it_resp(batch_data)
+            it_resp[batch_idx] = it
+
+            # get classification
+            cat = np.argmax(it, axis=1)
+            classification[batch_idx] = cat
+
+            # count correct predictions
+            correct_pred += self.get_correct_count(cat, batch_label)
+
+        accuracy = correct_pred / num_data
+        print("[EVALUATE] accuracy {:.4f}".format(accuracy))
+        return accuracy, it_resp, labels
 
     def _evaluate_accuracy_generator(self, generator):
         it_resp = []
