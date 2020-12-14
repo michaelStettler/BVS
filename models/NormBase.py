@@ -118,20 +118,25 @@ class NormBase:
         save_folder = os.path.join("models/saved", config['save_name'], save_name)
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
+        save_folder = os.path.join(save_folder, "NormBase_saved")
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
         #save reference and tuning vector
         np.save(os.path.join(save_folder, "ref_vector"), self.r)
         np.save(os.path.join(save_folder, "tuning_vector"), self.t)
+        np.save(os.path.join(save_folder, "tuning_mean"), self.t_mean)
         #save PCA
         if self.dim_red == 'PCA':
             #np.save(os.path.join(save_folder, "pca"), self.pca)
             pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
 
     def _load_model(self, config, save_name):
-        load_folder = os.path.join("models/saved", config['save_name'], save_name)
+        load_folder = os.path.join("models/saved", config['save_name'], save_name, "NormBase_saved")
         ref_vector = np.load(os.path.join(load_folder, "ref_vector.npy"))
         tun_vector = np.load(os.path.join(load_folder, "tuning_vector.npy"))
         self.set_ref_vector(ref_vector)
         self.set_tuning_vector(tun_vector)
+        self.t_mean = np.load(os.path.join(load_folder, "tuning_mean.npy"))
         if self.dim_red == 'PCA':
             self.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
 
@@ -221,6 +226,32 @@ class NormBase:
         elif self.tun_func == 'simplified':
             # this is the function published in the ICAAN paper with 1-norm and nu=1
             return 0.5 * (np.linalg.norm(batch_diff, ord=1, axis=1) + (self.t @ batch_diff.T)).T
+        elif self.tun_func == 'direction-only':
+            # return normalized scalar product between actual direction and tuning
+            v = np.linalg.norm(batch_diff, ord=2, axis=1)
+            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+            f[f<0] = 0
+            return f.T
+        elif self.tun_func == 'expressivity-direction':
+            # tun_func = exprissivity * (direction^nu)
+            # expressivity = norm(d) / norm(tun_mean)
+            # direction = f (like above)
+            # can be simplified by reducing norm(d), but leave it in for better understanding
+            # norm for expressivity can be chosen arbitrarily
+            v = np.linalg.norm(batch_diff, ord=2, axis=1)
+            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
+            f[f < 0] = 0
+            f = np.power(f, self.nu)
+            t_mean_norm = np.linalg.norm(self.t_mean, ord=2, axis=1)
+            batch_diff_norm = np.linalg.norm(batch_diff, ord=2, axis=1)
+            expressivity = np.outer(batch_diff_norm,
+                                     np.true_divide(1, t_mean_norm, out=np.zeros_like(t_mean_norm), where=t_mean_norm!=0))
+            it_resp = expressivity * f.T
+            #set response for reference category, to a sphere around reference vector with linear decay
+            # activity=1 in the middle, activity=0 at half the distance to the closest category
+            it_resp[:, self.ref_cat] = 1 - (0.5 *batch_diff_norm / np.delete(t_mean_norm, self.ref_cat).min())
+            it_resp[:, self.ref_cat][it_resp[:, self.ref_cat]<0] = 0
+            return it_resp
         else:
             raise ValueError("{} is no valid choice for tun_func".format(self.tun_func))
 
