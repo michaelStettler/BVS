@@ -73,14 +73,23 @@ class NormBase:
         print("[INIT] V4 layer:", config['v4_layer'])
         if not (self.dim_red is None):
             print("[INIT] dim_red:", self.dim_red)
-
+        shape_v4 = np.shape(self.v4.layers[-1].output)
+        print("shape_v4", shape_v4)
         try:
             # initialize n_features as number of components of PCA
             self.n_features = config['PCA']
         except KeyError:
             # initialize as output of network as default
             shape_v4 = np.shape(self.v4.layers[-1].output)
-            self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
+            if len(shape_v4) == 2:  # use flatten... but self.v4.layers[-1].output is a tensorShape object
+                self.n_features = shape_v4[1]
+            elif len(shape_v4) == 3:
+                self.n_features = shape_v4[1] * shape_v4[2]
+            elif len(shape_v4) == 4:
+                self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
+            else:
+                raise NotImplementedError("Dimensionality not implemented")
+
         self.r = np.zeros(self.n_features)
         self.t = np.zeros((self.n_category, self.n_features))
         self.t_cumul = np.zeros(self.n_category)
