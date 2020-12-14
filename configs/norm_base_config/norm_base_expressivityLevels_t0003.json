@@ -1,6 +1,6 @@
 {
   "train_data": "monkey_test",
-  "n_category": 8,
+  "n_category": 4,
   "ref_category": 0,
   "csv_train": "/app/Data/Dataset/ExpressivityLevels/csv/monkey_train.csv",
   "csv_val": "/app/Data/Dataset/ExpressivityLevels/csv/monkey_val.csv",
