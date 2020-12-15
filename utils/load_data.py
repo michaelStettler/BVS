@@ -110,47 +110,59 @@ def _load_expression_morphing(config, train, sort_by):
             directory = config['train_directory']
         except KeyError:
             directory = None
+        try:
+            avatar = config['train_avatar']
+        except KeyError:
+            avatar ='all'
+        try:
+            human_expression_config = config['train_human_expression']
+        except KeyError:
+            human_expression_config = 'all'
+        try:
+            anger_config = config['train_anger']
+        except KeyError:
+            anger_config = 'all'
     else:
         df = pd.read_csv(config['csv_val'])
         try:
             directory = config['val_directory']
         except KeyError:
             directory = None
+        try:
+            avatar = config['val_avatar']
+        except KeyError:
+            avatar ='all'
+        try:
+            human_expression_config = config['val_human_expression']
+        except KeyError:
+            human_expression_config = 'all'
+        try:
+            anger_config = config['val_anger']
+        except KeyError:
+            anger_config = 'all'
 
     if sort_by is not None:
         df = df.sort_values(by=sort_by)
 
     # select avatar
-    try:
-        avatar = config['train_avatar']
-        if avatar == 'all':
-            monkey_avatar = [False, True]
-        elif avatar == 'human':
-            monkey_avatar = [False]
-        else:
-            monkey_avatar = [True]
-    except KeyError:
+    if avatar == 'all':
         monkey_avatar = [False, True]
+    elif avatar == 'human':
+        monkey_avatar = [False]
+    else:
+        monkey_avatar = [True]
     df = df[df['monkey_avatar'].isin(monkey_avatar)]
     # select human/monkey expression
-    try:
-        human_expression_config = config['train_human_expression']
-        if human_expression_config == 'all':
-            human_expression = [0.0, 0.25, 0.5, 0.75, 1.0]
-        else:
-            human_expression = human_expression_config
-    except KeyError:
+    if human_expression_config == 'all':
         human_expression = [0.0, 0.25, 0.5, 0.75, 1.0]
+    else:
+        human_expression = human_expression_config
     df = df[df['human_expression'].isin(human_expression)]
     # select anger/fear blending
-    try:
-        anger_config = config['train_anger']
-        if anger_config == 'all':
-            anger = [0.0, 0.25, 0.5, 0.75, 1.0]
-        else:
-            anger = anger_config
-    except KeyError:
+    if anger_config == 'all':
         anger = [0.0, 0.25, 0.5, 0.75, 1.0]
+    else:
+        anger = anger_config
     df = df[df['anger'].isin(anger)]
 
     num_data = len(df.index)
