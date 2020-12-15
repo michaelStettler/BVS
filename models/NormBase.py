@@ -298,7 +298,7 @@ class NormBase:
                 #data = data.getAllData()
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
             v4_predict = self.v4.predict(data[0])
-            v4_predict = np.reshape(v4_predict, (360,-1))
+            v4_predict = np.reshape(v4_predict, (data[0].shape[0],-1))
             print("[FIT] v4 prediction generated", v4_predict.shape)
             # perform PCA on this output
             self.pca.fit(v4_predict)
