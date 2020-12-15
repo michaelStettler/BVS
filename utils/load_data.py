@@ -36,6 +36,8 @@ def load_data(config, train=True, sort_by=None):
 
     elif config['train_data'] == 'affectnet':
         data = _load_affectnet(config, train)
+    elif config['train_data'] == 'ExpressionMorphing':
+        data = _load_expression_morphing(config, train, sort_by)
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
                          .format(config['train_data']))
@@ -101,6 +103,74 @@ def _load_monkey(config, train, sort_by):
         idx += 1
     return [x, y]
 
+def _load_expression_morphing(config, train, sort_by):
+    if train:
+        df = pd.read_csv(config['csv_train'])
+        try:
+            directory = config['train_directory']
+        except KeyError:
+            directory = None
+    else:
+        df = pd.read_csv(config['csv_val'])
+        try:
+            directory = config['val_directory']
+        except KeyError:
+            directory = None
+
+    if sort_by is not None:
+        df = df.sort_values(by=sort_by)
+
+    # select avatar
+    try:
+        avatar = config['train_avatar']
+        if avatar == 'all':
+            monkey_avatar = [False, True]
+        elif avatar == 'human':
+            monkey_avatar = [False]
+        else:
+            monkey_avatar = [True]
+    except KeyError:
+        monkey_avatar = [False, True]
+    df = df[df['monkey_avatar'].isin(monkey_avatar)]
+    # select human/monkey expression
+    try:
+        human_expression_config = config['train_human_expression']
+        if human_expression_config == 'all':
+            human_expression = [0.0, 0.25, 0.5, 0.75, 1.0]
+        else:
+            human_expression = human_expression_config
+    except KeyError:
+        human_expression = [0.0, 0.25, 0.5, 0.75, 1.0]
+    df = df[df['human_expression'].isin(human_expression)]
+    # select anger/fear blending
+    try:
+        anger_config = config['train_anger']
+        if anger_config == 'all':
+            anger = [0.0, 0.25, 0.5, 0.75, 1.0]
+        else:
+            anger = anger_config
+    except KeyError:
+        anger = [0.0, 0.25, 0.5, 0.75, 1.0]
+    df = df[df['anger'].isin(anger)]
+
+    num_data = len(df.index)
+    print("[DATA] Found {} images".format(num_data))
+
+    #  declare x and y
+    x = np.zeros((num_data, 224, 224, 3))
+    y = np.zeros(num_data)
+
+    for idx, row in tqdm(df.iterrows()):
+        # load img
+        if directory is None:
+            im = cv2.imread(os.path.join(row['image_path'], row['image_name']))
+        else:
+            im = cv2.imread(os.path.join(directory, row['image_name']))
+        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        x[idx, :, :, :] = im_rgb
+        y[idx] = row['category']
+
+    return [x,y]
 
 def _load_FEI(config):
     # get csv
