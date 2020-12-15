@@ -172,15 +172,17 @@ def _load_expression_morphing(config, train, sort_by):
     x = np.zeros((num_data, 224, 224, 3))
     y = np.zeros(num_data)
 
-    for idx, row in tqdm(df.iterrows()):
+    index = 0 # because idx does not represent correct index
+    for _ , row in tqdm(df.iterrows()):
         # load img
         if directory is None:
             im = cv2.imread(os.path.join(row['image_path'], row['image_name']))
         else:
             im = cv2.imread(os.path.join(directory, row['image_name']))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        x[idx, :, :, :] = im_rgb
-        y[idx] = row['category']
+        x[index, :, :, :] = im_rgb
+        y[index] = row['category']
+        index +=1
 
     return [x,y]
 
