@@ -365,6 +365,39 @@ class NormBase:
         for data in tqdm(generator.generate()):
             self._update_dir_tuning(data[0], data[1])
 
+    def fit_only_reference(self, data, batch_size=32):
+        """
+        fits only reference vector without fitting tuning vector
+        :param data: [x,y] or DataGen
+        :param batch_size:
+        :return:
+        """
+        # reset reference
+        self.r = np.zeros(self.r.shape)
+        self.ref_cumul = 0
+
+        if isinstance(data, list):
+            num_data = data[0].shape[0]
+            indices = np.arange(num_data)
+            #if shuffle:
+            #    np.random.shuffle(indices)
+            # learn reference vector
+            print("[FIT] Learning reference pose")
+            for b in tqdm(range(0, num_data, batch_size)):
+                # built batch
+                end = min(b + batch_size, num_data)
+                batch_idx = indices[b:end]
+                batch_data = data[0][batch_idx]
+                ref_data = batch_data[
+                    data[1][batch_idx] == self.ref_cat]  # keep only data with ref = 0 (supposedly neutral face)
+                # update reference vector
+                self._update_ref_vector(ref_data)
+        elif isinstance(data, DataGen):
+            # train using a generator function
+            raise ValueError("Type DataGen is not implemented yet")
+        else:
+            raise ValueError("Type {} od data is not recognize!".format(type(data)))
+
     def predict(self, data, batch_size=32):
         x = data[0]
         num_data = np.shape(x)[0]
