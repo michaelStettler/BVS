@@ -34,7 +34,7 @@ print("[MODEL] Set tuning vector", np.shape(t))
 
 # predict tuning vector
 # it_resp = norm_base.predict(data)
-it_resp = norm_base.evaluate(data)
+_, it_resp, _ = norm_base.evaluate(data)
 print("shape it_resp", np.shape(it_resp))
 plt.plot(it_resp)
 plt.show()

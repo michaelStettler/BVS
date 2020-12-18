@@ -9,6 +9,8 @@ This function runs and evaluates the model with given config.
 The model is saved to models/saved/config['save_name']/save_name.
 If already calculated the result is loaded instead of calculated.
 '''
+
+# TODO use save and load instead
 def evaluate_model(config, save_name):
     if not os.path.exists(os.path.join("models/saved", config['save_name'])):
         os.mkdir(os.path.join("models/saved", config['save_name']))
@@ -49,7 +51,9 @@ def evaluate_model(config, save_name):
             print("[Data] -- Data loaded --")
 
             # train model
-            ref_vector, tun_vector = norm_base.fit(data_train, batch_size=config['batch_size'])
+            norm_base.fit(data_train, batch_size=config['batch_size'])
+            ref_vector = norm_base.r
+            tun_vector = norm_base.t
 
             # save model
             np.save(os.path.join(save_folder, "ref_vector"), ref_vector)
@@ -61,7 +65,7 @@ def evaluate_model(config, save_name):
         print("[Data] -- Data loaded --")
 
         # evaluate
-        accuracy, it_resp, labels = norm_base.evaluate_accuracy(data_test)
+        accuracy, it_resp, labels = norm_base.evaluate(data_test)
         np.save(os.path.join(save_folder, "accuracy"), accuracy)
         np.save(os.path.join(save_folder, "it_resp"), it_resp)
         np.save(os.path.join(save_folder, "labels"), labels)
