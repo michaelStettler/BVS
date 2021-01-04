@@ -1,28 +1,33 @@
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 from utils.load_config import load_config
 from models.NormBase import NormBase
 from utils.load_data import load_data
 
-config = load_config("norm_base_affectNet_sub8_4000_t0007.json")
+config = load_config("norm_base_plotDirections_t0001.json")
+save_name = "test"
 
-#accuracy, it_resp, labels, ref_vector, tun_vector = evaluate_model(config, config['v4_layer'])
+# model
+try:
+    norm_base = NormBase(config, input_shape=(224, 224, 3), save_name=save_name)
+except IOError:
+    norm_base = NormBase(config, input_shape=(224,224,3))
+    data_train = load_data(config)
+    norm_base.fit(data_train)
+    norm_base.save_model(config, save_name)
 
-norm_base = NormBase(config, input_shape=(224, 224, 3))
-# load vectors
-save_folder = os.path.join("models/saved", config['save_name'], config['v4_layer'])
-ref_vector = np.load(os.path.join(save_folder, "ref_vector.npy"))
-tun_vector = np.load(os.path.join(save_folder, "tuning_vector.npy"))
-# set vectors
-norm_base.set_ref_vector(ref_vector)
-norm_base.set_tuning_vector(tun_vector)
-
-#TODO load data
-data = load_data(config, train=False, sort_by=['image'])
-print("type(data)", type(data))
-
+# test
+data = load_data(config, train=False)
 projection, labels = norm_base.projection_tuning(data)
 
-# tun_vector is normed in 2-norm
-print("tun_vector 1-norm", np.linalg.norm(tun_vector, ord=1, axis=1))
-print("tun_vector 2-norm", np.linalg.norm(tun_vector, ord=2, axis=1))
+# plot
+fig, axs = plt.subplots(1, projection.shape[0], figsize=(5*projection.shape[0], 5))
+fig.suptitle("Projection of difference vector keeping 2-norm and scalar product")
+for category, ax in enumerate(axs):
+    ax.set_title('category {}'.format(category))
+    ax.scatter(projection[category,:,0], projection[category,:,1], s = 1, c=labels)
+    ax.set_ylim(ymin=0)
+    x_max = max(np.abs(ax.get_xlim()))
+    ax.set_xlim(xmin=-x_max, xmax=x_max)
+plt.savefig(os.path.join("models/saved", config['save_name'], "scatter.png"))

@@ -495,40 +495,55 @@ class NormBase:
 
     ### PLOTTING
 
-    def projection_tuning(self, data):
+    def projection_tuning(self, data, batch_size = 32):
         """
         This function calculates how the data projects onto a plane.
         It returns the projection and correct labels
+        keeps constant:
+        - 2-norm of difference vector
+        - scalar product of difference vector and tuning vector
+        :param batch_size:
         :param data: input data
         :return:
         """
-        if type(data) == DataGen:
-            projection, labels = self._projection_tuning(data)
+        if isinstance(data, DataGen):
+            projection, labels = self._projection_generator(data)
+        if isinstance(data, list):
+            projection, labels = self._projection_array(data, batch_size=batch_size)
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
         return projection, labels
 
-    def _projection_tuning(self, generator):
+    def _projection_array(self, data, batch_size):
+        labels = data[1]
+        projection = np.zeros((self.n_category, labels.size, 2))
+
+        num_data = labels.size
+        indices = np.arange(num_data)
+        for b in tqdm(range(0, num_data, batch_size)):
+            # build batch
+            end = min(b + batch_size, num_data)
+            batch_idx = indices[b:end]
+            batch_data = data[0][batch_idx]
+
+            # calculate projection
+            batch_diff = self._get_reference_pred(batch_data)
+            for category in range(self.n_category):
+                if category == self.ref_cat:
+                    continue
+                scalar_product = batch_diff @ self.t[category]
+                projection[category, batch_idx, 0] = scalar_product
+                projection[category, batch_idx, 1] = np.sqrt(np.square(np.linalg.norm(batch_diff, axis=1)) -
+                                                   np.square(scalar_product))
+                projection[category, batch_idx] = projection[category, batch_idx] / np.linalg.norm(self.t_mean[category])
+
+        return projection, labels
+
+    def _projection_generator(self, generator):
         projection = [] #np.zeros((generator.num_data, 2))
         labels = [] #np.zeros(generator.num_data)
         for data in tqdm(generator.generate()):
             # compute batch diff
             batch_diff = self._get_reference_pred(data[0])
-            print("batch_diff.shape", batch_diff.shape)
 
-            # compute norm-reference neurons
-            #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
-            v = np.linalg.norm(batch_diff, ord=2, axis = 1)
-            print("v.shape",v.shape)
-            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-            print("f.shape", f.shape)
-            # TODO continue work here
-
-            #f[f < 0] = 0
-            f = f+0.5
-            print("f", f)
-
-
-            f = np.power(f, self.nu)
-            it=np.diag(v) @ f.T
         return projection, labels
