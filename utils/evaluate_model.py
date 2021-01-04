@@ -35,6 +35,7 @@ def evaluate_model(config, save_name, legacy = False):
                 norm_base = NormBase(config, input_shape=(224,224,3))
                 data_train = load_data(config)
                 norm_base.fit(data_train)
+                norm_base.save_model(config, save_name)
             data_test = load_data(config, train=False)
             accuracy, it_resp, labels = norm_base.evaluate(data_test)
 
