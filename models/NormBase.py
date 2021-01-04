@@ -549,6 +549,14 @@ class NormBase:
         return projection, labels
 
     def line_constant_activation(self, dx=0.01, x_max=2.0, activations=[0.25,0.5, 0.75,1]):
+        """
+        calculates the lines of constant activation based on the activation function "expressivity-direction"
+        recommended to be used together with projection_tuning()
+        :param dx: sample distance
+        :param x_max: maximum sample value
+        :param activations: values of activation
+        :return:
+        """
         x = np.arange(dx,x_max,dx)
 
         lines = np.zeros((x.size, len(activations)))
