@@ -165,8 +165,6 @@ class NormBase:
 
     ### HELPER FUNCTIONS ###
 
-    # TODO in scripts that call set_ref and set_tun, replace by save_model, load_model, and fit() with options
-    # especially in evaluate_model()
     def set_ref_vector(self, r):
         self.r = r
 
