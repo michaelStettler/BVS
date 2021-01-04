@@ -547,3 +547,13 @@ class NormBase:
             batch_diff = self._get_reference_pred(data[0])
 
         return projection, labels
+
+    def line_constant_activation(self, dx=0.01, x_max=2.0, activations=[0.25,0.5, 0.75,1]):
+        x = np.arange(dx,x_max,dx)
+
+        lines = np.zeros((x.size, len(activations)))
+        for i, activation in enumerate(activations):
+            lines[:,i] = np.power(activation/np.power(x,self.nu), 2/(1-self.nu)) - np.square(x)
+            lines[:,i][ lines[:,i]<0 ] = 0
+            lines[:,i] = np.sqrt(lines[:,i])
+        return x, lines
