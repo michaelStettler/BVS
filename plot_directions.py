@@ -5,9 +5,9 @@ from utils.load_config import load_config
 from models.NormBase import NormBase
 from utils.load_data import load_data
 
-config = load_config("norm_base_plotDirections_t0001.json")
-save_name = "humanAvatar"
-retrain = False
+config = load_config("norm_base_plotDirections_t0007.json")
+save_name = config["sub_folder"]
+retrain = True
 
 # model
 try:
@@ -16,13 +16,22 @@ try:
     norm_base = NormBase(config, input_shape=(224, 224, 3), save_name=save_name)
 except IOError:
     norm_base = NormBase(config, input_shape=(224,224,3))
-    data_train = load_data(config)
-    norm_base.fit(data_train)
+
+    data1 = load_data(config, train=1)
+    norm_base.fit(load_data(config, train=config["train_dim_ref_tun_ref"][0]), fit_dim_red=True, fit_ref=False,
+                  fit_tun=False)
+    norm_base.fit(load_data(config, train=config["train_dim_ref_tun_ref"][1]), fit_dim_red=False, fit_ref=True,
+                  fit_tun=False)
+    norm_base.fit(load_data(config, train=config["train_dim_ref_tun_ref"][2]), fit_dim_red=False, fit_ref=False,
+                  fit_tun=True)
+    norm_base.fit(load_data(config, train=config["train_dim_ref_tun_ref"][3]), fit_dim_red=False, fit_ref=True,
+                  fit_tun=False)
     norm_base.save_model(config, save_name)
 
 # test
-data = load_data(config, train=False)
-projection, labels = norm_base.projection_tuning(data)
+data_test = load_data(config, train=config["data_test"])
+
+projection, labels = norm_base.projection_tuning(data_test)
 
 # calculate constant activation lines
 x_lines, lines = norm_base.line_constant_activation()
@@ -36,7 +45,7 @@ for category, ax in enumerate(axs):
 
     # set axis limits
     ax.set_ylim(ymin=0, ymax=ax.get_ylim()[1]*1.2)
-    x_max = max(np.abs(ax.get_xlim()))
+    x_max = max(max(np.abs(ax.get_xlim())), 1)
     ax.set_xlim(xmin=-x_max, xmax=x_max)
 
     #plot lines of constant activation
