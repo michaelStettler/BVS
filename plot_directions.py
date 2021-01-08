@@ -17,7 +17,6 @@ try:
 except IOError:
     norm_base = NormBase(config, input_shape=(224,224,3))
 
-    data1 = load_data(config, train=1)
     norm_base.fit(load_data(config, train=config["train_dim_ref_tun_ref"][0]), fit_dim_red=True, fit_ref=False,
                   fit_tun=False)
     norm_base.fit(load_data(config, train=config["train_dim_ref_tun_ref"][1]), fit_dim_red=False, fit_ref=True,
