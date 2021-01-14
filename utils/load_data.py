@@ -103,6 +103,7 @@ def _load_monkey(config, train, sort_by):
         idx += 1
     return [x, y]
 
+
 def _load_expression_morphing(config, train, sort_by):
     if train:
         df = pd.read_csv(config['csv_train'])
@@ -183,6 +184,7 @@ def _load_expression_morphing(config, train, sort_by):
         y[idx] = row['category']
 
     return [x,y]
+
 
 def _load_FEI(config):
     # get csv
