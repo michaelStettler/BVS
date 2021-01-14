@@ -13,6 +13,11 @@ from utils.data_generator import DataGen
 class NormBase:
     """
     NormBase class define the functions to train a norm base mechanism with a front end extracting features
+    important functions:
+    - NormBase(config, input_shape, save_name)
+    - save_model(config, save_name)
+    - fit(data, batch_size, fit_dim_red, fit_ref, fit_tun)
+    - evaluate(data, batch_size)
 
     r:= reference vector (n_features, )
     t:= tuning vector (n_category, n_features)
@@ -115,6 +120,8 @@ class NormBase:
             raise ValueError("model: {} does not exists! Please change config file or add the model"
                              .format(config['model']))
 
+    ### SAVE AND LOAD ###
+
     def save_model(self, config, save_name):
         """
         This method saves the fitted model
@@ -140,6 +147,13 @@ class NormBase:
             pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
 
     def _load_model(self, config, save_name):
+        """
+        loads trained model from file, including dimensionality reduction
+        this method should only be called by init
+        :param config: configuration file
+        :param save_name: folder name
+        :return:
+        """
         load_folder = os.path.join("models/saved", config['save_name'], save_name, "NormBase_saved")
         ref_vector = np.load(os.path.join(load_folder, "ref_vector.npy"))
         tun_vector = np.load(os.path.join(load_folder, "tuning_vector.npy"))
@@ -149,8 +163,7 @@ class NormBase:
         if self.dim_red == 'PCA':
             self.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
 
-    def print_v4_summary(self):
-        print(self.v4.summary())
+    ### HELPER FUNCTIONS ###
 
     def set_ref_vector(self, r):
         self.r = r
@@ -158,10 +171,12 @@ class NormBase:
     def set_tuning_vector(self, t):
         self.t = t
 
-    '''
-    Get the computation of the whole pipeline before NormBase
-    '''
     def _get_preds(self,data):
+        """
+        returns prediction of pipeline before norm-base
+        :param data: batch of data
+        :return: prediction
+        """
         # prediction of v4 layer
         preds = self.v4.predict(data)
         preds = np.reshape(preds, (data.shape[0], -1))
@@ -171,24 +186,36 @@ class NormBase:
         return preds
 
     def _update_ref_vector(self, data):
+        """
+        updates reference vector wrt to new data
+        :param data: input of self.ref_cat
+        :return:
+        """
         n_ref = np.shape(data)[0]
-
         if n_ref > 0:
             preds = self._get_preds(data)
-
             # update ref_vector m
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
             self.ref_cumul += n_ref
 
     def _get_reference_pred(self, data):
+        """
+        returns difference vector between prediction and reference vector
+        :param data: batch data
+        :return: difference vector
+        """
         len_batch = len(data)  # take care of last epoch if size is not equal as the batch_size
-
         preds = self._get_preds(data)
-
         # compute batch diff
         return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
 
     def _update_dir_tuning(self, data, label):
+        """
+        updates tuning vector wrt to new data
+        :param data: input data
+        :param label: corresponding labels
+        :return:
+        """
         # compute batch diff
         batch_diff = self._get_reference_pred(data)
 
@@ -212,6 +239,12 @@ class NormBase:
                     self.t[i] = self.t_mean[i] / np.linalg.norm(self.t_mean[i])
 
     def _get_it_resp(self, data):
+        """
+        computes the activity of norm-based neurons
+        for different tuning functions selected in config
+        :param data: input data
+        :return: activity for each category
+        """
         # compute batch diff
         batch_diff = self._get_reference_pred(data)
 
@@ -264,222 +297,140 @@ class NormBase:
         else:
             raise ValueError("{} is no valid choice for tun_func".format(self.tun_func))
 
-    def get_correct_count(self, x, label):
+    def _get_correct_count(self, x, label):
         one_hot_encoder = np.eye(self.n_category)
         one_hot_cats = one_hot_encoder[x]
         one_hot_label = one_hot_encoder[label]
 
         return np.count_nonzero(np.multiply(one_hot_cats, one_hot_label))
 
-    def fit(self, data, batch_size=32, shuffle=False):
+    ### FIT FUNCTIONS ###
+
+    def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True):
         """
-        The fit function allows to learn both the reference vector (m) and the tuning vector (n).
-        The training is complete in two different loops, one loop for the reference vector and one for the tuning
-        vector.
-
-        The loops allows to compute the reference and tuning vector in a cumulative way over the complete dataset
-        by leveraging the creation of batch from the data
-
-        n_features:= height * width * channels
-
-        :param data: Either DataGen or list [t,y]
-        t: training data (n_samples, height, width, channels)
-        y: label (n_samples, )
+        fit model on data
+        :param data: input
         :param batch_size:
-        :param shuffle:
-        :return: r, t
+        :param fit_dim_red: whether to fit dimensionality reduction
+        :param fit_ref: whether to fit reference vector
+        :param fit_tun: whether to fit tuning vector
+        :return:
         """
+        if fit_dim_red:
+            self._fit_dim_red(data)
+        if fit_ref:
+            self._fit_reference(data, batch_size)
+        if fit_tun:
+            self._fit_tuning(data, batch_size)
 
+    def _fit_dim_red(self, data):
+        """
+        fit dimensionality reduction selected by config
+        :param data: input data
+        :return:
+        """
+        print("[FIT] dimensionality reduction")
         # in the case of dimensionality reduction set up the pipeline
         if self.dim_red == 'PCA':
             print("[FIT] Fitting PCA")
             # get output on all data from self.v4
             if isinstance(data, DataGen):
-                #data = data.getAllData()
+                # data = data.getAllData()
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
             v4_predict = self.v4.predict(data[0])
-            v4_predict = np.reshape(v4_predict, (360,-1))
+            v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
             print("[FIT] v4 prediction generated", v4_predict.shape)
             # perform PCA on this output
             self.pca.fit(v4_predict)
-            print("explained variance",self.pca.explained_variance_ratio_)
+            print("explained variance", self.pca.explained_variance_ratio_)
+
+    def _fit_reference(self, data, batch_size):
+        """
+        fits only reference vector without fitting tuning vector
+        :param data: [x,y] or DataGen
+        :param batch_size:
+        :return:
+        """
+        print("[FIT] Learning reference pose")
+        # reset reference
+        self.r = np.zeros(self.r.shape)
+        self.ref_cumul = 0
 
         if isinstance(data, list):
-            # train using data array
-            self._fit_array(data[0], data[1], batch_size, shuffle)
+            num_data = data[0].shape[0]
+            indices = np.arange(num_data)
+            for b in tqdm(range(0, num_data, batch_size)):
+                # built batch
+                end = min(b + batch_size, num_data)
+                batch_idx = indices[b:end]
+                batch_data = data[0][batch_idx]
+                ref_data = batch_data[data[1][batch_idx] == self.ref_cat]
+                # update reference vector
+                self._update_ref_vector(ref_data)
         elif isinstance(data, DataGen):
-            # train using a generator function
-            self._fit_generator(data)
+            # train using a generator
+            data.reset()
+            for data_batch in tqdm(data.generate()):
+                x = data_batch[0]
+                y = data_batch[1]
+                ref_data = x[y == self.ref_cat]  # keep only data with ref = 0 (supposedly neutral face)
 
+                self._update_ref_vector(ref_data)
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
 
-        return self.r, self.t
+    def _fit_tuning(self, data, batch_size):
+        """
+        fits only tuning vector with already fitted reference vector
+        :param data: [x,y] or DataGen
+        :param batch_size:
+        :return:
+        """
+        print("[FIT] Learning tuning vector")
+        self.t = np.zeros(self.t.shape)
+        self.t_mean = np.zeros(self.t_mean.shape)
+        self.t_cumul = np.zeros(self.t_cumul.shape)
+        if isinstance(data, list):
+            num_data = data[0].shape[0]
+            indices = np.arange(num_data)
+            for b in tqdm(range(0, num_data, batch_size)):
+                # built batch
+                end = min(b + batch_size, num_data)
+                batch_idx = indices[b:end]
+                batch_data = data[0][batch_idx]
+                batch_label = data[1][batch_idx]
 
-    def _fit_array(self, x, y, batch_size, shuffle):
-        num_data = np.shape(x)[0]
-        indices = np.arange(num_data)
+                # update direction tuning vector
+                self._update_dir_tuning(batch_data, batch_label)
+        elif isinstance(data, DataGen):
+            data.reset()
+            for data_batch in tqdm(data.generate()):
+                self._update_dir_tuning(data_batch[0], data_batch[1])
+        else:
+            raise ValueError("Type {} od data is not recognize!".format(type(data)))
 
-        if shuffle:
-            np.random.shuffle(indices)
-
-        # learn reference vector
-        print("[FIT] Learning reference pose")
-        for b in tqdm(range(0, num_data, batch_size)):
-            # built batch
-            end = min(b + batch_size, num_data)
-            batch_idx = indices[b:end]
-            batch_data = x[batch_idx]
-            ref_data = batch_data[y[batch_idx] == self.ref_cat]  # keep only data with ref = 0 (supposedly neutral face)
-
-            # update reference vector
-            self._update_ref_vector(ref_data)
-
-        # learn tuning direction
-        print("[FIT] Learning tuning direction")
-        for b in tqdm(range(0, num_data, batch_size)):
-            # built batch
-            end = min(b + batch_size, num_data)
-            batch_idx = indices[b:end]
-            batch_data = x[batch_idx]
-            batch_label = y[batch_idx]
-
-            # update direction tuning vector
-            self._update_dir_tuning(batch_data, batch_label)
-
-    def _fit_generator(self, generator):
-        # learn reference vector
-        print("[FIT] Learning reference pose")
-        for data in tqdm(generator.generate()):
-            x = data[0]
-            y = data[1]
-            ref_data = x[y == self.ref_cat]  # keep only data with ref = 0 (supposedly neutral face)
-
-            self._update_ref_vector(ref_data)
-
-        # reset count of the generator for second pass
-        generator.reset()
-
-        # learn tuning direction
-        print("[FIT] Learning tuning direction")
-        for data in tqdm(generator.generate()):
-            self._update_dir_tuning(data[0], data[1])
-
-    def predict(self, data, batch_size=32):
-        x = data[0]
-        num_data = np.shape(x)[0]
-        indices = np.arange(num_data)
-
-        it_resp = np.zeros((num_data, self.n_category))
-
-        # predict data
-        for b in tqdm(range(0, num_data, batch_size)):
-            # built batch
-            end = min(b + batch_size, num_data)
-            batch_idx = indices[b:end]
-            batch_data = x[batch_idx]
-
-            # get it response
-            it = self._get_it_resp(batch_data)
-            it_resp[batch_idx] = it
-
-        return it_resp
+    ### EVALUATION / PREDICTION
 
     def evaluate(self, data, batch_size=32):
-
+        """
+        This function evaluates the NormBase model on a test data set.
+        :param data: input data
+        :param batch_size:
+        :return: accuracy, it_resp, labels
+        """
         if isinstance(data, list):
             # train using data array
-            it_resp = self._evaluate_array(data[0], data[1], batch_size)
+            accuracy, it_resp, labels = self._evaluate_array(data[0], data[1], batch_size)
         elif isinstance(data, DataGen):
             # train using a generator function
-            it_resp = self._evaluate_generator(data)
-
-        else:
-            raise ValueError("Type {} od data is not recognize!".format(type(data)))
-
-        return it_resp
-
-    def _evaluate_array(self, x, y, batch_size):
-        num_data = np.shape(x)[0]
-        indices = np.arange(num_data)
-
-        it_resp = np.zeros((num_data, self.n_category))
-        classification = np.zeros(num_data)
-
-        print("[EVALUATE] Evaluating IT responses")
-        correct_pred = 0
-        # evaluate data
-        for b in tqdm(range(0, num_data, batch_size)):
-            # built batch
-            end = min(b + batch_size, num_data)
-            batch_idx = indices[b:end]
-            batch_data = x[batch_idx]
-            batch_label = np.array(y[batch_idx]).astype(int)
-
-            # get IT response
-            it = self._get_it_resp(batch_data)
-            it_resp[batch_idx] = it
-
-            # get classification
-            cat = np.argmax(it, axis=1)
-            classification[batch_idx] = cat
-
-            # count correct predictions
-            correct_pred += self.get_correct_count(cat, batch_label)
-
-        accuracy = correct_pred / num_data
-        print("[EVALUATE] accuracy {:.4f}".format(accuracy))
-        return it_resp
-
-    def _evaluate_generator(self, generator):
-        it_resp = []
-        classification = []
-        num_data = 0
-
-        print("[EVALUATE] Evaluating IT responses")
-        correct_pred = 0
-        # evaluate data
-        for data in tqdm(generator.generate()):
-            num_data += len(data[0])
-
-            # get IT response
-            it = self._get_it_resp(data[0])
-            it_resp.append(it)
-
-            # get classification
-            it[:, self.ref_cat] = self.threshold
-            cat = np.argmax(it, axis=1)
-            classification.append(cat)
-
-            # count correct predictions
-            correct_pred += self.get_correct_count(cat, np.array(data[1]).astype(np.uint8))
-
-        accuracy = correct_pred / num_data
-        print("[EVALUATE] accuracy {:.4f}".format(accuracy))
-        return np.reshape(it_resp, (-1, self.n_category))
-
-    '''
-    This function evaluates the NormBase model on a test data set.
-    This function is similar to evaluate but returns additional results.
-    returns 
-    accuracy: fraction correct
-    it_resp: response activity
-    labels: correct labels
-    '''
-    def evaluate_accuracy(self, data, batch_size=32):
-        if isinstance(data, list):
-            # train using data array
-            accuracy, it_resp, labels = self._evaluate_accuracy_array(data[0], data[1], batch_size)
-        elif isinstance(data, DataGen):
-            # train using a generator function
-            accuracy, it_resp, labels = self._evaluate_accuracy_generator(data)
+            accuracy, it_resp, labels = self._evaluate_generator(data)
 
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
 
         return accuracy, it_resp, labels
 
-    def _evaluate_accuracy_array(self, x, y, batch_size):
+    def _evaluate_array(self, x, y, batch_size):
         num_data = np.shape(x)[0]
         indices = np.arange(num_data)
 
@@ -507,13 +458,13 @@ class NormBase:
             classification[batch_idx] = cat
 
             # count correct predictions
-            correct_pred += self.get_correct_count(cat, batch_label)
+            correct_pred += self._get_correct_count(cat, batch_label)
 
         accuracy = correct_pred / num_data
         print("[EVALUATE] accuracy {:.4f}".format(accuracy))
         return accuracy, it_resp, labels
 
-    def _evaluate_accuracy_generator(self, generator):
+    def _evaluate_generator(self, generator):
         it_resp = []
         classification = []
         labels = []
@@ -536,44 +487,81 @@ class NormBase:
             classification.append(cat)
 
             # count correct predictions
-            correct_pred += self.get_correct_count(cat, np.array(data[1]).astype(np.uint8))
+            correct_pred += self._get_correct_count(cat, np.array(data[1]).astype(np.uint8))
 
         accuracy = correct_pred / num_data
         print("[EVALUATE] accuracy {:.4f}".format(accuracy))
         return accuracy, np.reshape(it_resp, (-1, self.n_category)), np.concatenate(labels, axis=None)
 
-    '''
-    This function calculates how the data projects onto a plane.
-    It returns the projection and correct labels
-    '''
-    def projection_tuning(self, data):
-        if type(data) == DataGen:
-            projection, labels = self._projection_tuning(data)
+    ### PLOTTING
+
+    def projection_tuning(self, data, batch_size = 32):
+        """
+        This function calculates how the data projects onto a plane.
+        It returns the projection and correct labels
+        keeps constant:
+        - 2-norm of difference vector
+        - scalar product of difference vector and tuning vector
+        :param batch_size:
+        :param data: input data
+        :return:
+        """
+        if isinstance(data, DataGen):
+            projection, labels = self._projection_generator(data)
+        if isinstance(data, list):
+            projection, labels = self._projection_array(data, batch_size=batch_size)
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
         return projection, labels
 
-    def _projection_tuning(self, generator):
+    def _projection_array(self, data, batch_size):
+        labels = data[1]
+        projection = np.zeros((self.n_category, labels.size, 2))
+
+        num_data = labels.size
+        indices = np.arange(num_data)
+        for b in tqdm(range(0, num_data, batch_size)):
+            # build batch
+            end = min(b + batch_size, num_data)
+            batch_idx = indices[b:end]
+            batch_data = data[0][batch_idx]
+
+            # calculate projection
+            batch_diff = self._get_reference_pred(batch_data)
+            for category in range(self.n_category):
+                if category == self.ref_cat:
+                    continue
+                scalar_product = batch_diff @ self.t[category]
+                projection[category, batch_idx, 0] = scalar_product
+                projection[category, batch_idx, 1] = np.sqrt(np.square(np.linalg.norm(batch_diff, axis=1)) -
+                                                   np.square(scalar_product))
+                projection[category, batch_idx] = projection[category, batch_idx] / np.linalg.norm(self.t_mean[category])
+
+        return projection, labels
+
+    def _projection_generator(self, generator):
         projection = [] #np.zeros((generator.num_data, 2))
         labels = [] #np.zeros(generator.num_data)
         for data in tqdm(generator.generate()):
             # compute batch diff
             batch_diff = self._get_reference_pred(data[0])
-            print("batch_diff.shape", batch_diff.shape)
 
-            # compute norm-reference neurons
-            #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
-            v = np.linalg.norm(batch_diff, ord=2, axis = 1)
-            print("v.shape",v.shape)
-            f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-            print("f.shape", f.shape)
-            # TODO continue work here
-
-            #f[f < 0] = 0
-            f = f+0.5
-            print("f", f)
-
-
-            f = np.power(f, self.nu)
-            it=np.diag(v) @ f.T
         return projection, labels
+
+    def line_constant_activation(self, dx=0.01, x_max=2.0, activations=[0.25,0.5, 0.75,1]):
+        """
+        calculates the lines of constant activation based on the activation function "expressivity-direction"
+        recommended to be used together with projection_tuning()
+        :param dx: sample distance
+        :param x_max: maximum sample value
+        :param activations: values of activation
+        :return:
+        """
+        x = np.arange(dx,x_max,dx)
+
+        lines = np.zeros((x.size, len(activations)))
+        for i, activation in enumerate(activations):
+            lines[:,i] = np.power(activation/np.power(x,self.nu), 2/(1-self.nu)) - np.square(x)
+            lines[:,i][ lines[:,i]<0 ] = 0
+            lines[:,i] = np.sqrt(lines[:,i])
+        return x, lines

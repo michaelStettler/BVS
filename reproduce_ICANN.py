@@ -21,8 +21,8 @@ norm_base = NormBase(config, input_shape=(224,224,3), save_name=save_name)
 data_test = load_data(config, train=False, sort_by=['image'])
 
 # evaluate model
-accuracy1, it_resp1, labels1 = norm_base.evaluate_accuracy(data_train)
-accuracy2, it_resp2, labels2 = norm_base.evaluate_accuracy(data_test)
+accuracy1, it_resp1, labels1 = norm_base.evaluate(data_train)
+accuracy2, it_resp2, labels2 = norm_base.evaluate(data_test)
 
 print("accuracy1", accuracy1)
 print("it_resp1.shape", it_resp1.shape)

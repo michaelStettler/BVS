@@ -13,7 +13,7 @@ def evaluate_nu(config):
         config['nu'] = nu
         print("[LOOP] nu=", nu)
 
-        accuracy, it_resp, labels, ref_vector, tun_vector = evaluate_model(config, "nu_%f"%nu)
+        accuracy, it_resp, labels, ref_vector, tun_vector = evaluate_model(config, "nu_%f"%nu, legacy=True)
 
         print("accuracy", accuracy)
 

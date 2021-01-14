@@ -7,7 +7,7 @@
   "csv_val": "/app/Data/Dataset/ExpressionMorphing/ExpressionMorphing.csv",
   "train_directory": "/app/Data/Dataset/ExpressionMorphing/images",
   "val_directory": "/app/Data/Dataset/ExpressionMorphing/images",
-  "train_avatar": "all",
+  "train_avatar": "human",
   "train_human_expression": [1.0],
   "train_anger": [0.0, 1.0],
   "val_avatar": "all",

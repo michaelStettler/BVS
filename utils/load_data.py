@@ -105,42 +105,61 @@ def _load_monkey(config, train, sort_by):
 
 
 def _load_expression_morphing(config, train, sort_by):
-    if train:
-        df = pd.read_csv(config['csv_train'])
+    if isinstance(train, int):
+        df = pd.read_csv(config['csv{}'.format(train)])
         try:
-            directory = config['train_directory']
+            directory = config['directory{}'.format(train)]
         except KeyError:
             directory = None
         try:
-            avatar = config['train_avatar']
+            avatar = config['avatar{}'.format(train)]
         except KeyError:
-            avatar ='all'
+            avatar = 'all'
         try:
-            human_expression_config = config['train_human_expression']
+            human_expression_config = config['human_expression{}'.format(train)]
         except KeyError:
             human_expression_config = 'all'
         try:
-            anger_config = config['train_anger']
+            anger_config = config['anger{}'.format(train)]
         except KeyError:
             anger_config = 'all'
     else:
-        df = pd.read_csv(config['csv_val'])
-        try:
-            directory = config['val_directory']
-        except KeyError:
-            directory = None
-        try:
-            avatar = config['val_avatar']
-        except KeyError:
-            avatar ='all'
-        try:
-            human_expression_config = config['val_human_expression']
-        except KeyError:
-            human_expression_config = 'all'
-        try:
-            anger_config = config['val_anger']
-        except KeyError:
-            anger_config = 'all'
+        if train:
+            df = pd.read_csv(config['csv_train'])
+            try:
+                directory = config['train_directory']
+            except KeyError:
+                directory = None
+            try:
+                avatar = config['train_avatar']
+            except KeyError:
+                avatar ='all'
+            try:
+                human_expression_config = config['train_human_expression']
+            except KeyError:
+                human_expression_config = 'all'
+            try:
+                anger_config = config['train_anger']
+            except KeyError:
+                anger_config = 'all'
+        else:
+            df = pd.read_csv(config['csv_val'])
+            try:
+                directory = config['val_directory']
+            except KeyError:
+                directory = None
+            try:
+                avatar = config['val_avatar']
+            except KeyError:
+                avatar ='all'
+            try:
+                human_expression_config = config['val_human_expression']
+            except KeyError:
+                human_expression_config = 'all'
+            try:
+                anger_config = config['val_anger']
+            except KeyError:
+                anger_config = 'all'
 
     if sort_by is not None:
         df = df.sort_values(by=sort_by)
@@ -173,15 +192,17 @@ def _load_expression_morphing(config, train, sort_by):
     x = np.zeros((num_data, 224, 224, 3))
     y = np.zeros(num_data)
 
-    for idx, row in tqdm(df.iterrows()):
+    index = 0 # because idx does not represent correct index
+    for _ , row in tqdm(df.iterrows()):
         # load img
         if directory is None:
             im = cv2.imread(os.path.join(row['image_path'], row['image_name']))
         else:
             im = cv2.imread(os.path.join(directory, row['image_name']))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        x[idx, :, :, :] = im_rgb
-        y[idx] = row['category']
+        x[index, :, :, :] = im_rgb
+        y[index] = row['category']
+        index +=1
 
     return [x,y]
 

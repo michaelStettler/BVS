@@ -27,7 +27,7 @@ def evaluate_all_layers(config):
         print('[LOOP] start with v4_layer: {}'.format(config['v4_layer']))
         print('[LOOP] layer %i of %i' % (i_layer+1, len(v4_layers)))
 
-        accuracy, it_resp, labels, ref_vector, tun_vector = evaluate_model(config, config['v4_layer'])
+        accuracy, it_resp, labels, ref_vector, tun_vector = evaluate_model(config, config['v4_layer'], legacy=True)
         tf.keras.backend.clear_session()
 
         print("accuracy", accuracy)
