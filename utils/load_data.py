@@ -38,6 +38,8 @@ def load_data(config, train=True, sort_by=None):
         data = _load_affectnet(config, train)
     elif config['train_data'] == 'ExpressionMorphing':
         data = _load_expression_morphing(config, train, sort_by)
+    elif config['train_data'] == 'basic_shapes':
+        data = _load_basic_shapes(config, train)
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
                          .format(config['train_data']))
@@ -340,3 +342,27 @@ def _load_affectnet(config, train):
     dataGen = DataGen(config, df, directory)
 
     return dataGen
+
+def _load_basic_shapes(config, train):
+    from PIL import Image, ImageDraw
+    color_background = (128,128,128)
+    images = []
+    if train == "black_circle_displacement":
+        for displacement in [0,4,8,16,32]:
+            im = Image.new('RGB', (224, 224), color_background)
+            draw = ImageDraw.Draw(im)
+            draw.ellipse([70,70+displacement,100,100+displacement], fill=(0,0,0))
+            im = np.array(im)
+            images.append(im)
+    elif train == "eye_shape":
+        im = Image.new('RGB', (224, 224), color_background)
+        draw = ImageDraw.Draw(im)
+        draw.ellipse((70, 80, 100, 100), fill=(255, 255, 255), outline=(0, 0, 0), width=3)
+        draw.ellipse([80, 83, 90, 93], fill=(0, 0, 0))
+        im = np.array(im)
+        images.append(im)
+    else:
+        raise ValueError(
+            f"basic shape with train: '{train}' does not exists! Please change norm_base_config file or add the training data")
+    #images = np.array(images)
+    return images
