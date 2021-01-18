@@ -1,3 +1,11 @@
+"""
+2020/12/07
+This script evaluates the accuracy for different nu_values. Results are plotted with plot_accuracy_nu.py
+2021/01/18
+Note: This is an old script that does not use dimensionality reduction. Therefore, the accuracy is very bad.
+Additionally, the tuning function changed significantly since then.
+"""
+
 from utils.load_config import load_config
 from utils.evaluate_model import evaluate_model
 

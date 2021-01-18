@@ -1,3 +1,10 @@
+"""
+2021/01/04
+This script has 2 novelties:
+- model is trained in separate steps (specified in config)
+- data is plotted using the projection to 2D
+"""
+
 import os
 import numpy as np
 

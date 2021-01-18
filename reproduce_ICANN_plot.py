@@ -1,3 +1,8 @@
+"""
+2020/12/11
+This script plots the results from reproduce_ICANN.py
+"""
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt

@@ -1,3 +1,12 @@
+"""
+2020/12/09
+This script creates a dataset out of the expression morphing pictures.
+Load this dataset by
+- put "train_data": "ExpressionMorphing" in config file (example: norm_base_expressionMorphing_t0001.json)
+- using load_data._load_expression_morphing()
+
+"""
+
 import os
 import numpy as np
 import cv2

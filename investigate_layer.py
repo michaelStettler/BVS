@@ -1,3 +1,10 @@
+"""
+2021/01/12
+This script compares the first PCA component of the human and the monkey dataset.
+2021/01/18
+This result is basically meaningless. (better compare tuning vectors)
+Use utils.plot_cnn_output.py instead for much better plots.
+"""
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt

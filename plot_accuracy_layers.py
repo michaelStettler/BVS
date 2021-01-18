@@ -1,3 +1,8 @@
+"""
+2020/12/03
+This script plots the result from evaluate_all_layers.py
+"""
+
 import json
 import os
 import numpy as np

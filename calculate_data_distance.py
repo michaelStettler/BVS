@@ -1,3 +1,14 @@
+"""
+2021/01/07
+This script figures out why the transfer didn't work but the intermediate model worked.
+It trains the human and the monkey model separately and then calculates the combined model as the average.
+Several data is printed out to the command line.
+Important results:
+- distance between human and monkey data set is high compared to in between distance
+- tuning vectors of human and monkey data set are orthogonal.
+- tuning vector of intermediate model is 45 degree (consequence of previous point)
+"""
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt

@@ -1,3 +1,10 @@
+"""
+2020/12/03
+This script evaluates the accuracy over all layers. Results are plotted with plot_accuracy_layers.py
+2021/01/18
+Note: This is an old script that does not use dimensionality reduction. Therefore, the accuracy is very bad.
+"""
+
 import tensorflow as tf
 import os
 import numpy as np

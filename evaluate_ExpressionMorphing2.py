@@ -1,3 +1,11 @@
+"""
+2020/12/16
+This script tried to create transfer from human to monkey dataset.
+2021/01/18
+The results are bad.
+Look at plot_directions.py and calculate_data_distance.py instead.
+"""
+
 import os
 import matplotlib.pyplot as plt
 

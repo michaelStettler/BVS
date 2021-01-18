@@ -1,3 +1,8 @@
+"""
+2020/12/07
+This script plots the result from evaluate_all_nu.py
+"""
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt

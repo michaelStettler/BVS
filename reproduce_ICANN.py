@@ -1,3 +1,12 @@
+"""
+2020/12/11
+The purpose of this script is to try out different tuning functions.
+This script calculates the response of the neurons like in the ICANN paper (Fig3 and FIg4)
+Use reproduce_ICANN_plot.py to plot the saved results.
+2021/01/18
+only the function "expressivity-direction" is used by now
+"""
+
 import numpy as np
 import os
 
