@@ -1,0 +1,11 @@
+{
+  "__comment__": "move_basic_shape.py : used to test response to basic shapes",
+  "train_data": "basic_shapes",
+  "subset": "eye_shape",
+  "model": "VGG19",
+  "include_top": false,
+  "weights": "imagenet",
+  "v4_layer": "block3_pool",
+  "save_name": "norm_base_basic_shapes",
+  "sub_folder": "t0002_eye_shape"
+}
