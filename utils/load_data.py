@@ -38,6 +38,8 @@ def load_data(config, train=True, sort_by=None):
         data = _load_affectnet(config, train)
     elif config['train_data'] == 'ExpressionMorphing':
         data = _load_expression_morphing(config, train, sort_by)
+    elif config['train_data'] == 'morphing_space':
+        data = _load_morphing_space(config, train, sort_by)
     elif config['train_data'] == 'basic_shapes':
         data = _load_basic_shapes(config, train)
     else:
@@ -207,6 +209,83 @@ def _load_expression_morphing(config, train, sort_by):
         index +=1
 
     return [x,y]
+
+def _load_morphing_space(config, train, sort_by):
+    # load csv
+    df = pd.read_csv(config['csv'], index_col=0)
+
+    # sort if argument is present
+    if sort_by is not None:
+        df = df.sort_values(by=sort_by)
+
+    # select avatar
+    if train:
+        config_avatar = config['train_avatar']
+    else:
+        config_avatar = config['val_avatar']
+
+    # build filter depending on avatar
+    if config_avatar == 'all_orig':
+        avatar = ['Monkey_orig', 'Human_orig']
+    elif config_avatar == 'human_orig':
+        avatar = ['Human_orig']
+    elif config_avatar == 'monkey_orig':
+        avatar = ['Monkey_orig']
+    else:
+        raise ValueError('Avatar {} does not exists in morphing_space dataset!'.format(train))
+    # apply filter
+    df = df[df['avatar'].isin(avatar)]
+
+    # read out the expressions for training
+    new_df = pd.DataFrame()
+    for expression in config['train_expression']:
+        sub_df = df.copy()
+        if 'c1' in expression:  # 100% human - 100% angry
+            h_exp = [1.0]
+            anger = [1.0]
+        elif 'c2' in expression:  # 100% human - 100% fear
+            h_exp = [1.0]
+            anger = [0.0]
+        elif 'c3' in expression:  # 100% monkey - 100% angry
+            h_exp = [0.0]
+            anger = [1.0]
+        elif 'c4' in expression:  # 100% monkey - 100% fear
+            h_exp = [0.0]
+            anger = [0.0]
+        else:
+            raise NotImplementedError('Expression {} is not yet implemented')
+
+        # select anger expression
+        sub_df = sub_df[sub_df['anger'].isin(anger)]
+        # select species expression
+        sub_df = sub_df[sub_df['h_exp'].isin(h_exp)]
+
+        # append to new df
+        new_df = new_df.append(sub_df, ignore_index=True)
+
+    num_data = len(new_df.index)
+    print("[DATA] Found {} images".format(num_data))
+
+    #  declare x and y
+    x = np.zeros((num_data, 224, 224, 3))  # todo change to use config file
+    y = np.zeros(num_data)
+
+    # load images from dataframe
+    directory = config['directory']
+    index = 0
+    for _ , row in tqdm(new_df.iterrows(), total=num_data):
+        # load img
+        if directory is None:
+            im = cv2.imread(os.path.join(row['image_path'], row['image_name']))
+        else:
+            im = cv2.imread(os.path.join(directory, row['image_path'], row['image_name']))
+        im = cv2.resize(im, (224, 224))  # todo use config file
+        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        x[index, :, :, :] = im_rgb
+        y[index] = row['category']
+        index +=1
+
+    return [x, y]
 
 
 def _load_FEI(config):

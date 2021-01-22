@@ -57,16 +57,20 @@ class NormBase:
             self.nu = config['nu']
         except KeyError:
             self.nu = 2.0
+        # set tuning function
         try:
             self.tun_func = config['tun_func']
         except KeyError:
             self.tun_func = '2-norm'
+        # set dimensionality reduction
         try:
             #set dim_red if available in config (only option 'PCA')
             self.dim_red = config['dim_red']
             self.pca = PCA(n_components=config['PCA'])
+
         except KeyError:
             self.dim_red = None
+
         self.n_category = config['n_category']
         self.ref_cat = config['ref_category']
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
@@ -78,20 +82,19 @@ class NormBase:
         print("[INIT] V4 layer:", config['v4_layer'])
         if not (self.dim_red is None):
             print("[INIT] dim_red:", self.dim_red)
-        shape_v4 = np.shape(self.v4.layers[-1].output)
-        print("shape_v4", shape_v4)
+        self.shape_v4 = np.shape(self.v4.layers[-1].output)
+        print("[INIT] shape_v4", self.shape_v4)
         try:
             # initialize n_features as number of components of PCA
             self.n_features = config['PCA']
         except KeyError:
             # initialize as output of network as default
-            shape_v4 = np.shape(self.v4.layers[-1].output)
-            if len(shape_v4) == 2:  # use flatten... but self.v4.layers[-1].output is a tensorShape object
-                self.n_features = shape_v4[1]
-            elif len(shape_v4) == 3:
-                self.n_features = shape_v4[1] * shape_v4[2]
-            elif len(shape_v4) == 4:
-                self.n_features = shape_v4[1] * shape_v4[2] * shape_v4[3]
+            if len(self.shape_v4) == 2:  # use flatten... but self.v4.layers[-1].output is a tensorShape object
+                self.n_features = self.shape_v4[1]
+            elif len(self.shape_v4) == 3:
+                self.n_features = self.shape_v4[1] * self.shape_v4[2]
+            elif len(self.shape_v4) == 4:
+                self.n_features = self.shape_v4[1] * self.shape_v4[2] * self.shape_v4[3]
             else:
                 raise NotImplementedError("Dimensionality not implemented")
 
@@ -103,6 +106,8 @@ class NormBase:
         self.threshold = self.n_features / threshold_divided
         print("[INIT] n_features:", self.n_features)
         print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
+
+        self.v4_predict = None
 
         # load model
         if not save_name is None:
@@ -180,9 +185,7 @@ class NormBase:
         # prediction of v4 layer
         preds = self.v4.predict(data)
         preds = np.reshape(preds, (data.shape[0], -1))
-        if self.dim_red == 'PCA':
-            # projection by PCA
-            preds = self.pca.transform(preds)
+
         return preds
 
     def _update_ref_vector(self, data):
@@ -331,7 +334,7 @@ class NormBase:
         """
         print("[FIT] dimensionality reduction")
         # in the case of dimensionality reduction set up the pipeline
-        if self.dim_red == 'PCA':
+        if  'PCA' in self.dim_red:
             print("[FIT] Fitting PCA")
             # get output on all data from self.v4
             if isinstance(data, DataGen):
@@ -339,9 +342,9 @@ class NormBase:
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
             v4_predict = self.v4.predict(data[0])
             v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
-            print("[FIT] v4 prediction generated", v4_predict.shape)
+            self.v4_predict = v4_predict
             # perform PCA on this output
-            self.pca.fit(v4_predict)
+            self.pca.fit(self.v4_predict)
             print("explained variance", self.pca.explained_variance_ratio_)
 
     def _fit_reference(self, data, batch_size):
@@ -508,7 +511,7 @@ class NormBase:
         """
         if isinstance(data, DataGen):
             projection, labels = self._projection_generator(data)
-        if isinstance(data, list):
+        elif isinstance(data, list):
             projection, labels = self._projection_array(data, batch_size=batch_size)
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
