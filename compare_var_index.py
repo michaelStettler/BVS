@@ -28,7 +28,8 @@ print(t[:, :, 0])
 print(t[:, :, 1])
 print(t[:, :, 2])
 print(t[:, :, 3])
-x, y, z = get_feature_map_index(17, n_feature_map, feature_map_size)
+x,y,z = np.unravel_index(17, (feature_map_size,feature_map_size,n_feature_map))
+#x, y, z = get_feature_map_index(17, n_feature_map, feature_map_size)
 print("({}, {}, {})".format(x, y, z))
 
 
@@ -74,7 +75,8 @@ for a, avatar in enumerate(avatars):
     avatar_positions = []
     for i in range(len(indexes[a])):
         index = indexes[a, i]
-        (x, y, f) = get_feature_map_index(index, n_feature_map, feature_map_size)
+        x,y,f = np.unravel_index(index, v4_shape)
+        #(x, y, f) = get_feature_map_index(index, n_feature_map, feature_map_size)
         avatar_positions.append((x, y, f))
     positions.append(np.array(avatar_positions))
 
