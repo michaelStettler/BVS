@@ -75,7 +75,7 @@ for a, avatar in enumerate(avatars):
     avatar_positions = []
     for i in range(len(indexes[a])):
         index = indexes[a, i]
-        x,y,f = np.unravel_index(index, v4_shape)
+        x,y,f = np.unravel_index(index, v4_shape[1:])
         #(x, y, f) = get_feature_map_index(index, n_feature_map, feature_map_size)
         avatar_positions.append((x, y, f))
     positions.append(np.array(avatar_positions))
