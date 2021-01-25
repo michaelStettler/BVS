@@ -107,6 +107,8 @@ class NormBase:
         print("[INIT] n_features:", self.n_features)
         print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
 
+        # v4 prediction of the training data set - used in external script compare_var_index.py
+        # TODO: eventually delete to save RAM
         self.v4_predict = None
 
         # load model
@@ -185,7 +187,9 @@ class NormBase:
         # prediction of v4 layer
         preds = self.v4.predict(data)
         preds = np.reshape(preds, (data.shape[0], -1))
-
+        if self.dim_red == 'PCA':
+            # projection by PCA
+            preds = self.pca.transform(preds)
         return preds
 
     def _update_ref_vector(self, data):
@@ -334,7 +338,7 @@ class NormBase:
         """
         print("[FIT] dimensionality reduction")
         # in the case of dimensionality reduction set up the pipeline
-        if  'PCA' in self.dim_red:
+        if self.dim_red == 'PCA':
             print("[FIT] Fitting PCA")
             # get output on all data from self.v4
             if isinstance(data, DataGen):
@@ -346,6 +350,8 @@ class NormBase:
             # perform PCA on this output
             self.pca.fit(self.v4_predict)
             print("explained variance", self.pca.explained_variance_ratio_)
+        else:
+            print("[FIT] no dimensionality reduction")
 
     def _fit_reference(self, data, batch_size):
         """
