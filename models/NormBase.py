@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 from sklearn.decomposition import PCA
+import warnings
 
 from utils.load_model import load_model
 from utils.data_generator import DataGen
@@ -126,6 +127,12 @@ class NormBase:
         else:
             raise ValueError("model: {} does not exists! Please change config file or add the model"
                              .format(config['model']))
+        # define preprocessing for images
+        if config['model']=='VGG19':
+            self.preprocessing ='VGG19'
+        else:
+            self.preprocessing = None
+            warnings.warn(f'no preprocessing for images defined for config["model"]={config["model"]}')
 
     ### SAVE AND LOAD ###
 
@@ -178,15 +185,36 @@ class NormBase:
     def set_tuning_vector(self, t):
         self.t = t
 
-    def _get_preds(self,data):
+    def _evaluate_v4(self,data):
         """
-        returns prediction of pipeline before norm-base
+        returns prediction of cnn including preprocessing of images
+        must be used only to train dimensionality reduction and in _get_preds()
         :param data: batch of data
         :return: prediction
         """
+        # preprocess images
+        if self.preprocessing is None:
+            preds=data
+        elif self.preprocessing == 'VGG19':
+            preds = tf.keras.applications.vgg19.preprocess_input(np.copy(data))
+        else:
+            raise ValueError(f'preprocessing = {self.preprocessing} is not admitted')
+
         # prediction of v4 layer
-        preds = self.v4.predict(data)
+        preds = self.v4.predict(preds)
         preds = np.reshape(preds, (data.shape[0], -1))
+        return preds
+
+    def _get_preds(self,data):
+        """
+        returns prediction of pipeline before norm-base
+        pipeline consists of preprocessing, cnn, and dimensionality reduction
+        :param data: batch of data
+        :return: prediction
+        """
+        # get prediction after cnn, before dimensionality reduction
+        preds = self._evaluate_v4(data)
+
         if self.dim_red == 'PCA':
             # projection by PCA
             preds = self.pca.transform(preds)
@@ -340,13 +368,16 @@ class NormBase:
         # in the case of dimensionality reduction set up the pipeline
         if self.dim_red == 'PCA':
             print("[FIT] Fitting PCA")
-            # get output on all data from self.v4
             if isinstance(data, DataGen):
                 # data = data.getAllData()
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
-            v4_predict = self.v4.predict(data[0])
-            v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
-            self.v4_predict = v4_predict
+            # get prediction of cnn of training data
+            self.v4_predict = self._evaluate_v4(data[0])
+            # old (w/o preprocessing):
+            # v4_predict = self.v4.predict(data[0])
+            # v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
+            # self.v4_predict = v4_predict
+
             # perform PCA on this output
             self.pca.fit(self.v4_predict)
             print("explained variance", self.pca.explained_variance_ratio_)
