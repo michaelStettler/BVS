@@ -25,5 +25,6 @@
   "batch_size": 32,
   "save_name": "animate_cnn_response",
   "movie_name": "monkey_anger",
-  "plot_title": "cnn response to anger on monkey avatar"
+  "plot_title": "cnn response to anger on monkey avatar",
+  "plot_option": "cnn_output"
 }

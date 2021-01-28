@@ -185,11 +185,12 @@ class NormBase:
     def set_tuning_vector(self, t):
         self.t = t
 
-    def _evaluate_v4(self,data):
+    def evaluate_v4(self,data,flatten=True):
         """
         returns prediction of cnn including preprocessing of images
-        must be used only to train dimensionality reduction and in _get_preds()
+        in NormBase, must be used only to train dimensionality reduction and in _get_preds()
         :param data: batch of data
+        :param flatten: if True, is flattened
         :return: prediction
         """
         # preprocess images
@@ -202,10 +203,10 @@ class NormBase:
 
         # prediction of v4 layer
         preds = self.v4.predict(preds)
-        preds = np.reshape(preds, (data.shape[0], -1))
+        if flatten: preds = np.reshape(preds, (data.shape[0], -1))
         return preds
 
-    def _get_preds(self,data):
+    def get_preds(self,data):
         """
         returns prediction of pipeline before norm-base
         pipeline consists of preprocessing, cnn, and dimensionality reduction
@@ -213,7 +214,7 @@ class NormBase:
         :return: prediction
         """
         # get prediction after cnn, before dimensionality reduction
-        preds = self._evaluate_v4(data)
+        preds = self.evaluate_v4(data)
 
         if self.dim_red == 'PCA':
             # projection by PCA
@@ -228,7 +229,7 @@ class NormBase:
         """
         n_ref = np.shape(data)[0]
         if n_ref > 0:
-            preds = self._get_preds(data)
+            preds = self.get_preds(data)
             # update ref_vector m
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
             self.ref_cumul += n_ref
@@ -240,7 +241,7 @@ class NormBase:
         :return: difference vector
         """
         len_batch = len(data)  # take care of last epoch if size is not equal as the batch_size
-        preds = self._get_preds(data)
+        preds = self.get_preds(data)
         # compute batch diff
         return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
 
@@ -372,7 +373,7 @@ class NormBase:
                 # data = data.getAllData()
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
             # get prediction of cnn of training data
-            self.v4_predict = self._evaluate_v4(data[0])
+            self.v4_predict = self.evaluate_v4(data[0])
             # old (w/o preprocessing):
             # v4_predict = self.v4.predict(data[0])
             # v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
