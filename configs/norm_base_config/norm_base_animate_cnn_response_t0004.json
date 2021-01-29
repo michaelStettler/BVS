@@ -24,7 +24,7 @@
   "v4_layer": "block3_pool",
   "batch_size": 32,
   "save_name": "animate_cnn_response",
-  "movie_name": "monkey_fear",
+  "movie_name": "t0004_monkey_fear",
   "plot_title": "cnn response to fear on monkey avatar",
   "plot_option": "cnn_output"
 }

@@ -24,7 +24,7 @@
   "v4_layer": "block3_pool",
   "batch_size": 32,
   "save_name": "animate_cnn_response",
-  "movie_name": "human_anger",
+  "movie_name": "t0001_human_anger",
   "plot_title": "cnn response to human anger",
   "plot_option": "cnn_output"
 }
