@@ -31,9 +31,9 @@ config["plot_option"]: choose which property to plot
 # t0001: human_anger, t0002: human_fear, t0003: monkey_anger, t0004: monkey_fear  --> plot cnn_output
 # t0005: human_anger, t0006: human_fear, t0007: monkey_anger, t0008: monkey_fear  --> plot difference, stride3, highlight max
 # t0009: human_anger, t0010: human_fear, t0011: monkey_anger, t0012: monkey_fear  --> plot difference, first, highlight max
-# t0013: human_anger  --> plot difference, first, reduce max
+# t0013: human_anger, t0014: human_fear, t0015: monkey_anger, t0016: monkey_fear  --> plot difference, first, reduce max
 # t0017: human_anger  --> plot difference, stride3, reduce max
-config = load_config("norm_base_animate_cnn_response_t0017.json")
+config = load_config("norm_base_animate_cnn_response_t0011.json")
 
 # load images
 images,_ = load_data(config, train=config["dataset"])
@@ -66,8 +66,9 @@ else:
 # calculate which feature maps to highlight
 try:
     if config["highlight_option"]=="maximum":
+        #TODO take np.abs
         max_map = np.amax(vector_plot, axis=(0,1,2)) # max over frames, and within feature map
-        highlight = np.argsort(max_map)[-25:]
+        highlight = np.flip(np.argsort(max_map)[-25:])
     else:
         raise KeyError(f'config["highlight_option"]={config["highlight_option"]} is no valid option')
 except KeyError:
