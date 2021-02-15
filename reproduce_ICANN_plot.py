@@ -11,7 +11,7 @@ from utils.load_config import load_config
 
 # t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
 
-config = load_config("norm_base_reproduce_ICANN_t0005.json")
+config = load_config("norm_base_reproduce_ICANN_t0001.json")
 save_name = config["sub_folder"]
 save_folder = os.path.join("models/saved", config['save_name'], save_name)
 accuracy = np.load(os.path.join(save_folder, "accuracy.npy"))
@@ -37,33 +37,47 @@ print("labels.shape", labels.shape)
 # Threat 0.5 in 1200:1320
 # Threat 0.75 in 1320:1440
 # it_resp 0=Neutral, 1=Threat, 2=Fear, 3=LipSmacking
-it_resp_threat = [it_resp[240:360,:], it_resp[1320:1440,:],it_resp[1200:1320,:], it_resp[1080:1200,:]]
-it_resp_fear = [it_resp[0:120,:], it_resp[600:720,:],it_resp[480:600,:], it_resp[360:480,:]]
-it_resp_lipSmacking = [it_resp[120:240,:], it_resp[960:1080,:],it_resp[840:960,:], it_resp[720:840,:]]
+it_resp_threat = np.array([it_resp[240:360,:], it_resp[1320:1440,:],it_resp[1200:1320,:], it_resp[1080:1200,:]])
+it_resp_fear = np.array([it_resp[0:120,:], it_resp[600:720,:],it_resp[480:600,:], it_resp[360:480,:]])
+it_resp_lipSmacking = np.array([it_resp[120:240,:], it_resp[960:1080,:],it_resp[840:960,:], it_resp[720:840,:]])
 # colors 0=Neutral=Black, 1=Threat=Yellow, 2=Fear=Blue, 3=LipSmacking=Red
 colors = ['k', 'y', 'b', 'r']
 titles = ['Neutral','Threat', 'Fear', 'LipSmacking']
 
+# plot all it responses for one stimulus
+fig = plt.figure(figsize=(15,10))
+plt.subplots(3,1)
+plt.suptitle("Face Neuron Responses")
+for i, data in enumerate([it_resp_threat, it_resp_fear, it_resp_lipSmacking]):
+    plt.subplot(3,1,i+1)
+    for j in range(4):
+        plt.plot(range(120), data[0, :, j], color=colors[j], label=titles[j])
+    plt.ylabel(titles[i+1])
+plt.legend()
+plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig3A.png"))
+
 # plot it_resp over stimulus intensity
 fig = plt.figure(figsize=(15,10))
 plt.subplots(3,1)
-plt.suptitle("Face Neuron Response")
+plt.suptitle("Face Neuron Responses")
 for i, data in enumerate([it_resp_threat, it_resp_fear, it_resp_lipSmacking]):
     plt.subplot(3,1,i+1)
     plt.ylabel(titles[i+1])
     for j, percent in enumerate(['100%', '75%', '50%', '25%']):
-        plt.plot(range(120),data[j][:,i+1], label=percent, color=colors[i+1], linewidth=4/(j+1))
+        plt.plot(range(120),data[j, :, i+1], label=percent, color=colors[i+1], linewidth=4/(j+1))
     plt.legend()
-plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig4.png"))
+plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig4A.png"))
 
-# plot all it responses for one stimulus
+# plot activity in function of expressivity level
 fig = plt.figure(figsize=(15,10))
 plt.subplots(3,1)
-plt.suptitle("Face Neuron Response")
+plt.suptitle("Expression Neuron Responses")
 for i, data in enumerate([it_resp_threat, it_resp_fear, it_resp_lipSmacking]):
     plt.subplot(3,1,i+1)
-    for j in range(4):
-        plt.plot(range(120), data[0][:,j], color=colors[j], label=titles[j])
-    plt.ylabel(titles[i+1])
-plt.legend()
-plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig3.png"))
+    plt.ylabel(titles[i + 1])
+    maximums = np.amax(data[:, :, i+1], axis=1)
+    max_normed = maximums / np.amax(maximums)
+    plt.plot([100, 75, 50, 25], max_normed, color=colors[i+1], label=titles[i+1])
+    plt.xticks([25, 50, 75, 100])
+    plt.legend()
+plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig4B.png"))
