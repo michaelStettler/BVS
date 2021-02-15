@@ -12,8 +12,9 @@
   "v4_layer": "block3_pool",
   "dim_red": "PCA",
   "PCA": 25,
-  "tun_func": "2-norm",
-  "nu": 2.0,
+  "tun_func": "simplified",
+  "nu": "not needed",
   "batch_size": 32,
-  "save_name": "norm_base_expressivityLevels"
+  "save_name": "norm_base_expressivityLevels",
+  "sub_folder": "t0003_simplified"
 }

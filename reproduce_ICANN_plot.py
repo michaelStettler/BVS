@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 
 from utils.load_config import load_config
 
-config = load_config("norm_base_expressivityLevels_t0005.json")
-save_name = "expressivity-direction"
+# t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
+
+config = load_config("norm_base_reproduce_ICANN_t0005.json")
+save_name = config["sub_folder"]
 save_folder = os.path.join("models/saved", config['save_name'], save_name)
 accuracy = np.load(os.path.join(save_folder, "accuracy.npy"))
 it_resp = np.load(os.path.join(save_folder, "it_resp.npy"))

@@ -14,9 +14,10 @@ from utils.load_data import load_data
 from utils.load_config import load_config
 from models.NormBase import NormBase
 
+# t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
 
-config = load_config("norm_base_expressivityLevels_t0005.json")
-save_name = "expressivity-direction"
+config = load_config("norm_base_reproduce_ICANN_t0005.json")
+save_name = config["sub_folder"]
 
 data_train = load_data(config)
 
