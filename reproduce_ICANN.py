@@ -16,7 +16,7 @@ from models.NormBase import NormBase
 
 # t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
 
-config = load_config("norm_base_reproduce_ICANN_t0005.json")
+config = load_config("norm_base_reproduce_ICANN_t0001.json")
 save_name = config["sub_folder"]
 
 data_train = load_data(config)
