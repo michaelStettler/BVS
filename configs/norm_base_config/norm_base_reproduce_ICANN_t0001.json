@@ -1,4 +1,5 @@
 {
+  "_comment": "Fear 1.0 in 0:120\n#LipSmacking 1.0 in 120:240\n# Threat 1.0 in 240:360\n# Fear 0.25 in 360:480\n# Fear 0.5 in 480:600\n# Fear 0.75 in 600:720\n# LipSmacking 0.25 in 720:840\n# LipSmacking 0.5 in 840:960\n# LipSmacking 0.75 in 960:1080\n# Threat 0.25 in 1080:1200\n# Threat 0.5 in 1200:1320\n# Threat 0.75 in 1320:1440\n# it_resp 0=Neutral, 1=Threat, 2=Fear, 3=LipSmacking",
   "train_data": "monkey_test",
   "n_category": 4,
   "ref_category": 0,
@@ -16,5 +17,11 @@
   "nu": 2.0,
   "batch_size": 32,
   "save_name": "norm_base_reproduce_ICANN",
-  "sub_folder": "t0001_norm2"
+  "sub_folder": "t0001_norm2",
+  "condition": ["Neutral", "Threat", "Fear", "LipSmacking"],
+  "labels": ["25%", "50%", "75%", "100%"],
+  "xticks": [25, 50, 75, 100],
+  "colors": ["k", "y", "b", "r"],
+  "seq_length": 120,
+  "concat_seq_start": [[1080, 1200, 1320, 240], [360, 480, 600, 0], [720, 840, 960, 120]]
 }
