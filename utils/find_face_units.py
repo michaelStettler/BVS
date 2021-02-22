@@ -11,6 +11,7 @@ def find_face_units(model, data, verbose=False):
     Implementation of the method "Face-selective population estimation" from the paper :
     ""Convolutional neural networks explain tuning properties of anterior, but not middle, face-processing areas in
     macaque inferotemporal cortex
+    https://www.nature.com/articles/s42003-020-0945-x
 
     :param model:
     :param config:
