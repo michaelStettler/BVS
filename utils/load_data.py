@@ -79,10 +79,12 @@ def _load_monkey(config, train, sort_by):
     idx = 0
     for index, row in tqdm(df.iterrows()):
         # load img
-        if directory is None:
-            im = cv2.imread(os.path.join(row['path'], row['image']))
-        else:
+        if os.path.exists(os.path.join(directory, row['path'], row['image'])):
+            # Michael's dataset and csv file
             im = cv2.imread(os.path.join(directory, row['path'], row['image']))
+        else:
+            # Tim's dataset and csv file
+            im = cv2.imread(os.path.join(directory, row['image']))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         # crop image
         im_crop = im_rgb[:, 280:1000, :]
@@ -109,7 +111,7 @@ def _load_monkey(config, train, sort_by):
 
 
 def _load_expression_morphing(config, train, sort_by):
-    if isinstance(train, int):
+    if not isinstance(train, bool):         # if train is an integer
         df = pd.read_csv(config['csv{}'.format(train)])
         try:
             directory = config['directory{}'.format(train)]
