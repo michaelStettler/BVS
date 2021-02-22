@@ -1,7 +1,7 @@
 """
 2021/02/18
 This function calculates the position within a feature map.
-Used in animate_cnn_response.py
+Used in calculate_position_demo.py and animate_cnn_response.py
 
 Note: To allow for different shapes of response, expand dimension
 """
@@ -19,11 +19,12 @@ def calculate_position(response, mode, return_mode = "array"):
     :param return_mode:
         "flattened" --> return flattened position
         "xy"        --> return coordinates
+        "xy float"  --> return coordinates as float
         "array"     --> return  zero-array with 1 at coordinates
     :return:
     """
-    ### calculate position into position_flattened ###
-    # TODO: To allow for different shapes of response, expand dimension
+    ### calculate position into position_flattened and index_mean_x_float###
+    # TODO: To allow for other shapes of response, expand dimension
     # save original shape
     original_shape = response.shape
     # flatten dimensions that encode x and y of each image and each feature map
@@ -44,22 +45,24 @@ def calculate_position(response, mode, return_mode = "array"):
             # unravel indices
             index_ravel_max = np.unravel_index(index_flat_max, original_shape[1:3])
             # compute average according to coordinates
-            index_mean_x = np.rint(np.mean(index_ravel_max[0], axis=1)).astype(int)
-            index_mean_y = np.rint(np.mean(index_ravel_max[1], axis=1)).astype(int)
+            index_mean_x_float = np.mean(index_ravel_max[0], axis=1)
+            index_mean_y_float = np.mean(index_ravel_max[1], axis=1)
+            # rounded
+            index_mean_x = np.rint(index_mean_x_float).astype(int)
+            index_mean_y = np.rint(index_mean_y_float).astype(int)
             # ravel the indices such that they can be applied to flattened array
             position_flattened = np.ravel_multi_index((index_mean_x, index_mean_y), original_shape[1:3])
     elif mode == "weighted average":
         # initialize indices with x and y indices
         indices = np.unravel_index(np.arange(response.shape[1]), original_shape[1:3])
         # compute weighted average of the indices, weighted by the neuron activation
-        average_x = np.rint(
-            np.average(response, axis=1, weights=indices[0]) * np.sum(indices[0]) / np.sum(response, axis=1)).astype(
-            int)
-        average_y = np.rint(
-            np.average(response, axis=1, weights=indices[1]) * np.sum(indices[1]) / np.sum(response, axis=1)).astype(
-            int)
+        index_mean_x_float = np.average(response, axis=1, weights=indices[0]) * np.sum(indices[0]) / np.sum(response, axis=1)
+        index_mean_y_float = np.average(response, axis=1, weights=indices[1]) * np.sum(indices[1]) / np.sum(response, axis=1)
+        # rounded
+        index_mean_x = np.rint(index_mean_x_float).astype(int)
+        index_mean_y = np.rint(index_mean_y_float).astype(int)
         # ravel the indices such that they can be applied to flattened array
-        position_flattened = np.ravel_multi_index((average_x, average_y), original_shape[1:3])
+        position_flattened = np.ravel_multi_index((index_mean_x, index_mean_y), original_shape[1:3])
     else:
         raise ValueError(f'mode={mode} is no valid value')
 
@@ -68,6 +71,11 @@ def calculate_position(response, mode, return_mode = "array"):
         return position_flattened
     elif return_mode == "xy":
         return np.unravel_index(position_flattened, original_shape[1:3])
+    elif return_mode == "xy float":
+        try:
+            return (index_mean_x_float, index_mean_y_float)
+        except UnboundLocalError:
+            return np.unravel_index(position_flattened, original_shape[1:3])
     elif return_mode == "array":
         # init plot vector
         position_array = np.zeros(response.shape)
