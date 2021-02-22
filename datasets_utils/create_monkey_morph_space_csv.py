@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 
-path = '/app/Data/Dataset/MonkeyMorph'
+# path = '/app/Data/Dataset/MonkeyMorph'
+path = 'D:/Dataset/MonkeyMorph'
 avatar_type = "monkey"
 csv_train_name = "monkey_morph_train.csv"
 csv_val_name = "monkey_morph_val.csv"
@@ -18,6 +19,10 @@ for root, dirs, files in os.walk(os.path.join(path, "images")):
                 words = file.split('_')
                 args = words[-1].split('.')
 
+                # get local path
+                local_path = os.path.relpath(root, start=path)
+                local_path = local_path.replace('\\', '/')
+
                 # set some frame to be the Neutral category
                 if float(words[2]) >= float(words[4]):
                     category = 'Threat' # angry
@@ -30,10 +35,10 @@ for root, dirs, files in os.walk(os.path.join(path, "images")):
                 # add entry to the data frame
                 if float(words[2]) == 1.0 or float(words[4]) == 1.0:
                     df_train = df_train.append({'image': file, 'category': category, 'avatar': avatar_type,
-                                                'strength': words[2], 'path': root}, ignore_index=True)
+                                                'strength': words[2], 'path': local_path}, ignore_index=True)
                 else:
                     df_val = df_val.append({'image': file, 'category': category, 'avatar': avatar_type,
-                                            'strength': words[2], 'path': root}, ignore_index=True)
+                                            'strength': words[2], 'path': local_path}, ignore_index=True)
 
 print(df_train.head())
 print(df_val.head())
