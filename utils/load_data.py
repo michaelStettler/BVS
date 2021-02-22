@@ -80,7 +80,7 @@ def _load_monkey(config, train, sort_by):
     for index, row in tqdm(df.iterrows()):
         # load img
         if directory is None:
-            im = cv2.imread(os.path.join(directory, row['path'], row['image']))
+            im = cv2.imread(os.path.join(row['path'], row['image']))
         else:
             im = cv2.imread(os.path.join(directory, row['path'], row['image']))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
