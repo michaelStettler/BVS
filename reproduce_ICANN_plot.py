@@ -15,7 +15,7 @@ from models.NormBase import NormBase
 
 do_reverse = False
 
-config = load_config("norm_base_reproduce_ICANN_m0006.json")
+config = load_config("norm_base_reproduce_ICANN_t0015.json")
 save_name = config["sub_folder"]
 save_folder = os.path.join("models/saved", config['save_name'], save_name)
 accuracy = np.load(os.path.join(save_folder, "accuracy.npy"))
