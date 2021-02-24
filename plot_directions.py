@@ -16,7 +16,7 @@ from utils.load_config import load_config
 from models.NormBase import NormBase
 from utils.load_data import load_data
 
-config = load_config("norm_base_plotDirections_t0009.json")
+config = load_config("norm_base_plotDirections_t0012.json")
 save_name = config["sub_folder"]
 retrain = False
 
