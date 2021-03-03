@@ -20,5 +20,7 @@
   "xticks": [0, 1, 2, 3, 4],
   "colors": ["k", "y", "b"],
   "seq_length": 150,
-  "concat_seq_start": [[0, 300, 450, 600, 150], [150, 600, 450, 300, 0]]
+  "concat_seq_start": [[0, 300, 450, 600, 150], [150, 600, 450, 300, 0]],
+  "use_ggplot": 0,
+  "show_legends": 0
 }

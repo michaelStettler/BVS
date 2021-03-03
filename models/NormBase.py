@@ -9,6 +9,7 @@ import warnings
 
 from utils.load_model import load_model
 from utils.data_generator import DataGen
+from utils.calculate_position import calculate_position
 
 
 class NormBase:
@@ -67,8 +68,6 @@ class NormBase:
         try:
             #set dim_red if available in config (only option 'PCA')
             self.dim_red = config['dim_red']
-            self.pca = PCA(n_components=config['PCA'])
-
         except KeyError:
             self.dim_red = None
 
@@ -85,10 +84,9 @@ class NormBase:
             print("[INIT] dim_red:", self.dim_red)
         self.shape_v4 = np.shape(self.v4.layers[-1].output)
         print("[INIT] shape_v4", self.shape_v4)
-        try:
-            # initialize n_features as number of components of PCA
-            self.n_features = config['PCA']
-        except KeyError:
+
+        #initialize n_features based on dimensionality reduction method
+        if self.dim_red is None:
             # initialize as output of network as default
             if len(self.shape_v4) == 2:  # use flatten... but self.v4.layers[-1].output is a tensorShape object
                 self.n_features = self.shape_v4[1]
@@ -98,6 +96,15 @@ class NormBase:
                 self.n_features = self.shape_v4[1] * self.shape_v4[2] * self.shape_v4[3]
             else:
                 raise NotImplementedError("Dimensionality not implemented")
+        elif self.dim_red == "PCA":
+            self.pca = PCA(n_components=config['PCA'])
+            # initialize n_features as number of components of PCA
+            self.n_features = config['PCA']
+        elif self.dim_red == "position":
+            self.position_method = config['position_method']
+            # initialize n_features as number of feature maps*2
+            self.n_features = self.shape_v4[-1]*2
+        print("[INIT] n_features:", self.n_features)
 
         self.r = np.zeros(self.n_features)
         self.t = np.zeros((self.n_category, self.n_features))
@@ -105,7 +112,6 @@ class NormBase:
         self.t_mean = np.zeros((self.n_category, self.n_features))
         threshold_divided = 50
         self.threshold = self.n_features / threshold_divided
-        print("[INIT] n_features:", self.n_features)
         print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
 
         # v4 prediction of the training data set - used in external script compare_var_index.py
@@ -116,6 +122,17 @@ class NormBase:
         if not save_name is None:
             self._load_model(config, save_name)
             print("[INIT] saved model is loaded from file")
+
+        # set time constant for dynamic and competitive network
+        if config.get('use_dynamic') is not None:
+            if config['use_dynamic']:
+                print("[INIT] Model Dynamic Set")
+                # set parameters for differentiator and decision networks
+                self.tau_u = config['tau_u']  # time constant for pos and negative differentiator
+                self.tau_v = config['tau_v']  # time constant for IT resp differentitor
+                self.tau_y = config['tau_y']  # time constant for integral differentiator
+                self.tau_d = config['tau_d']  # time constant for competitive network
+                self.m_inhi_w = config['m_inhi_w']  # weights of mutual inhibition
 
         print()
 
@@ -213,12 +230,22 @@ class NormBase:
         :param data: batch of data
         :return: prediction
         """
-        # get prediction after cnn, before dimensionality reduction
-        preds = self.evaluate_v4(data)
-
-        if self.dim_red == 'PCA':
+        if self.dim_red is None:
+            # get prediction after cnn, before dimensionality reduction
+            preds = self.evaluate_v4(data)
+        elif self.dim_red == 'PCA':
             # projection by PCA
-            preds = self.pca.transform(preds)
+            preds = self.pca.transform(self.evaluate_v4(data))
+        elif self.dim_red == 'position':
+            # receive unflattened prediction
+            # receive xy positions and flatten
+            # output shape: (batch_size, n_feature_maps*2)
+            preds = np.concatenate(calculate_position(
+                    self.evaluate_v4(data, flatten=False),
+                    mode=self.position_method, return_mode="xy float"),
+                axis=1)
+        else:
+            raise KeyError(f'invalid value self.dim_red={self.dim_red}')
         return preds
 
     def _update_ref_vector(self, data):
@@ -340,8 +367,11 @@ class NormBase:
 
         return np.count_nonzero(np.multiply(one_hot_cats, one_hot_label))
 
-    ### FIT FUNCTIONS ###
-
+    # -----------------------------------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------------------------------
+    # ## FIT FUNCTIONS ###
+    # -----------------------------------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------------------------------
     def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True):
         """
         fit model on data
@@ -367,7 +397,9 @@ class NormBase:
         """
         print("[FIT] dimensionality reduction")
         # in the case of dimensionality reduction set up the pipeline
-        if self.dim_red == 'PCA':
+        if self.dim_red is None:
+            print("[FIT] no dimensionality reduction")
+        elif self.dim_red == 'PCA':
             print("[FIT] Fitting PCA")
             if isinstance(data, DataGen):
                 # data = data.getAllData()
@@ -382,8 +414,10 @@ class NormBase:
             # perform PCA on this output
             self.pca.fit(self.v4_predict)
             print("explained variance", self.pca.explained_variance_ratio_)
+        elif self.dim_red == 'position':
+            print(f'[FIT] dimensionality reduction method: position with calculation method {self.position_method}')
         else:
-            print("[FIT] no dimensionality reduction")
+            raise KeyError(f'self.dim_red={self.dim_red} is no valid value')
 
     def _fit_reference(self, data, batch_size):
         """
@@ -606,3 +640,52 @@ class NormBase:
             lines[:,i][ lines[:,i]<0 ] = 0
             lines[:,i] = np.sqrt(lines[:,i])
         return x, lines
+
+    def compute_dynamic_responses(self, seq_resp):
+        """
+        Compute the dynamic responses of recognition neurons
+        Compute first a differentiation circuit followed bz a competitive network
+        :param seq_resp:
+        :return:
+        """
+        seq_length = np.shape(seq_resp)[0]
+
+        # --------------------------------------------------------------------------------------------------------------
+        # compute differentitator
+
+        # declare differentiator
+        pos_df = np.zeros((seq_length, self.n_category))
+        neg_df = np.zeros((seq_length, self.n_category))
+        v_df = np.zeros((seq_length, self.n_category))
+        y_df = np.zeros((seq_length, self.n_category))
+
+        for f in range(1, seq_length):
+            # compute differences
+            pos_dif = seq_resp[f - 1] - v_df[f - 1]
+            pos_dif[pos_dif < 0] = 0
+            neg_dif = v_df[f - 1] - seq_resp[f - 1]
+            neg_dif[neg_dif < 0] = 0
+
+            # update differentiator states
+            pos_df[f] = ((self.tau_u - 1) * pos_df[f - 1] + pos_dif) / self.tau_u
+            neg_df[f] = ((self.tau_u - 1) * neg_df[f - 1] + neg_dif) / self.tau_u
+            v_df[f] = ((self.tau_v - 1) * v_df[f - 1] + seq_resp[f - 1]) / self.tau_v
+            y_df[f] = ((self.tau_y - 1) * y_df[f - 1] + pos_df[f - 1] + neg_df[f - 1]) / self.tau_y
+
+        # --------------------------------------------------------------------------------------------------------------
+        # compute decision network
+
+        # declare inhibition kernel
+        inhib_k = (1 - np.eye(self.n_category) * 0.8) * self.m_inhi_w
+        # declare decision neurons
+        ds_neuron = np.zeros((seq_length, self.n_category))
+
+        for f in range(1, seq_length):
+            # update decision neurons
+            ds_neur = ((self.tau_d - 1) * ds_neuron[f - 1] + y_df[f - 1] - inhib_k @ ds_neuron[f - 1]) / self.tau_d
+
+            # apply activation to decision neuron
+            ds_neur[ds_neur < 0] = 0
+            ds_neuron[f] = ds_neur
+
+        return ds_neuron

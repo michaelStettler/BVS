@@ -16,5 +16,7 @@
   "nu": "not needed",
   "batch_size": 32,
   "save_name": "norm_base_reproduce_ICANN",
-  "sub_folder": "t0004_direction-only"
+  "sub_folder": "t0004_direction-only",
+  "use_ggplot": 0,
+  "show_legends": 0
 }
