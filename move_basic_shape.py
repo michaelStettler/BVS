@@ -1,15 +1,14 @@
 """
 2021/01/18
-This script plots the network response to basic shapes and the movement of them.
+This script plots_utils the network response to basic shapes and the movement of them.
 Look under load_data._load_basic_shapes for all the possibilities of basic shapes.
 """
 
 import numpy as np
-from PIL import Image, ImageDraw
 import tensorflow as tf
 import os
 
-from utils.plot_cnn_output import plot_cnn_output
+from plots_utils.plot_cnn_output import plot_cnn_output
 from utils.load_config import load_config
 from utils.load_data import load_data
 

@@ -11,7 +11,7 @@ import tensorflow as tf
 
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.plot_cnn_output import plot_cnn_output
+from plots_utils.plot_cnn_output import plot_cnn_output
 
 # parameter
 config = load_config("norm_base_animate_cnn_response_t0001.json")

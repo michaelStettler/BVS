@@ -7,6 +7,10 @@ from tqdm import tqdm
 from utils.load_data import load_data
 from utils.load_model import load_model
 
+"""
+take only labels that has at least 10 images 
+"""
+
 
 def find_semantic_units(model, data, label):
     input_size = np.shape(data)[1:]

@@ -11,7 +11,7 @@ import numpy as np
 
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.plot_cnn_output import plot_cnn_output
+from plots_utils.plot_cnn_output import plot_cnn_output
 from models.NormBase import NormBase
 """
 config["movie_name"]: name under which the movie is saved, extension .mp4 is automatically added

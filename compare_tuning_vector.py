@@ -4,12 +4,11 @@ This script calculates the tuning vector for the human avatar and monkey avatar 
 """
 
 import os
-import numpy as np
 
 from utils.load_config import load_config
 from utils.load_data import load_data
 from models.NormBase import NormBase
-from utils.plot_cnn_output import plot_cnn_output
+from plots_utils.plot_cnn_output import plot_cnn_output
 
 # setting
 retrain = False

@@ -37,7 +37,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test / coverage v1_and_BotUpSaliency
 htmlcov/
 .tox/
 .nox/
@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # result video folder
-bvs/video/
+models/layers/video/
 
 logs/
 
