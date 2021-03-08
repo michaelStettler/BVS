@@ -19,7 +19,7 @@ accuracies = np.zeros(len(nus))
 for i, nu in enumerate(nus):
     config['nu'] = nu
 
-    save_folder = os.path.join("models/saved", config['save_name'], 'nu_%f'%nu)
+    save_folder = os.path.join("../../models/saved", config['save_name'], 'nu_%f' % nu)
     accuracy = np.load(os.path.join(save_folder, "accuracy.npy"))
     accuracies[i] = accuracy
 
@@ -31,4 +31,4 @@ plt.xlabel("nu")
 plt.ylabel("accuracy")
 
 # save plot
-plt.savefig(os.path.join("models/saved", config['save_name'], "plot_accuracy_nu.png"))
+plt.savefig(os.path.join("../../models/saved", config['save_name'], "plot_accuracy_nu.png"))

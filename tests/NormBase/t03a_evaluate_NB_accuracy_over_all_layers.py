@@ -1,10 +1,3 @@
-"""
-2020/12/03
-This script evaluates the accuracy over all layers. Results are plotted with plot_accuracy_layers.py
-2021/01/18
-Note: This is an old script that does not use dimensionality reduction. Therefore, the accuracy is very bad.
-"""
-
 import tensorflow as tf
 import os
 import numpy as np
@@ -45,7 +38,15 @@ def evaluate_all_layers(config):
 
 
 if __name__ == "__main__":
-    #config_names = ['norm_base_affectNet_sub8_4000_t0004.json', 'norm_base_affectNet_sub8_4000_t0005.json']
+
+    """
+    2020/12/03
+    This script evaluates the accuracy over all layers. Results are plotted with t03b_plot_accuracy_layers.py
+    2021/01/18
+    Note: norm_base_affectNet_sub8_4000_t0005.json does not use dimensionality reduction. 
+    Therefore, the accuracy is very bad.
+    """
+
     config_names = ['norm_base_affectNet_sub8_4000_t0005.json']
     for config_name in config_names:
         config = load_config(config_name)

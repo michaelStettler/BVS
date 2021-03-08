@@ -5,7 +5,7 @@ from utils.load_data import load_data
 
 from models.NormBase import NormBase
 
-congig_path = 'configs/norm_base_config'
+congig_path = '../../configs/norm_base_config'
 # config_name = 'norm_base_monkey_test.json'
 config_name = 'norm_base_affectNet_sub8_4000.json'
 config_file_path = os.path.join(congig_path, config_name)
@@ -30,7 +30,7 @@ print("shape m", np.shape(m))
 print("shape n", np.shape(n))
 
 # save model
-save_folder = os.path.join("models/saved", config['save_name'])
+save_folder = os.path.join("../../models/saved", config['save_name'])
 if not os.path.exists(save_folder):
     os.mkdir(save_folder)
 np.save(os.path.join(save_folder, "ref_vector"), m)

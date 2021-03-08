@@ -95,7 +95,7 @@ except KeyError:
     pass
 
 # make folder
-folder = os.path.join("models/saved", config["save_name"])
+folder = os.path.join("../../models/saved", config["save_name"])
 if not os.path.exists(folder):
     os.mkdir(folder)
 

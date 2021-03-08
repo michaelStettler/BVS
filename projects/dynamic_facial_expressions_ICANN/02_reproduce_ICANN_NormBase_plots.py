@@ -1,6 +1,6 @@
 """
 2020/12/11
-This script plots_utils the results from reproduce_ICANN_NormBase.py
+This script plots_utils the results from 01_reproduce_ICANN_NormBase.py
 """
 
 import os

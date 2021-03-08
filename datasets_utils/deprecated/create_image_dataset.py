@@ -5,6 +5,11 @@ Load this dataset by
 - put "train_data": "ExpressionMorphing" in config file (example: norm_base_expressionMorphing_t0001.json)
 - using load_data._load_expression_morphing()
 
+
+2021/03/04
+Michael: keep it as I don't know exactly the difference with "create_monkey_expressivity_space_csv"
+-> todo create a generator!!
+
 """
 
 import os

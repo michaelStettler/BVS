@@ -114,7 +114,7 @@ class NormBase:
         self.threshold = self.n_features / threshold_divided
         print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
 
-        # v4 prediction of the training data set - used in external script compare_var_index.py
+        # v4 prediction of the training data set - used in external script t05_compare_retained_PCA_index.py
         # TODO: eventually delete to save RAM
         self.v4_predict = None
 

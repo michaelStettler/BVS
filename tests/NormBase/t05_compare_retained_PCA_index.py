@@ -7,7 +7,7 @@ The script train a norm base model with the three following conditions:
     - human + monkey
 and compare the most important features kept by the PCA
 
-run: python compare_var_index.py
+run: python t05_compare_retained_PCA_index.py
 """
 
 import numpy as np
@@ -28,7 +28,7 @@ print(t[:, :, 0])
 print(t[:, :, 1])
 print(t[:, :, 2])
 print(t[:, :, 3])
-x,y,z = np.unravel_index(17, (feature_map_size,feature_map_size,n_feature_map))
+x, y, z = np.unravel_index(17, (feature_map_size,feature_map_size,n_feature_map))
 #x, y, z = get_feature_map_index(17, n_feature_map, feature_map_size)
 print("({}, {}, {})".format(x, y, z))
 

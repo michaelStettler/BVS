@@ -1,0 +1,19 @@
+{
+  "train_data": "ExpressionMorphing",
+  "n_category": 3,
+  "ref_category": 0,
+  "csv1": "/app/Data/Dataset/ExpressionMorphing/ExpressionMorphing.csv",
+  "directory1": "/app/Data/Dataset/ExpressionMorphing/images",
+  "avatar1": "human",
+  "human_expression1": [1.0],
+  "anger1": [1.0],
+  "model": "VGG19",
+  "include_top": false,
+  "weights": "imagenet",
+  "v4_layer": "block3_pool",
+  "dim_red": "position",
+  "position_method": "maximum10",
+  "batch_size": 32,
+  "save_name": "plot_frequency_time",
+  "plot_name": "t0001_frequency_time_human_anger"
+  }

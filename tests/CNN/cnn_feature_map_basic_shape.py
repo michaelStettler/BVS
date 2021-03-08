@@ -1,6 +1,6 @@
 """
 2021/01/18
-This script plots_utils the network response to basic shapes and the movement of them.
+This script plots the network response to basic shapes and the movement of them.
 Look under load_data._load_basic_shapes for all the possibilities of basic shapes.
 """
 
@@ -16,7 +16,7 @@ from utils.load_data import load_data
 config = load_config("norm_base_basic_shape_t0002.json")
 
 # make folder
-folder = os.path.join("models/saved", config["save_name"])
+folder = os.path.join("../../models/saved", config["save_name"])
 if not os.path.exists(folder):
     os.mkdir(folder)
 

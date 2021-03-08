@@ -1,6 +1,6 @@
 """
 2020/12/03
-This script plots the result from evaluate_all_layers.py
+This script plots the result from t03a_evaluate_NB_accuracy_over_all_layers.py
 """
 
 import json
@@ -11,7 +11,7 @@ from utils.load_model import load_model
 
 from utils.load_model import load_model
 
-config_path = 'configs/norm_base_config'
+config_path = '../../configs/norm_base_config'
 config_name = 'norm_base_affectNet_sub8_4000_t0005.json'
 config_file_path = os.path.join(config_path, config_name)
 print("config_file_path", config_file_path)
@@ -35,7 +35,7 @@ for i_layer, layer in enumerate(v4_layers):
     config['v4_layer'] = layer
 
     # folder for load
-    load_folder = os.path.join("models/saved", config['save_name'], config['v4_layer'])
+    load_folder = os.path.join("../../models/saved", config['save_name'], config['v4_layer'])
     accuracy = np.load(os.path.join(load_folder, "accuracy.npy"))
     accuracies[i_layer] = accuracy
 
@@ -53,4 +53,4 @@ plt.xticks(rotation=90)
 ax.xaxis.grid()
 
 #save plot
-plt.savefig(os.path.join("models/saved", config['save_name'], "plot_accuracy_pool.png"))
+plt.savefig(os.path.join("../../models/saved", config['save_name'], "plot_accuracy_pool.png"))

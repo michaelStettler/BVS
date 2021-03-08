@@ -1,7 +1,7 @@
 """
 2021/02/18
 This function calculates the position within a feature map.
-Used in calculate_position_demo.py and animate_cnn_response.py
+Used in t08_calculate_position_demo.py and compute_cnn_feature_map_response.py
 
 Note: To allow for different shapes of response, expand dimension
 """

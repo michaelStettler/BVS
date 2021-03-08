@@ -54,7 +54,7 @@ for vector in [ref_human, tun1_human, tun2_human, cat1_human, cat2_human,
     vector.shape = (28,28,256)
 
 # plot vectors
-path = os.path.join("models/saved", configs[0]["save_name"])
+path = os.path.join("../../models/saved", configs[0]["save_name"])
 if not os.path.exists(path): os.mkdir(path)
 
 plot_cnn_output(ref_human ,path,"ref_human.png" , title="Average response to neutral expression, human avatar")

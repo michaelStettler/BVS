@@ -2,7 +2,7 @@
 2020/12/11
 The purpose of this script is to try out different tuning functions.
 This script calculates the response of the neurons like in the ICANN paper (Fig3 and FIg4)
-Use reproduce_ICANN_NormBase_plots.py to plot the saved results.
+Use 02_reproduce_ICANN_NormBase_plots.py to plot the saved results.
 2021/01/18
 only the function "expressivity-direction" is used by now
 """
@@ -50,7 +50,7 @@ print("accuracy", accuracy)
 print("it_resp.shape", it_resp.shape)
 print("labels.shape", labels.shape)
 
-# save results to be used by reproduce_ICANN_NormBase_plots.py
+# save results to be used by 02_reproduce_ICANN_NormBase_plots.py
 save_folder = os.path.join("../../models/saved", config['save_name'], save_name)
 np.save(os.path.join(save_folder, "accuracy"), accuracy)
 np.save(os.path.join(save_folder, "it_resp"), it_resp)
