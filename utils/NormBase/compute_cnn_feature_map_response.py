@@ -40,7 +40,7 @@ config["plot_option"]: choose which property to plot
 # t0100: human_anger  --> plot maximum
 # t0104: human_anger  --> plot weighted average
 # t0108: human_anger  --> plot 10 biggest values (maximum10)
-config = load_config("norm_base_animate_cnn_response_t0108.json")
+config = load_config("norm_base_animate_cnn_response_t0001.json", path="configs/norm_base_config")
 
 # load images
 images,_ = load_data(config, train=config["dataset"])
@@ -95,7 +95,7 @@ except KeyError:
     pass
 
 # make folder
-folder = os.path.join("../../models/saved", config["save_name"])
+folder = os.path.join("models/saved", config["save_name"])
 if not os.path.exists(folder):
     os.mkdir(folder)
 

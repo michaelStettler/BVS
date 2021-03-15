@@ -14,10 +14,11 @@ from models.NormBase import NormBase
 # t0006: 2-norm-monkey_morph
 
 do_reverse = False
+do_normalize = False
 
-config = load_config("norm_base_reproduce_ICANN_t0015.json")
+config = load_config("norm_base_reproduce_ICANN_t0015.json", path="configs/norm_base_config")
 save_name = config["sub_folder"]
-save_folder = os.path.join("../../models/saved", config['save_name'], save_name)
+save_folder = os.path.join("models/saved", config['save_name'], save_name)
 accuracy = np.load(os.path.join(save_folder, "accuracy.npy"))
 it_resp = np.load(os.path.join(save_folder, "it_resp.npy"))
 labels = np.load(os.path.join(save_folder, "labels.npy"))
@@ -67,25 +68,26 @@ for i in range(n_condition):
         sorted_expression_resp[i, j] = expression_resp
 print("shape sorted_it_resp (n_condition, n_sequence, length_seq, n_category)", np.shape(sorted_it_resp))
 
-# normalize data
-# max it
-max_it_resp = np.amax(sorted_it_resp, axis=(1, 2, 3))
-max_it_resp = np.expand_dims(max_it_resp, axis=1)
-max_it_resp = np.repeat(max_it_resp, np.shape(sorted_it_resp)[1], axis=1)
-max_it_resp = np.expand_dims(max_it_resp, axis=2)
-max_it_resp = np.repeat(max_it_resp, np.shape(sorted_it_resp)[2], axis=2)
-max_it_resp = np.expand_dims(max_it_resp, axis=3)
-max_it_resp = np.repeat(max_it_resp, np.shape(sorted_it_resp)[3], axis=3)
-sorted_it_resp /= max_it_resp
-# max expression
-max_expr_resp = np.amax(sorted_expression_resp, axis=(1, 2, 3))
-max_expr_resp = np.expand_dims(max_expr_resp, axis=1)
-max_expr_resp = np.repeat(max_expr_resp, np.shape(sorted_expression_resp)[1], axis=1)
-max_expr_resp = np.expand_dims(max_expr_resp, axis=2)
-max_expr_resp = np.repeat(max_expr_resp, np.shape(sorted_expression_resp)[2], axis=2)
-max_expr_resp = np.expand_dims(max_expr_resp, axis=3)
-max_expr_resp = np.repeat(max_expr_resp, np.shape(sorted_expression_resp)[3], axis=3)
-sorted_expression_resp /= max_expr_resp
+if do_normalize:
+    # normalize data
+    # max it
+    max_it_resp = np.amax(sorted_it_resp, axis=(1, 2, 3))
+    max_it_resp = np.expand_dims(max_it_resp, axis=1)
+    max_it_resp = np.repeat(max_it_resp, np.shape(sorted_it_resp)[1], axis=1)
+    max_it_resp = np.expand_dims(max_it_resp, axis=2)
+    max_it_resp = np.repeat(max_it_resp, np.shape(sorted_it_resp)[2], axis=2)
+    max_it_resp = np.expand_dims(max_it_resp, axis=3)
+    max_it_resp = np.repeat(max_it_resp, np.shape(sorted_it_resp)[3], axis=3)
+    sorted_it_resp /= max_it_resp
+    # max expression
+    max_expr_resp = np.amax(sorted_expression_resp, axis=(1, 2, 3))
+    max_expr_resp = np.expand_dims(max_expr_resp, axis=1)
+    max_expr_resp = np.repeat(max_expr_resp, np.shape(sorted_expression_resp)[1], axis=1)
+    max_expr_resp = np.expand_dims(max_expr_resp, axis=2)
+    max_expr_resp = np.repeat(max_expr_resp, np.shape(sorted_expression_resp)[2], axis=2)
+    max_expr_resp = np.expand_dims(max_expr_resp, axis=3)
+    max_expr_resp = np.repeat(max_expr_resp, np.shape(sorted_expression_resp)[3], axis=3)
+    sorted_expression_resp /= max_expr_resp
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------  plotting  ------------------------------------------------------------------------------
 # plot all it responses for one stimulus
@@ -102,7 +104,9 @@ for i in range(n_condition):  # n_condition (i.e. anger fear lip_smack)
 
     plt.ylabel(titles[i+1])
     # plt.yticks([0, 0.25, 0.5, 0.75, 1.0])
-    plt.ylim([-0.05, 1.1])
+    if do_normalize:
+        plt.ylim([-0.05, 1.1])
+plt.xlabel("frame")
 if show_legends:
     plt.legend()
 plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig3A.png"))
@@ -121,7 +125,9 @@ for i in range(n_condition):  # n_condition (i.e. anger fear lip_smack)
 
     plt.ylabel(titles[i+1])
     # plt.yticks([0, 0.25, 0.5, 0.75, 1.0])
-    plt.ylim([-0.05, 1.1])
+    if do_normalize:
+        plt.ylim([-0.05, 1.1])
+plt.xlabel("frame")
 if show_legends:
     plt.legend()
 plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig3B.png"))
@@ -140,8 +146,10 @@ for i in range(n_condition):  # n_condition (anger fear lip_smack)
 
     plt.ylabel(titles[i+1])
     # plt.yticks([0, 0.25, 0.5, 0.75, 1.0])
-    plt.ylim([-0.05, 1.1])
-    if show_legends:
+    if do_normalize:
+        plt.ylim([-0.05, 1.1])
+plt.xlabel("frame")
+if show_legends:
         plt.legend()
 plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig4A.png"))
 
@@ -161,8 +169,10 @@ for i in range(n_condition):  # n_condition (anger fear lip_smack)
 
     plt.ylabel(titles[i + 1])
     # plt.yticks([0, 0.25, 0.5, 0.75, 1.0])
-    plt.ylim([-0.05, 1.1])
+    if do_normalize:
+        plt.ylim([-0.05, 1.1])
     plt.xticks(config['xticks'], labels)
-    if show_legends:
-        plt.legend()
+plt.xlabel("frame")
+if show_legends:
+    plt.legend()
 plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig4B.png"))

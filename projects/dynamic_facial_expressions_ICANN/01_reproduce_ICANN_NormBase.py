@@ -17,7 +17,7 @@ from models.NormBase import NormBase
 # t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
 # t0006: 2-norm-monkey_morph
 
-config = load_config("norm_base_reproduce_ICANN_t0015.json")
+config = load_config("norm_base_reproduce_ICANN_t0015.json", path="configs/norm_base_config")
 save_name = config["sub_folder"]
 
 data_train = load_data(config)
@@ -51,7 +51,7 @@ print("it_resp.shape", it_resp.shape)
 print("labels.shape", labels.shape)
 
 # save results to be used by 02_reproduce_ICANN_NormBase_plots.py
-save_folder = os.path.join("../../models/saved", config['save_name'], save_name)
+save_folder = os.path.join("models/saved", config['save_name'], save_name)
 np.save(os.path.join(save_folder, "accuracy"), accuracy)
 np.save(os.path.join(save_folder, "it_resp"), it_resp)
 np.save(os.path.join(save_folder, "labels"), labels)

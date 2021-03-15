@@ -20,7 +20,7 @@ config_names = ["norm_base_data_distance_t0001.json", "norm_base_data_distance_t
 models = []
 
 for i, config_name in enumerate(config_names):
-    config = load_config(config_name)
+    config = load_config(config_name, path="configs/norm_base_config")
     save_name = config["sub_folder"]
     retrain = False
 

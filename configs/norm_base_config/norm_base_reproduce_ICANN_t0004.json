@@ -17,6 +17,18 @@
   "batch_size": 32,
   "save_name": "norm_base_reproduce_ICANN",
   "sub_folder": "t0004_direction-only",
+  "use_dynamic":  1,
+  "tau_u": 3,
+  "tau_v": 3,
+  "tau_y": 15,
+  "tau_d": 5,
+  "m_inhi_w": 0.8,
+  "condition": ["Neutral", "Threat", "Fear", "LipSmacking"],
+  "labels": ["25%", "50%", "75%", "100%"],
+  "xticks": [25, 50, 75, 100],
+  "colors": ["k", "y", "b", "r"],
+  "seq_length": 120,
+  "concat_seq_start": [[1080, 1200, 1320, 240], [360, 480, 600, 0], [720, 840, 960, 120]],
   "use_ggplot": 0,
-  "show_legends": 0
+  "show_legends": 1
 }
