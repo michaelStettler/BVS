@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from utils.load_data import load_data
-from utils.load_model import load_model
+from utils.load_extraction_model import load_model
 
 
 def find_SA_tuning(model, img, features, face_units=None, verbose=False):

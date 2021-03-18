@@ -1,14 +1,15 @@
 import types
 import os
 import pickle
+import pandas as pd
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 from sklearn.decomposition import PCA
 import warnings
 
-from utils.load_model import load_model
-from utils.data_generator import DataGen
+from utils.load_extraction_model import load_extraction_model
+from utils.CSV_data_generator import CSVDataGen
 from utils.calculate_position import calculate_position
 
 
@@ -29,14 +30,14 @@ class NormBase:
 
     """
 
-    def __init__(self, config, input_shape, save_name=None):
+    def __init__(self, config, input_shape, load_NB_model=None):
         """
         The init function is responsible to declare the front end model of the norm base mechanism declared in the
         config file
 
         :param config: JSON file
         :param input_shape: Tuple with the input size of the model (height, width, channels)
-        :param save_name: if given the fitted model is loaded from config['save_name'] subfolder save_name
+        :param load_NB_model: if given the fitted model is loaded from config["config_name"] subfolder save_name
         """
         # -----------------------------------------------------------------
         # limit GPU memory as it appear windows have an issue with this, from:
@@ -76,9 +77,10 @@ class NormBase:
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
 
         # load front end feature extraction model
-        self._load_v4(config, input_shape)
+        self._load_v4(config, input_shape)  # load extraction model
+        print()
         print("[INIT] -- Model loaded --")
-        print("[INIT] Model:", config['model'])
+        print("[INIT] Extraction Model:", config['extraction_model'])
         print("[INIT] V4 layer:", config['v4_layer'])
         if not (self.dim_red is None):
             print("[INIT] dim_red:", self.dim_red)
@@ -112,15 +114,15 @@ class NormBase:
         self.t_mean = np.zeros((self.n_category, self.n_features))
         threshold_divided = 50
         self.threshold = self.n_features / threshold_divided
-        print("[INIT] threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
+        print("[INIT] Neutral threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
 
         # v4 prediction of the training data set - used in external script t05_compare_retained_PCA_index.py
         # TODO: eventually delete to save RAM
         self.v4_predict = None
 
-        # load model
-        if not save_name is None:
-            self._load_model(config, save_name)
+        # load norm base model
+        if load_NB_model is not None:
+            self._load_NB_model(config, save_name)
             print("[INIT] saved model is loaded from file")
 
         # set time constant for dynamic and competitive network
@@ -134,50 +136,69 @@ class NormBase:
                 self.tau_d = config['tau_d']  # time constant for competitive network
                 self.m_inhi_w = config['m_inhi_w']  # weights of mutual inhibition
 
+        # set option to save the v4 raw predictions into a csv file
+        self.save_preds = False
+        self.preds_saved = False
+        if config.get('save_preds') is not None:
+            if config['save_preds']:
+                print("[INIT] Save raw prediction set")
+                self.save_preds = True
+                self.raw_preds_df = pd.DataFrame()
         print()
 
     def _load_v4(self, config, input_shape):
-        if (config['model'] == 'VGG19') | (config['model'] =='ResNet50V2'):
-            model = load_model(config, input_shape)
+        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] =='ResNet50V2'):
+            model = load_extraction_model(config, input_shape)
             self.v4 = tf.keras.Model(inputs=model.input,
                                      outputs=model.get_layer(config['v4_layer']).output)
         else:
             raise ValueError("model: {} does not exists! Please change config file or add the model"
-                             .format(config['model']))
+                             .format(config['extraction_model']))
         # define preprocessing for images
-        if config['model']=='VGG19':
-            self.preprocessing ='VGG19'
+        if config['extraction_model'] == 'VGG19':
+            self.preprocessing = 'VGG19'
         else:
             self.preprocessing = None
-            warnings.warn(f'no preprocessing for images defined for config["model"]={config["model"]}')
+            warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
 
     ### SAVE AND LOAD ###
 
-    def save_model(self, config, save_name):
+    def save_NB_model(self, config):
         """
         This method saves the fitted model
         :param config: saves under the specified path in config
         :param save_name: subfolder name
-        can be loaded with load_model(config, save_name)
+        can be loaded with load_extraction_model(config, save_name)
         """
-        if not os.path.exists(os.path.join("models/saved", config['save_name'])):
-            os.mkdir(os.path.join("models/saved", config['save_name']))
-        save_folder = os.path.join("models/saved", config['save_name'], save_name)
+        print()
+        # control that config folder exists
+        save_folder = os.path.join("models/saved", config['config_name'])
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
-        save_folder = os.path.join(save_folder, "NormBase_saved")
+
+        save_folder = os.path.join(save_folder, "NormBase")
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
+
         #save reference and tuning vector
+        print("[SAVE] Save reference and tuning vectors")
         np.save(os.path.join(save_folder, "ref_vector"), self.r)
         np.save(os.path.join(save_folder, "tuning_vector"), self.t)
         np.save(os.path.join(save_folder, "tuning_mean"), self.t_mean)
         #save PCA
         if self.dim_red == 'PCA':
+            print("[SAVE] Save PCA")
             #np.save(os.path.join(save_folder, "pca"), self.pca)
             pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
 
-    def _load_model(self, config, save_name):
+        if self.save_preds and self.preds_saved:
+            print("[SAVE] Save raw prediction to csv")
+            self.raw_preds_df.to_csv(os.path.join(save_folder, "raw_pred.csv"))
+
+        print("[SAVE] Norm Base Model saved")
+        print()
+
+    def _load_NB_model(self, config, save_name):
         """
         loads trained model from file, including dimensionality reduction
         this method should only be called by init
@@ -185,7 +206,7 @@ class NormBase:
         :param save_name: folder name
         :return:
         """
-        load_folder = os.path.join("models/saved", config['save_name'], save_name, "NormBase_saved")
+        load_folder = os.path.join("models/saved", config['config_name'], save_name, "NormBase_saved")
         ref_vector = np.load(os.path.join(load_folder, "ref_vector.npy"))
         tun_vector = np.load(os.path.join(load_folder, "tuning_vector.npy"))
         self.set_ref_vector(ref_vector)
@@ -202,7 +223,7 @@ class NormBase:
     def set_tuning_vector(self, t):
         self.t = t
 
-    def evaluate_v4(self,data,flatten=True):
+    def evaluate_v4(self, data, flatten=True):
         """
         returns prediction of cnn including preprocessing of images
         in NormBase, must be used only to train dimensionality reduction and in _get_preds()
@@ -210,20 +231,26 @@ class NormBase:
         :param flatten: if True, is flattened
         :return: prediction
         """
-        # preprocess images
-        if self.preprocessing is None:
-            preds=data
-        elif self.preprocessing == 'VGG19':
-            preds = tf.keras.applications.vgg19.preprocess_input(np.copy(data))
-        else:
-            raise ValueError(f'preprocessing = {self.preprocessing} is not admitted')
 
         # prediction of v4 layer
-        preds = self.v4.predict(preds)
-        if flatten: preds = np.reshape(preds, (data.shape[0], -1))
+        preds = self.v4.predict(data)
+        if flatten:
+            preds = np.reshape(preds, (np.shape(preds)[0], -1))
+
+        # save raw extraction prediction
+        if self.save_preds and not self.preds_saved:
+            # ensure that the data are flatten for the csv file
+            if not flatten:
+                save_preds = np.reshape(preds, (np.shape(preds)[0], -1))
+            else:
+                save_preds = preds
+            # save predictions
+            df = pd.DataFrame(save_preds)
+            self.raw_preds_df = self.raw_preds_df.append(df, ignore_index=True)
+
         return preds
 
-    def get_preds(self,data):
+    def get_preds(self, data):
         """
         returns prediction of pipeline before norm-base
         pipeline consists of preprocessing, cnn, and dimensionality reduction
@@ -400,24 +427,31 @@ class NormBase:
         if self.dim_red is None:
             print("[FIT] no dimensionality reduction")
         elif self.dim_red == 'PCA':
-            print("[FIT] Fitting PCA")
-            if isinstance(data, DataGen):
+            if isinstance(data, CSVDataGen):
                 # data = data.getAllData()
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
-            # get prediction of cnn of training data
-            self.v4_predict = self.evaluate_v4(data[0])
+            elif isinstance(data, tf.keras.preprocessing.image.ImageDataGenerator):
+                self.v4_predict = self.evaluate_v4(data)
+            else:
+                self.v4_predict = self.evaluate_v4(data[0])
             # old (w/o preprocessing):
             # v4_predict = self.v4.predict(data[0])
             # v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
             # self.v4_predict = v4_predict
 
             # perform PCA on this output
+            print("[FIT] Fitting PCA")
             self.pca.fit(self.v4_predict)
-            print("explained variance", self.pca.explained_variance_ratio_)
+            print("[FIT] PCA: explained variance", self.pca.explained_variance_ratio_)
+
         elif self.dim_red == 'position':
             print(f'[FIT] dimensionality reduction method: position with calculation method {self.position_method}')
         else:
             raise KeyError(f'self.dim_red={self.dim_red} is no valid value')
+
+        # set preds_saved to true so the predictions are saved only once
+        if self.save_preds and self.dim_red is not None:
+            self.preds_saved = True
 
     def _fit_reference(self, data, batch_size):
         """
@@ -442,7 +476,8 @@ class NormBase:
                 ref_data = batch_data[data[1][batch_idx] == self.ref_cat]
                 # update reference vector
                 self._update_ref_vector(ref_data)
-        elif isinstance(data, DataGen):
+
+        elif isinstance(data, CSVDataGen):
             # train using a generator
             data.reset()
             for data_batch in tqdm(data.generate()):
@@ -454,10 +489,14 @@ class NormBase:
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
 
+        # set preds_saved to true so the predictions are saved only once
+        if self.save_preds:
+            self.preds_saved = True
+
     def _fit_tuning(self, data, batch_size):
         """
         fits only tuning vector with already fitted reference vector
-        :param data: [x,y] or DataGen
+        :param data: [x,y] or CSVDataGen
         :param batch_size:
         :return:
         """
@@ -477,12 +516,16 @@ class NormBase:
 
                 # update direction tuning vector
                 self._update_dir_tuning(batch_data, batch_label)
-        elif isinstance(data, DataGen):
+        elif isinstance(data, CSVDataGen):
             data.reset()
             for data_batch in tqdm(data.generate()):
                 self._update_dir_tuning(data_batch[0], data_batch[1])
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
+
+        # set preds_saved to true so the predictions are saved only once
+        if self.save_preds:
+            self.preds_saved = True
 
     ### EVALUATION / PREDICTION
 
@@ -496,7 +539,7 @@ class NormBase:
         if isinstance(data, list):
             # train using data array
             accuracy, it_resp, labels = self._evaluate_array(data[0], data[1], batch_size)
-        elif isinstance(data, DataGen):
+        elif isinstance(data, CSVDataGen):
             # train using a generator function
             accuracy, it_resp, labels = self._evaluate_generator(data)
 
@@ -581,7 +624,7 @@ class NormBase:
         :param data: input data
         :return:
         """
-        if isinstance(data, DataGen):
+        if isinstance(data, CSVDataGen):
             projection, labels = self._projection_generator(data)
         elif isinstance(data, list):
             projection, labels = self._projection_array(data, batch_size=batch_size)

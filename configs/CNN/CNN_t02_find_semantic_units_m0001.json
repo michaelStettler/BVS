@@ -1,8 +1,8 @@
 {
-  "model": "VGG19",
+  "extraction_model": "VGG19",
   "weights": "imagenet",
   "include_top": true,
-  "train_data": "FEI_semantic",
+  "train_data": "AffectNet_semantic",
   "num_cat": 12,
   "img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/face_images/originalimages",
   "seg_img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/face_images/segmentedimages",

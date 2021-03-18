@@ -200,17 +200,20 @@ def create_morphe_space_csv(img_path, dist_file_list, m_threshold=50, h_threshol
 
     # add each image into the dataframe
     print("Adding images to dataframe:")
-    for image_path in tqdm(image_list):
+    for image_path in tqdm(sorted(image_list)):
         splits = splitall(image_path)
         relat_img_path = os.path.join(*splits[img_path_length:-1])  # add * 'splat' to take a list as argument
         relat_img_path = relat_img_path.replace('\\', '/')
         image_name = splits[-1]
+        img_path = os.path.join(relat_img_path, image_name)
+        img_path = img_path.replace('\\', '/')
 
         # get information from directory
         img_pos = None
         img_cond_dir = relat_img_path.split('/')[-2]
         img_last_dir = relat_img_path.split('/')[-1]
 
+        # control that image is here
         pos_found = False
         for file in dist_file_list:
             if img_last_dir in file and img_cond_dir in file:
@@ -233,7 +236,7 @@ def create_morphe_space_csv(img_path, dist_file_list, m_threshold=50, h_threshol
             avatar = avatar + '_30deg'
 
         # add into dataframe
-        df = df.append({'image_path': relat_img_path, 'image_name': image_name, 'category': cat, 'avatar': avatar,
+        df = df.append({'image_path': img_path, 'image_name': image_name, 'category': cat, 'avatar': avatar,
                         'anger': anger, 'fear': fear, 'm_exp': m_exp, 'h_exp': h_exp, 'n_exp': n_exp},
                        ignore_index=True)
 
@@ -294,26 +297,26 @@ if __name__ == "__main__":
     m_threshold = 50
     h_threshold = 8
     # windows
-    # dist_path = ['D:/Maya projects/DigitalLuise/data/vtx_distance/human_orig',
-    #              'D:/Maya projects/DigitalLuise/data/vtx_distance/human_30deg',
-    #              'D:/Maya projects/DigitalLuise/data/vtx_distance/human_equ',
-    #              'D:/Maya projects/DigitalLuise/data/vtx_distance/human_equ_30deg',
-    #              'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_orig',
-    #              'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_30deg',
-    #              'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ',
-    #              'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ_30deg']
-    # img_path = 'D:/Dataset/MorphingSpace'
+    dist_path = ['D:/Maya projects/DigitalLuise/data/vtx_distance/human_orig',
+                 'D:/Maya projects/DigitalLuise/data/vtx_distance/human_30deg',
+                 'D:/Maya projects/DigitalLuise/data/vtx_distance/human_equ',
+                 'D:/Maya projects/DigitalLuise/data/vtx_distance/human_equ_30deg',
+                 'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_orig',
+                 'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_30deg',
+                 'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ',
+                 'D:/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ_30deg']
+    img_path = 'D:/Dataset/MorphingSpace'
 
-    # docker
-    dist_path = ['/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_orig',
-                 '/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_30deg',
-                 '/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_equ',
-                 '/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_equ_30deg',
-                 '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_orig',
-                 '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_30deg',
-                 '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ',
-                 '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ_30deg']
-    img_path = '/app/Data/Dataset/MorphingSpace'
+    # # docker
+    # dist_path = ['/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_orig',
+    #              '/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_30deg',
+    #              '/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_equ',
+    #              '/app/Data/Maya projects/DigitalLuise/data/vtx_distance/human_equ_30deg',
+    #              '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_orig',
+    #              '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_30deg',
+    #              '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ',
+    #              '/app/Data/Maya projects/MonkeyHead_MayaProject/data/vtx_distance/monkey_equ_30deg']
+    # img_path = '/app/Data/Dataset/MorphingSpace'
 
     dist_file_list = []
     for path in dist_path:

@@ -1,11 +1,8 @@
-import json
 import numpy as np
 import tensorflow as tf
 import cv2
 from tqdm import tqdm
 
-from utils.load_data import load_data
-from utils.load_model import load_model
 
 """
 take only labels that has at least 10 images 
@@ -104,29 +101,3 @@ def _scale_activations(preds, output_size):
 
     return np.array(sk)
 
-
-if __name__ == "__main__":
-    np.random.seed(0)
-    import os
-    config_file_path = 'configs/semantic_units/find_semantic_units_test_mac.json'
-    save = True
-
-    np.set_printoptions(precision=3, suppress=True, linewidth=150)
-
-    # load find_face config
-    with open(config_file_path) as json_file:
-        config = json.load(json_file)
-
-    #  load model
-    model = load_model(config)
-    # print(model.summary())
-
-    # load data
-    data = load_data(config)
-    print("[Loading] shape x", np.shape(data[0]))
-    print("[Loading] shape label", np.shape(data[1]))
-    print("[loading] finish loading data")
-    print()
-
-    # compute face units
-    find_semantic_units(model, data[0], data[1])

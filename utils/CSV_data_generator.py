@@ -3,21 +3,24 @@ import numpy as np
 import os
 
 
-class DataGen:
+class CSVDataGen:
 
-    def __init__(self, config, df, path):
+    def __init__(self, config, df, path, shuffle=True):
         self.start = 0
         self.batch_size = config['batch_size']
         self.df = df
         self.num_data = len(df.index)
         self.path = path
+        self.shuffle = shuffle
 
     def reset(self):
         self.start = 0
 
     def generate(self):
         idx = np.arange(self.num_data)
-        np.random.shuffle(idx)
+
+        if shuffle:
+            np.random.shuffle(idx)
 
         while self.start < self.num_data:
             # get batch idx

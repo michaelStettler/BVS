@@ -6,12 +6,13 @@ import warnings
 from tqdm import tqdm
 import tensorflow as tf
 
-from utils.data_generator import DataGen
+from utils.CSV_data_generator import CSVDataGen
 from utils.image_utils import resize_image
 from utils.image_utils import pad_image
+from utils.load_from_csv import load_from_csv
 
 
-def load_data(config, train=True, sort_by=None):
+def load_data(config, train=True, sort_by=None, get_raw=False):
     if config['train_data'] == 'test':
         print("[DATA] Generate random training data")
         np.random.seed(0)
@@ -37,9 +38,11 @@ def load_data(config, train=True, sort_by=None):
     elif config['train_data'] == 'affectnet':
         data = _load_affectnet(config, train)
     elif config['train_data'] == 'ExpressionMorphing':
+        print("[WARNING] 'ExpressionMorphing' dataset should be removed in the future by 'morphing_space'")
+        # todo remove _load_expression_morphing()
         data = _load_expression_morphing(config, train, sort_by)
     elif config['train_data'] == 'morphing_space':
-        data = _load_morphing_space(config, train, sort_by)
+        data = _load_morphing_space(config, train, sort_by, get_raw=get_raw)
     elif config['train_data'] == 'basic_shapes':
         data = _load_basic_shapes(config, train)
     else:
@@ -92,6 +95,7 @@ def _load_monkey(config, train, sort_by):
         im_rgb = cv2.resize(im_crop, (224, 224))
         x[idx, :, :, :] = im_rgb
 
+        # todo change csv or find a way to implement this within "load_from_csv"
         category = -1
         if row['category'] == "Neutral":
             category = 0
@@ -133,10 +137,6 @@ def _load_expression_morphing(config, train, sort_by):
         if train:
             df = pd.read_csv(config['csv_train'])
             try:
-                directory = config['train_directory']
-            except KeyError:
-                directory = None
-            try:
                 avatar = config['train_avatar']
             except KeyError:
                 avatar ='all'
@@ -150,10 +150,6 @@ def _load_expression_morphing(config, train, sort_by):
                 anger_config = 'all'
         else:
             df = pd.read_csv(config['csv_val'])
-            try:
-                directory = config['val_directory']
-            except KeyError:
-                directory = None
             try:
                 avatar = config['val_avatar']
             except KeyError:
@@ -194,25 +190,14 @@ def _load_expression_morphing(config, train, sort_by):
     num_data = len(df.index)
     print("[DATA] Found {} images".format(num_data))
 
-    #  declare x and y
-    x = np.zeros((num_data, 224, 224, 3))
-    y = np.zeros(num_data)
 
-    index = 0 # because idx does not represent correct index
-    for _ , row in tqdm(df.iterrows()):
-        # load img
-        if directory is None:
-            im = cv2.imread(os.path.join(row['image_path'], row['image_name']))
-        else:
-            im = cv2.imread(os.path.join(directory, row['image_name']))
-        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        x[index, :, :, :] = im_rgb
-        y[index] = row['category']
-        index +=1
+    # load each image from the csv file
+    data = load_from_csv(new_df, config)
 
-    return [x,y]
+    return data
 
-def _load_morphing_space(config, train, sort_by):
+
+def _load_morphing_space(config, train, sort_by, get_raw=False):
     # load csv
     df = pd.read_csv(config['csv'], index_col=0)
 
@@ -268,26 +253,42 @@ def _load_morphing_space(config, train, sort_by):
     num_data = len(new_df.index)
     print("[DATA] Found {} images".format(num_data))
 
-    #  declare x and y
-    x = np.zeros((num_data, 224, 224, 3))  # todo change to use config file
-    y = np.zeros(num_data)
+    if config['use_data_generator']:
+        # get image target size
+        input_shape = config['input_shape']
+        target_size = tuple(input_shape[:-1])
 
-    # load images from dataframe
-    directory = config['directory']
-    index = 0
-    for _ , row in tqdm(new_df.iterrows(), total=num_data):
-        # load img
-        if directory is None:
-            im = cv2.imread(os.path.join(row['image_path'], row['image_name']))
+        # make sure the categopry is a string
+        new_df[config["y_col"]] = new_df[config["y_col"]].astype(str)
+
+        # use tensorflow generator
+
+        if get_raw:
+            datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+
+        elif config["extraction_model"] == "VGG19":
+            datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+                preprocessing_function=tf.keras.applications.vgg19.preprocess_input)
+
         else:
-            im = cv2.imread(os.path.join(directory, row['image_path'], row['image_name']))
-        im = cv2.resize(im, (224, 224))  # todo use config file
-        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        x[index, :, :, :] = im_rgb
-        y[index] = row['category']
-        index +=1
+            print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+        data = datagen.flow_from_dataframe(new_df, directory=config['directory'],
+                                           x_col=config['x_col'],
+                                           y_col=config["y_col"],
+                                           target_size=target_size,
+                                           batch_size=config['batch_size'])
+    else:
+        # load each image from the csv file
+        data = load_from_csv(new_df, config)
 
-    return [x, y]
+        if get_raw:
+            data[0] = data[0]
+        elif config["extraction_model"] == "VGG19":
+            data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+        else:
+            print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+
+    return data
 
 
 def _load_FEI(config):
@@ -423,6 +424,7 @@ def _load_affectnet(config, train):
     dataGen = DataGen(config, df, directory)
 
     return dataGen
+
 
 def _load_basic_shapes(config, train):
     from PIL import Image, ImageDraw

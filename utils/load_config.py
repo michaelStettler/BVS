@@ -10,6 +10,7 @@ def load_config(config_name, path=None):
     :return:
     """
 
+    config_file_path = config_name
     # use given path if given
     if path is not None:
         config_file_path = os.path.join(path, config_name)

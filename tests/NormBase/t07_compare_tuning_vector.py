@@ -33,7 +33,7 @@ for config in configs:
     except IOError:
         norm_base = NormBase(config, input_shape=(224,224,3))
         dataset = load_data(config, train=config["dataset"])
-        norm_base.fit(dataset)
+        norm_base.fit(dataset)  # no feature selection
         norm_base.save_model(config, config["sub_folder"])
     norm_base_list.append(norm_base)
 
@@ -50,7 +50,7 @@ cat2_monkey = ref_monkey + tun2_monkey
 
 # reshape vectors to (28,28,256)
 for vector in [ref_human, tun1_human, tun2_human, cat1_human, cat2_human,
-               ref_monkey,tun1_monkey,tun2_monkey,cat1_monkey,cat2_monkey]:
+               ref_monkey,tun1_monkey, tun2_monkey,cat1_monkey,cat2_monkey]:
     vector.shape = (28,28,256)
 
 # plot vectors

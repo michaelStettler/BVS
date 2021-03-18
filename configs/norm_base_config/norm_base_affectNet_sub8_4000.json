@@ -6,6 +6,7 @@
   "csv_val": "D:/Dataset/AffectNet/val_sub8.csv",
   "train_directory": "D:/Dataset/AffectNet/training",
   "val_directory": "D:/Dataset/AffectNet/validation",
+  "csv_train"
   "model": "VGG19",
   "include_top": false,
   "weights": "imagenet",

@@ -60,9 +60,7 @@ def plot_directions(projection, labels, x_lines, lines, config, save=True):
                loc="upper right", borderaxespad=0.1)
 
     if save:
-        # todo harmonize the config files!
-        # todo put "../models/saved" into config
-        plt.savefig(os.path.join("../models/saved", config['save_name'], config["sub_folder"], "_direction_scatter.png"))
+        plt.savefig(os.path.join("models/saved", config['config_name'], "_direction_scatter.png"))
 
 
 if __name__ == '__main__':

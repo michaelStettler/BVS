@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from utils.load_data import load_data
-from utils.data_generator import DataGen
+from utils.CSV_data_generator import DataGen
 from models.NormBase import NormBase
 
 
