@@ -1,10 +1,12 @@
 import os
 import numpy as np
 # import fiftyone  # has a nice API but seems difficult to get the segmentation
+import skimage.io as io
+import cv2
 from pycocotools.coco import COCO
 import matplotlib.pyplot as plt
 from utils.load_config import load_config
-from utils.load_data import load_data
+from utils.load_coco_semantic_annotations import load_coco_semantic_annotations
 from utils.load_extraction_model import load_extraction_model
 from utils.find_semantic_units import find_semantic_units
 
@@ -24,7 +26,7 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
 config = load_config(config_path, path='configs/CNN')
 
-# todo make everxthing within this layout
+# todo make everything within this layout
 # # load model
 # model = load_extraction_model(config)
 # # print(model.summary())
@@ -40,31 +42,18 @@ config = load_config(config_path, path='configs/CNN')
 # find_semantic_units(model, data[0], data[1])
 
 
-path = '/Users/michaelstettler/Desktop/affectnet_face_semantic'
-json_name = 'AffectNet_semantic_COCO.json'
-json_path = os.path.join(path, json_name)
+data = load_coco_semantic_annotations(config)
+x = data[0]
+labels = data[1]
 
-# Initialize the COCO api for instance annotations
-coco = COCO(json_path)
+# print all masks per images
+for i, label in enumerate(labels[:1]):
+    for c in range(len(categories)):
+        # print category name
+        print("categories", categories[c])
 
-# Load the categories in a variable
-catIDs = coco.getCatIds()
-cats = coco.loadCats(catIDs)
-
-print(cats)
-
-# todo probably to put in a utils
-def getClassName(classID, cats):
-    for i in range(len(cats)):
-        if cats[i]['id']==classID:
-            return cats[i]['name']
-    return "None"
-print('The class name is', getClassName(2, cats))
+        # display mask
+        plt.imshow(label[:, :, c])
+        plt.show()
 
 
-# Load and display instance annotations
-plt.imshow(I)
-plt.axis('off')
-annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
-anns = coco.loadAnns(annIds)
-coco.showAnns(anns)

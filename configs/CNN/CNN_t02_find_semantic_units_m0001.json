@@ -2,11 +2,7 @@
   "extraction_model": "VGG19",
   "weights": "imagenet",
   "include_top": true,
-  "train_data": "AffectNet_semantic",
-  "num_cat": 12,
-  "img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/face_images/originalimages",
-  "seg_img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/face_images/segmentedimages",
-  "label_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/seg_labels",
-  "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FEI/FEI_face_segmented.csv",
-  "save_path": "/Users/michaelstettler/PycharmProjects/BVS/BVS/models/saved/semantic_units"
+  "coco_annot_json": "AffectNet_semantic_COCO.json",
+  "semantic_img_path": "/Users/michaelstettler/Desktop/affectnet_face_semantic",
+  "image_size": [224, 224]
 }

@@ -33,18 +33,23 @@ def load_data(config, train=True, sort_by=None, get_raw=False):
         data = _load_FEI_SA(config)
 
     elif config['train_data'] == 'FEI_semantic':
+        print("[WARNING] 'FEI_semantic' dataset should be removed in the future. Refer to 'load_coco_semantic_anotations'")
+        # todo remove _load_FEI_semantic()
         data = _load_FEI_semantic(config)
 
     elif config['train_data'] == 'affectnet':
         data = _load_affectnet(config, train)
+
     elif config['train_data'] == 'ExpressionMorphing':
         print("[WARNING] 'ExpressionMorphing' dataset should be removed in the future by 'morphing_space'")
         # todo remove _load_expression_morphing()
         data = _load_expression_morphing(config, train, sort_by)
     elif config['train_data'] == 'morphing_space':
         data = _load_morphing_space(config, train, sort_by, get_raw=get_raw)
+
     elif config['train_data'] == 'basic_shapes':
         data = _load_basic_shapes(config, train)
+
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
                          .format(config['train_data']))
@@ -421,7 +426,7 @@ def _load_affectnet(config, train):
     # print(df.head())
 
     #  declare generator
-    dataGen = DataGen(config, df, directory)
+    dataGen = CSVDataGen(config, df, directory)
 
     return dataGen
 
