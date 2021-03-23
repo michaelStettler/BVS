@@ -1,4 +1,6 @@
+import os
 import numpy as np
+import pickle
 import tensorflow as tf
 import cv2
 from tqdm import tqdm
@@ -9,14 +11,19 @@ take only labels that has at least 10 images
 """
 
 
-def find_semantic_units(model, data, label):
+def find_semantic_units(model, data, config, save=False):
+    label = data[1]
+    data = data[0]
+
     input_size = np.shape(data)[1:]
     n_class = np.shape(label)[-1]
     print("[IoU] num classes", n_class)
 
+    sem_indexes = {}
     # collect all predictions for each layer (discard input)
-    for layer in tqdm(model.layers[1:]):
-        print("[IoU] layer name:", layer.name)
+    for l_idx, layer in tqdm(enumerate(model.layers[1:])):
+        print("[IoU] layer {} name {}:".format(l_idx, layer.name))
+        layer_index = {"layer_name": layer.name, "layer_idx": l_idx}
 
         # stop if the layers flatten tha array since the resize won't work
         # todo take care of flatten units for reconstruction?
@@ -38,7 +45,7 @@ def find_semantic_units(model, data, label):
         # get scaled masked
         sk = _scale_activations(preds, input_size)
 
-        # get thesholded activation
+        # get thresholded activation
         mk = np.zeros(np.shape(sk), dtype=np.int8)
         mk[sk >= tk] = 1
 
@@ -51,7 +58,10 @@ def find_semantic_units(model, data, label):
                 inter = np.multiply(m, l)
                 sum_inter = np.count_nonzero(inter)
                 sum_union = np.count_nonzero(m) + np.count_nonzero(l)
-                IoU[c, k] = sum_inter / sum_union
+                if sum_union == 0:  # -> this also mean that inter = 0
+                    IoU[c, k] = 0
+                else:
+                    IoU[c, k] = sum_inter / sum_union
                 # print(c, k, sum_inter, sum_union, sum_inter / sum_union)
 
         # get number of unit per category
@@ -59,8 +69,22 @@ def find_semantic_units(model, data, label):
         n_units = np.count_nonzero(IoU, axis=1)
         print("n_units")
         print(n_units)
-    print("[IoU] finish computing IoU", np.shape(IoU))
-    print()
+
+        layer_index["IoU"] = IoU
+        sem_indexes[layer.name] = layer_index
+
+    # sem_indexes = np.array(sem_indexes)
+    print("[IoU] finished computing IoU")
+
+    if save:
+        save_folder = os.path.join("models/saved/semantic_units", config["config_name"])
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+
+        with open(os.path.join(save_folder, 'semantic_dictionary.pkl'), 'wb') as f:
+            pickle.dump(sem_indexes, f, pickle.HIGHEST_PROTOCOL)
+
+    return sem_indexes
 
 
 def _compute_quantile(preds, level=0.005):
@@ -100,4 +124,20 @@ def _scale_activations(preds, output_size):
     sk = np.moveaxis(sk, 1, -1)
 
     return np.array(sk)
+
+
+def get_IoU_per_category(IoU_dict, cat_ids):
+    cat_indexes = {}
+    # sort for each categories over each layers the feature map indexes that are activated
+    for cat in cat_ids:
+        layer_index = {}
+        for layer_name in IoU_dict:
+            IoU = IoU_dict[layer_name]["IoU"]
+            non_zero_idx = np.nonzero(IoU[cat])
+            layer_index[layer_name] = {"layer_name": IoU_dict[layer_name]["layer_name"], "indexes": non_zero_idx}
+
+        cat_indexes["category_{}".format(cat)] = layer_index
+
+    return cat_indexes
+
 

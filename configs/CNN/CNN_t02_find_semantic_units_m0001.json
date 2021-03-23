@@ -1,4 +1,5 @@
 {
+  "config_name": "CNN_t02_find_semantic_units_m0001",
   "extraction_model": "VGG19",
   "weights": "imagenet",
   "include_top": true,

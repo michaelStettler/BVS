@@ -2,6 +2,15 @@ import numpy as np
 import os
 import cv2
 from pycocotools.coco import COCO
+import matplotlib.pyplot as plt
+# import fiftyone  # has a nice API but seems difficult to get the segmentation
+
+
+"""
+helper function to load annotation following the COCO format: https://github.com/cocodataset/cocoapi
+
+the protocol was made following this: https://towardsdatascience.com/master-the-coco-dataset-for-semantic-image-segmentation-part-1-of-2-732712631047
+"""
 
 
 def getClassName(classID, cats):
@@ -20,7 +29,7 @@ def getClassName(classID, cats):
 
 def load_coco_semantic_annotations(config, verbose=False):
     """
-    build semantic labels from labelized masks following the "coco" dataset format
+    build semantic labels from labeled masks following the "coco" dataset format
 
     :return:
     """
@@ -59,7 +68,6 @@ def load_coco_semantic_annotations(config, verbose=False):
     # build semantic labels
     for i, image in enumerate(images[:1]):
         # load image
-        print("image", image)
         im = cv2.imread(os.path.join(path, "data", image["file_name"]))
         im = cv2.resize(im, image_size)
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -96,3 +104,68 @@ def load_coco_semantic_annotations(config, verbose=False):
     labels[labels > 1] = 1
 
     return [x, labels]
+
+
+def load_coco_categories(config, verbose=False):
+    # load coco to get the categories' name
+    path = config["semantic_img_path"]
+    json_path = os.path.join(path, config["coco_annot_json"])
+    # Initialize the COCO api for instance annotations
+    coco = COCO(json_path)
+
+    # Load the categories in a variable
+    cat_ids = coco.getCatIds()
+    categories = coco.loadCats(cat_ids)
+
+    if verbose:
+        for c in range(len(categories)):
+            # print category name
+            print("categories", categories[c])
+
+    return categories
+
+
+def get_coco_cat_ids(config, categories, to_numpy=False):
+    # load coco to get the categories' name
+    path = config["semantic_img_path"]
+    json_path = os.path.join(path, config["coco_annot_json"])
+    # Initialize the COCO api for instance annotations
+    coco = COCO(json_path)
+
+    cat_ids = np.array(coco.getCatIds(catNms=categories))
+    if to_numpy:
+        cat_ids = cat_ids - 1
+
+    return cat_ids
+
+
+if __name__ == "__main__":
+    """
+    Test load_coco_semantic_annotation function
+    
+    run: python -m utils.load_coco_semantic_annotations
+    """
+    # todo create a COCO class ?
+
+    from utils.load_config import load_config
+
+    # load config
+    config_path = 'CNN_t02_find_semantic_units_m0001.json'
+    config = load_config(config_path, path='configs/CNN')
+
+    # test function
+    data = load_coco_semantic_annotations(config)
+    x = data[0]
+    labels = data[1]
+
+    # Load the categories in a variable
+    categories = load_coco_categories(config)
+    # print all masks per images
+    for i, label in enumerate(labels[:1]):
+        for c in range(len(categories)):
+            # print category name
+            print("categories", categories[c])
+
+            # display mask
+            plt.imshow(label[:, :, c])
+            plt.show()
