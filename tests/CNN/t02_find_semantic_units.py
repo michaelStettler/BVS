@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pickle
 from utils.load_config import load_config
+from utils.load_data import load_data
 from utils.load_coco_semantic_annotations import load_coco_semantic_annotations
 from utils.load_coco_semantic_annotations import load_coco_categories
 from utils.load_coco_semantic_annotations import get_coco_cat_ids
@@ -70,7 +71,7 @@ feature_map_oi = np.array(feature_map_oi)[0]  # transform to numpy array
 print("[Index] feature map indexes for category {} at layer {}: {}".format(cat_id_of_interest, layer_of_interest, feature_map_oi))
 print("[Index] num of selected feature map: {}".format(len(feature_map_oi)))
 
-# todo plot feature maps
-
-
+# test selected feature maps on our morphing sequence
+data = load_data(config)
+print("[TEST] shape data", np.shape(data))
 
