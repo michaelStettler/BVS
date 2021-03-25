@@ -1,5 +1,5 @@
 {
-  "config_name": "CNN_t02_find_semantic_units_m0001",
+  "config_name": "CNN_t02_find_semantic_units_m0002",
   "train_data": "morphing_space",
   "use_data_generator": false,
   "x_col": "image_path",
@@ -14,7 +14,8 @@
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "weights": "imagenet",
-  "include_top": true,
+  "include_top": false,
+  "v4_layer": "block3_pool",
   "coco_annot_json": "AffectNet_semantic_COCO.json",
-  "semantic_img_path": "/Users/michaelstettler/Desktop/affectnet_face_semantic"
+  "semantic_img_path": "D:/Dataset/AffectNet_semantic"
 }

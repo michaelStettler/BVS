@@ -50,7 +50,7 @@ def load_coco_semantic_annotations(config, verbose=False):
     # retrieves parameters
     num_images = len(images)
     num_labels = len(categories)
-    image_size = tuple(config["image_size"])
+    image_size = tuple(config["input_shape"])
 
     # declare variables
     x = np.zeros((num_images, image_size[0], image_size[1], 3))
@@ -69,7 +69,7 @@ def load_coco_semantic_annotations(config, verbose=False):
     for i, image in enumerate(images[:1]):
         # load image
         im = cv2.imread(os.path.join(path, "data", image["file_name"]))
-        im = cv2.resize(im, image_size)
+        im = cv2.resize(im, (image_size[0], image_size[1]))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         x[i, :, :, :] = im_rgb
 
@@ -91,7 +91,7 @@ def load_coco_semantic_annotations(config, verbose=False):
             cat_id = anns[a]['category_id'] - 1  # ids start at 1
 
             # resize mask
-            mask = cv2.resize(mask, image_size)
+            mask = cv2.resize(mask, (image_size[0], image_size[1]))
 
             # add mask
             labels[i, :, :, cat_id] += mask  # += since some annotations could appears multiple times per images

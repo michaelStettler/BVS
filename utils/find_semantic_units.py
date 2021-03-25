@@ -21,7 +21,7 @@ def find_semantic_units(model, data, config, save=False):
 
     sem_indexes = {}
     # collect all predictions for each layer (discard input)
-    for l_idx, layer in tqdm(enumerate(model.layers[1:])):
+    for l_idx, layer in enumerate(tqdm(model.layers[1:])):
         print("[IoU] layer {} name {}:".format(l_idx, layer.name))
         layer_index = {"layer_name": layer.name, "layer_idx": l_idx}
 
@@ -77,7 +77,7 @@ def find_semantic_units(model, data, config, save=False):
     print("[IoU] finished computing IoU")
 
     if save:
-        save_folder = os.path.join("models/saved/semantic_units", config["config_name"])
+        save_folder = os.path.join("models/saved", config["config_name"])
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 

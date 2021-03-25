@@ -8,7 +8,8 @@ Note: To allow for different shapes of response, expand dimension
 
 import numpy as np
 
-def calculate_position(response, mode, return_mode = "array"):
+
+def calculate_position(response, mode="weighted average", return_mode="array"):
     """
     This function calculates the position within a feature map. Different modes are available.
     :param response: response vector of v4, shape (n_images, x, y, n_feature_maps)
@@ -34,7 +35,7 @@ def calculate_position(response, mode, return_mode = "array"):
             n_max = 1
         else:
             n_max = int(mode[7:])
-        if n_max==1:
+        if n_max == 1:
             # compute maximum into flattened dimension
             position_flattened = np.argmax(response, axis=1)
         else:
