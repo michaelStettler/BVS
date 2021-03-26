@@ -16,7 +16,7 @@ config_path = 'CNN_t03_feature_map_positions_m0001.json'
 config = load_config(config_path, path='configs/CNN')
 
 # choose feature map index
-eyebrow_ft_idx = 148   # the index come from the find_semantic_units
+eyebrow_ft_idx = 148   # the index comes from t02_find_semantic_units, it is the highest IoU score for eyebrow
 
 # load and define model
 model = load_extraction_model(config, input_shape=tuple(config["input_shape"]))
@@ -31,22 +31,30 @@ num_entry = 3
 num_ft = 1
 preds1 = np.zeros((num_entry,) + size_ft + (num_ft,))
 print("shape preds1", np.shape(preds1))
-# create test with 1 at each corner
-preds1[1, 0, 0, 0] = 1
-preds1[1, 0, -1, 0] = 1
-preds1[1, -1, 0, 0] = 1
-preds1[1, -1, -1, 0] = 1
+# -> should get (0, .33)
+preds1[1, 0, 0, 0] = 2
+preds1[1, 0, 1, 0] = 1
+
+# create test with 1 at each corners, should get -> (13,5, 13,5)
+preds1[2, 0, 0, 0] = 1
+preds1[2, 0, -1, 0] = 1
+preds1[2, -1, 0, 0] = 1
+preds1[2, -1, -1, 0] = 1
 
 # compute position vectors
+preds1_pos = calculate_position(preds1, mode="weighted average", return_mode="xy float")
+print("preds1_pos")
+print(preds1_pos)
 preds1_pos = calculate_position(preds1, mode="weighted average", return_mode="array")
 print("shape preds1_pos", np.shape(preds1_pos))
+
 # plot positions
 plot_cnn_output(preds1_pos, os.path.join("models/saved", config["config_name"]),
                 config['v4_layer'] + "_test1.gif",
-                image=preds1,
+                # image="",
                 video=True,
                 verbose=False)
-print("[TEST 1] Finished plotting dynamic eyebrow selection")
+print("[TEST 1] Finished plotting test1 positions")
 
 # # predict
 # preds = model.predict(data)

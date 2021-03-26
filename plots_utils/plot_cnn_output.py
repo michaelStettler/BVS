@@ -24,22 +24,38 @@ def plot_cnn_output(output, path, name, title=None, image=None, video=False, ver
     if verbose:
         print("start plot_cnn_output of", name)
 
-    n_rows = math.ceil(np.sqrt(output.shape[-1]))
-    n_col = output.shape[-1] //n_rows
+    num_ft = output.shape[-1]
+    n_col = math.ceil(np.sqrt(num_ft))
+    n_rows = math.ceil(num_ft / n_col)
     vmin, vmax = np.min(output), np.max(output)
-    fig, axs = plt.subplots(n_rows, n_col, figsize=(n_rows+3,n_col))
+    fig, axs = plt.subplots(n_rows, n_col, figsize=(n_rows+3, n_col))
+    # add entry to matrix if there's not enough columns/rows so np.ndenumerate can unpack two values
+    if n_col == 1 and n_rows == 1:
+        axs = [[axs]]
+    elif n_rows == 1:
+        axs = [axs]
+
     plt.subplots_adjust(right=0.75, wspace=0.1, hspace=0.1)
-    if not title is None: fig.suptitle(title)
+
+    # add title
+    if title is not None:
+        fig.suptitle(title)
+
     ax_colorbar = fig.add_axes([0.83, 0.1, 0.02, 0.65])
-    if not image is None:
+
+    # add image input
+    if image is not None:
         ax_image = fig.add_axes([0.78, 0.78, .12, .12])
         if np.max(image) > 1:
             if verbose:
                 print("transform image data to RGB [0..1] from [0..255]")
             image = image / 255
+
     if not os.path.exists(path):
         os.mkdir(path)
-    if not highlight is None:
+
+    # add highlight
+    if highlight is not None:
         for index_highlight in highlight:
             multi_index_highlight = np.unravel_index(index_highlight, (n_rows,n_col))
             if video:
@@ -58,17 +74,24 @@ def plot_cnn_output(output, path, name, title=None, image=None, video=False, ver
         if not video:
             data = output
         else:
-            data = output[n_frame,...]
+            data = output[n_frame, ...]
 
+        # loop over all feature maps
         for (i,j), ax in np.ndenumerate(axs):
             n = i*n_col + j
             try:
-                ax.get_images()[0].set_data(data[...,n])
-            except IndexError:
-                im = ax.imshow(data[...,n], vmin=vmin, vmax=vmax)
+                # old way, not sure to understand what Tim tried to do here
+                # ax.get_images()[0].set_data(data[..., n])
+                im = ax.imshow(data[..., n], vmin=vmin, vmax=vmax)
                 update_list.append(im)
-                ax.axis('off')
-        if not image is None:
+            except IndexError:
+                # old way, not sure to understand what Tim did here
+                # im = ax.imshow(data[...,n], vmin=vmin, vmax=vmax)
+                # update_list.append(im)
+                pass
+            ax.axis('off')
+        # add input image
+        if image is not None:
             if video:
                 image_frame = image[n_frame]
             else:
@@ -79,8 +102,11 @@ def plot_cnn_output(output, path, name, title=None, image=None, video=False, ver
                 im_image = ax_image.imshow(image_frame)
                 update_list.append(im_image)
                 ax_image.axis('off')
+
+        # display color bar
         if n_frame <= 0:
             cbar = fig.colorbar(im, cax=ax_colorbar)
+
         return update_list
 
     if not video:
