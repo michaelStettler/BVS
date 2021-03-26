@@ -13,8 +13,11 @@ from utils.find_semantic_units import get_IoU_per_category
 from utils.calculate_position import calculate_position
 from plots_utils.plot_cnn_output import plot_cnn_output
 """
-test script to try the find_semantic_function that implement the paper:
-todo put paper name
+test script to try the find_semantic_units function which implement the paper:
+
+Network Dissection: Quantifying Interpretability of Deep Visual Representations
+
+from David Bau, Bolei Zhou, Aditya Khosla, Aude Oliva, and Antonio Torralba
 
 run: python -m tests.CNN.t02_find_semantic_units
 """
@@ -22,8 +25,8 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
 
-# config_path = 'CNN_t02_find_semantic_units_m0001.json'
-config_path = 'CNN_t02_find_semantic_units_m0002.json'
+config_path = 'CNN_t02_find_semantic_units_m0001.json'
+# config_path = 'CNN_t02_find_semantic_units_m0002.json'
 save = True
 load = True
 
@@ -67,13 +70,10 @@ print("[Index] Computed category index for {}".format(cat_ids))
 # get layer idx
 cat_id_of_eyebrow = cat_ids[0]
 cat_id_of_lips = cat_ids[1]
-# layer_of_interest = "block1_conv2"
 layer_of_interest = config["v4_layer"]
 # get indexes from dictionary
 feature_map_of_eyebrow = cat_feature_map_indexes["category_{}".format(cat_id_of_eyebrow)][layer_of_interest]["indexes"]
-feature_map_of_eyebrow = np.array(feature_map_of_eyebrow)[0]  # transform to numpy array
 feature_map_of_lips = cat_feature_map_indexes["category_{}".format(cat_id_of_lips)][layer_of_interest]["indexes"]
-feature_map_of_lips = np.array(feature_map_of_lips)[0]  # transform to numpy array
 print("[Index] feature map indexes for category {} at layer {}: {}".format(cat_id_of_eyebrow, layer_of_interest, feature_map_of_eyebrow))
 print("[Index] num of selected feature map: {}".format(len(feature_map_of_eyebrow)))
 print("[Index] feature map indexes for category {} at layer {}: {}".format(cat_id_of_lips, layer_of_interest, feature_map_of_lips))

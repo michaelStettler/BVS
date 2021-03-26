@@ -126,15 +126,34 @@ def _scale_activations(preds, output_size):
     return np.array(sk)
 
 
-def get_IoU_per_category(IoU_dict, cat_ids):
+def get_IoU_per_category(IoU_dict, cat_ids, sort=True):
+    """
+    Get the feature map index for the IoU dictionary and the category index of interest
+    If sort is true, it returns the index from the highest to the lowest score
+
+    :param IoU_dict: IoU score dictionary
+    :param cat_ids: category index
+    :param sort:
+    :return:
+    """
     cat_indexes = {}
     # sort for each categories over each layers the feature map indexes that are activated
     for cat in cat_ids:
         layer_index = {}
         for layer_name in IoU_dict:
             IoU = IoU_dict[layer_name]["IoU"]
-            non_zero_idx = np.nonzero(IoU[cat])
-            layer_index[layer_name] = {"layer_name": IoU_dict[layer_name]["layer_name"], "indexes": non_zero_idx}
+            # get the non zero index
+            non_zero_idx = np.nonzero(IoU[cat])[0]
+
+            if sort:
+                # sort index from biggest to smallest IoU index
+                IoU_idx = np.flip(np.argsort(IoU[cat]))
+                # retain only the non zero index
+                IoU_idx = IoU_idx[:len(non_zero_idx)]
+            else:
+                IoU_idx = non_zero_idx
+
+            layer_index[layer_name] = {"layer_name": IoU_dict[layer_name]["layer_name"], "indexes": IoU_idx}
 
         cat_indexes["category_{}".format(cat)] = layer_index
 

@@ -1,5 +1,5 @@
 {
-  "config_name": "CNN_t02_find_semantic_units_m0001",
+  "config_name": "CNN_t03_feature_map_positions_m0001",
   "train_data": "morphing_space",
   "use_data_generator": false,
   "x_col": "image_path",
@@ -17,5 +17,5 @@
   "include_top": false,
   "v4_layer": "block3_pool",
   "coco_annot_json": "AffectNet_semantic_COCO.json",
-  "semantic_img_path": "/Users/michaelstettler/Desktop/affectnet_face_semantic"
+  "semantic_img_path": "D:/Dataset/AffectNet_semantic"
 }
