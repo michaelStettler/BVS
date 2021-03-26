@@ -54,6 +54,10 @@ def calculate_position(response, mode="weighted average", return_mode="array"):
             # ravel the indices such that they can be applied to flattened array
             position_flattened = np.ravel_multi_index((index_mean_x, index_mean_y), original_shape[1:3])
     elif mode == "weighted average":
+        print("shape original_shape", original_shape)  # (150, 28, 28, 16)
+        print("shape response", np.shape(response))  # (150, 784, 16)
+        print("shape response.shape[1]", response.shape[1])  # 784
+        print("shape original_shape[1:3]", original_shape[1:3])  # (28, 28)
         # initialize indices with x and y indices
         indices = np.unravel_index(np.arange(response.shape[1]), original_shape[1:3])
         # compute weighted average of the indices, weighted by the neuron activation

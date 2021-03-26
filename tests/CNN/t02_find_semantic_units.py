@@ -25,8 +25,8 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
 
-config_path = 'CNN_t02_find_semantic_units_m0001.json'
-# config_path = 'CNN_t02_find_semantic_units_m0002.json'
+# config_path = 'CNN_t02_find_semantic_units_m0001.json'
+config_path = 'CNN_t02_find_semantic_units_m0002.json'
 save = True
 load = True
 
