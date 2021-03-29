@@ -62,7 +62,7 @@ plot_cnn_output(preds1_pos, os.path.join("models/saved", config["config_name"]),
                 video=True,
                 verbose=False)
 print("[TEST 1] Finished plotting test1 positions")
-
+print()
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test 2 - control eye brow feature map
@@ -72,5 +72,60 @@ data = load_data(config)
 raw_seq = load_data(config, get_raw=True)[0]
 
 # predict
-preds = model.predict(data)
+preds = model.predict(data)[..., eyebrow_ft_idx]
+preds = np.expand_dims(preds, axis=3)
+preds = preds / np.amax(preds)  # normalize so we can compare with the positions
 print("[TEST 2] shape predictions", np.shape(preds))
+preds_init = preds[0]
+dyn_preds = preds - np.repeat(np.expand_dims(preds_init, axis=0), np.shape(preds)[0], axis=0)
+dyn_preds[dyn_preds < 0] = 0
+print("[TEST 2] shape dyn_preds", np.shape(dyn_preds))
+
+# compute positions
+preds_pos = calculate_position(preds, mode="weighted average", return_mode="array")
+print("[TEST 2] shape preds_pos", np.shape(preds_pos))
+dyn_preds_pos = calculate_position(dyn_preds, mode="weighted average", return_mode="array")
+print("[TEST 2] shape dyn_preds_pos", np.shape(dyn_preds_pos))
+
+# concatenate prediction and position for plotting
+results = np.concatenate((preds, preds_pos, dyn_preds, dyn_preds_pos), axis=3)
+print("[TEST 2] shape results", np.shape(results))
+
+# # plot results
+# plot_cnn_output(results, os.path.join("models/saved", config["config_name"]),
+#                 config['v4_layer'] + "_eye_brow_select_{}.gif".format(eyebrow_ft_idx),
+#                 image=raw_seq,
+#                 video=True,
+#                 verbose=False)
+# print("[TEST 2] Finished plotted cnn feature maps", np.shape(results))
+print()
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test 3 - compute optical flow on eye brow feature map
+# code taken frm: https://nanonets.com/blog/optical-flow/
+import cv2
+# transform to gray images
+predictions = preds[..., 0]
+
+# Creates an image filled with zero intensities with the same dimensions as the frame
+mask = np.zeros(size_ft + (3, ))  # add tuple to set up size of rgb image
+print("[TEST 3] shape mask", np.shape(mask))
+# Sets image saturation to maximum
+mask[..., 1] = 255
+
+for i in range(np.shape(predictions)[0] - 1):
+    # compute optical flow  todo check what are all those parameters...
+    flow = cv2.calcOpticalFlowFarneback(predictions[i], predictions[i + 1], None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+    # build image
+    # Computes the magnitude and angle of the 2D vectors
+    magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+    # Sets image hue according to the optical flow direction
+    mask[..., 0] = angle * 180 / np.pi / 2
+    # Sets image value according to the optical flow magnitude (normalized)
+    mask[..., 2] = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
+    # Converts HSV to RGB (BGR) color representation
+    rgb = cv2.cvtColor(mask.astype('float32'), cv2.COLOR_HSV2BGR)
+    print("shape rgb", np.shape(rgb))
+    # Opens a new window and displays the output frame
+    # cv.imshow("dense optical flow", rgb)
