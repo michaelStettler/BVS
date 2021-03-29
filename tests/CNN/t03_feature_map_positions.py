@@ -2,12 +2,19 @@ import os
 import numpy as np
 import tensorflow as tf
 from utils.load_config import load_config
+from utils.load_data import load_data
 from utils.load_extraction_model import load_extraction_model
 from utils.calculate_position import calculate_position
 from plots_utils.plot_cnn_output import plot_cnn_output
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
+
+"""
+test script to try the computations of feature positions within a feature map
+
+run: python -m tests.CNN.t03_feature_map_positions
+"""
 
 # define configuration
 config_path = 'CNN_t03_feature_map_positions_m0001.json'
@@ -30,7 +37,7 @@ print("size_ft", size_ft)
 num_entry = 3
 num_ft = 1
 preds1 = np.zeros((num_entry,) + size_ft + (num_ft,))
-print("shape preds1", np.shape(preds1))
+print("[TEST 1] shape predictions", np.shape(preds1))
 # -> should get (0, .33)
 preds1[1, 0, 0, 0] = 2
 preds1[1, 0, 1, 0] = 1
@@ -56,5 +63,14 @@ plot_cnn_output(preds1_pos, os.path.join("models/saved", config["config_name"]),
                 verbose=False)
 print("[TEST 1] Finished plotting test1 positions")
 
-# # predict
-# preds = model.predict(data)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test 2 - control eye brow feature map
+# load morphing sequence
+print("[TEST 2] Test semantic selection on morphing space")
+data = load_data(config)
+raw_seq = load_data(config, get_raw=True)[0]
+
+# predict
+preds = model.predict(data)
+print("[TEST 2] shape predictions", np.shape(preds))
