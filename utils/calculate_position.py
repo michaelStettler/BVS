@@ -80,7 +80,9 @@ def calculate_position(response, mode="weighted average", return_mode="array"):
         return np.unravel_index(position_flattened, original_shape[1:3])
     elif return_mode == "xy float":
         try:
-            return np.array((index_mean_x_float[:, 0], index_mean_y_float[:, 0])).transpose()
+            # return np.array((index_mean_x_float[:, 0], index_mean_y_float[:, 0])).transpose()  # @Tim: return only positions from first feature map?
+            stacked = np.stack((index_mean_x_float, index_mean_y_float))
+            return np.swapaxes(stacked, 0, 1)
         except UnboundLocalError:
             return np.unravel_index(position_flattened, original_shape[1:3])
     elif return_mode == "array":

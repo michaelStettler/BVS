@@ -29,6 +29,7 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 config_path = 'CNN_t02_find_semantic_units_m0002.json'
 save = True
 load = True
+do_plot = False
 
 # load config
 config = load_config(config_path, path='configs/CNN')
@@ -120,55 +121,56 @@ eye_brow_pos = calculate_position(preds_eyebrow, mode="weighted average", return
 print("shape eye_brow_pos", np.shape(eye_brow_pos))
 dyn_eye_brow_pos = calculate_position(dyn_preds_eyebrow[1:], mode="weighted average", return_mode="array")
 
-# # plot feature maps
-# plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
-#                 config['v4_layer'] + "_eye_brow.gif",
-#                 image=raw_data,
-#                 video=True,
-#                 highlight=feature_map_of_eyebrow)
-#
-# plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
-#                 config['v4_layer'] + "_eye_lips.gif",
-#                 image=raw_data,
-#                 video=True,
-#                 highlight=feature_map_of_lips)
-#
-# plot selection of feature maps
-plot_cnn_output(preds_eyebrow, os.path.join("models/saved", config["config_name"]),
-                config['v4_layer'] + "_eye_brow_selection.gif",
-                image=raw_data,
-                video=True,
-                verbose=False)
-print("[TEST] Finished plotting eyebrow selection")
-#
-# plot_cnn_output(preds_lips, os.path.join("models/saved", config["config_name"]),
-#                 config['v4_layer'] + "_lips_selection.gif",
-#                 image=raw_data,
-#                 video=True)
+if do_plot:
+    # # plot feature maps
+    # plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
+    #                 config['v4_layer'] + "_eye_brow.gif",
+    #                 image=raw_data,
+    #                 video=True,
+    #                 highlight=feature_map_of_eyebrow)
+    #
+    # plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
+    #                 config['v4_layer'] + "_eye_lips.gif",
+    #                 image=raw_data,
+    #                 video=True,
+    #                 highlight=feature_map_of_lips)
+    #
+    # plot selection of feature maps
+    plot_cnn_output(preds_eyebrow, os.path.join("models/saved", config["config_name"]),
+                    config['v4_layer'] + "_eye_brow_selection.gif",
+                    image=raw_data,
+                    video=True,
+                    verbose=False)
+    print("[TEST] Finished plotting eyebrow selection")
+    #
+    # plot_cnn_output(preds_lips, os.path.join("models/saved", config["config_name"]),
+    #                 config['v4_layer'] + "_lips_selection.gif",
+    #                 image=raw_data,
+    #                 video=True)
 
-# plot dynamic selection
-plot_cnn_output(dyn_preds_eyebrow, os.path.join("models/saved", config["config_name"]),
-                config['v4_layer'] + "_dyn_eye_brow_selection.gif",
-                image=raw_data,
-                video=True,
-                verbose=False)
-print("[TEST] Finished plotting dynamic eyebrow selection")
+    # plot dynamic selection
+    plot_cnn_output(dyn_preds_eyebrow, os.path.join("models/saved", config["config_name"]),
+                    config['v4_layer'] + "_dyn_eye_brow_selection.gif",
+                    image=raw_data,
+                    video=True,
+                    verbose=False)
+    print("[TEST] Finished plotting dynamic eyebrow selection")
 
-# # plot positions
-# plot_cnn_output(eye_brow_pos, os.path.join("models/saved", config["config_name"]),
-#                 config['v4_layer'] + "_eye_brow_select_pos.gif",
-#                 image=raw_data,
-#                 video=True,
-#                 verbose=False)
+    # # plot positions
+    # plot_cnn_output(eye_brow_pos, os.path.join("models/saved", config["config_name"]),
+    #                 config['v4_layer'] + "_eye_brow_select_pos.gif",
+    #                 image=raw_data,
+    #                 video=True,
+    #                 verbose=False)
 
-# plot positions
-plot_cnn_output(dyn_eye_brow_pos, os.path.join("models/saved", config["config_name"]),
-                config['v4_layer'] + "_dyn_eye_brow_select_pos.gif",
-                image=raw_data,
-                video=True,
-                verbose=False)
-print("[TEST] Finished plotting dynamic eyebrow selection position")
+    # plot positions
+    plot_cnn_output(dyn_eye_brow_pos, os.path.join("models/saved", config["config_name"]),
+                    config['v4_layer'] + "_dyn_eye_brow_select_pos.gif",
+                    image=raw_data,
+                    video=True,
+                    verbose=False)
+    print("[TEST] Finished plotting dynamic eyebrow selection position")
 
 print("[TEST] highlight eyebrow:", feature_map_of_eyebrow)
 print("[TEST] highlight lips:", feature_map_of_lips)
-
+print()
