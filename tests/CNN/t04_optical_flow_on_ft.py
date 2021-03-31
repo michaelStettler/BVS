@@ -106,6 +106,7 @@ for i in range(1, 5):
 
     # transform current frame to BGR for visualization
     fm = cv2.cvtColor(curr_frame, cv2.COLOR_GRAY2BGR)
+    print("min max fm", np.amin(fm), np.amax(fm))
 
     # compute optical flow
     # parameters explanation: https://www.geeksforgeeks.org/opencv-the-gunnar-farneback-optical-flow/
@@ -147,9 +148,9 @@ for i in range(1, 5):
     print("min max g channel", np.amin(bgr[..., 1]), np.amax(bgr[..., 1]))
     print("min max r channel", np.amin(bgr[..., 2]), np.amax(bgr[..., 2]))
 
-    cv2.imwrite(os.path.join(path, "bgr_{}.png".format(i)), bgr)
+    cv2.imwrite(os.path.join(path, "bgr_{}.png".format(i)), bgr.astype(np.uint8))
     # write image
-    of_out.write(bgr)  # seems to create weird horizontal lines
+    of_out.write(bgr.astype(np.uint8))  # seems to create weird horizontal lines
     fm_out.write(fm)
     print()
 
