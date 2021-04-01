@@ -25,10 +25,14 @@ def load_from_csv(df, config, x_col="image_path"):
     index = 0
     for _ , row in tqdm(df.iterrows(), total=num_data):
         # load img
-        if directory is None:
-            im = cv2.imread(os.path.join(row[x_col]))
-        else:
-            im = cv2.imread(os.path.join(directory, row[x_col]))
+        im_path = row[x_col]
+        if directory is not None:
+            im_path = os.path.join(directory, row[x_col])
+        im = cv2.imread(im_path)
+
+        if im is None:
+            raise ValueError("Image is None, control given path: {}".format(im_path))
+
         im = cv2.resize(im, target_size)
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 

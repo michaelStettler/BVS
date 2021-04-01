@@ -3,7 +3,7 @@ import cv2
 from tqdm import tqdm
 
 
-def crop(img, size=(720, 720), alignment='center'):
+def crop(img_path, size=(720, 720), alignment='center'):
     """
     helper function to crop an image to the given size
     :param img:
@@ -11,7 +11,11 @@ def crop(img, size=(720, 720), alignment='center'):
     :param center:
     :return:
     """
-    img = cv2.imread(img)
+    img = cv2.imread(img_path)
+
+    if img is None:
+        raise ValueError("img is None! Path: {}".format(img_path))
+
     h, w, c = img.shape
 
     # crop height
@@ -20,7 +24,7 @@ def crop(img, size=(720, 720), alignment='center'):
         diff_h = h - size[1]
 
         if alignment == 'center':
-            half_diff = int(diff_h/2)
+            half_diff = int(diff_h / 2)
             img = img[half_diff:size[1] + half_diff]
         elif alignment == 'left':
             img = img[:size[1]]
@@ -61,14 +65,17 @@ def get_list_of_files(dirName):
     all_files = list()
     # Iterate over all the entries
     for entry in file_list:
-        # Create full path
-        full_path = os.path.join(dirName, entry)
-        # If entry is a directory then get the list of files in this directory 
-        if os.path.isdir(full_path):
-            all_files = all_files + get_list_of_files(full_path)
+        if 'csv' in entry or entry[0] == '.':
+            print("removed:", entry)
         else:
-            if 'jpeg' or 'jpg' in full_path:
-                all_files.append(full_path)
+            # Create full path
+            full_path = os.path.join(dirName, entry)
+            # If entry is a directory then get the list of files in this directory
+            if os.path.isdir(full_path):
+                all_files = all_files + get_list_of_files(full_path)
+            else:
+                if 'jpeg' or 'jpg' in full_path:
+                    all_files.append(full_path)
 
     return all_files
 
@@ -101,7 +108,7 @@ if __name__ == "__main__":
     Script to crop all images within a folder. 
     We use it to crop the monkey avatars from 1280x720 to 720x720 so all morphing space images have the same size
     
-    usage: python -m datasets_utils.crop_morph_space
+    usage: python -m datasets_utils.crop_image_of_dataset
 
     """
 

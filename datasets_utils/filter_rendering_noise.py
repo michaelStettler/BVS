@@ -48,9 +48,11 @@ if __name__ == "__main__":
     """
 
     # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
-    path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'
+    # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'
+    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
 
-    list_file = os.listdir(path)
+    list_file = sorted(os.listdir(path))
     print("length list_file", len(list_file))
 
     sequence = load_sequence(list_file, path)
