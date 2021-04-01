@@ -168,10 +168,30 @@ print("[TEST 4] Shape eye_brow_mean_pred", np.shape(eye_brow_mean_pred))
 eye_brow_mean_pred_init = np.repeat(np.expand_dims(eye_brow_mean_pred[0], axis=0), len(eye_brow_mean_pred), axis=0)
 dyn_eye_brow_mean_pred = eye_brow_mean_pred - eye_brow_mean_pred_init
 dyn_eye_brow_mean_pred[dyn_eye_brow_mean_pred < 0] = 0
-dyn_eye_brow_mean_pred = np.exp(2*dyn_eye_brow_mean_pred) - 1
-print("min max dyn_eye_brow_mean_pred", np.amin(dyn_eye_brow_mean_pred), np.amax(dyn_eye_brow_mean_pred))
+print("[TEST 4] Prev-fm-process: min max dyn_eye_brow_mean_pred", np.amin(dyn_eye_brow_mean_pred), np.amax(dyn_eye_brow_mean_pred))
+
+# exponential
+# dyn_eye_brow_mean_pred = np.exp(2*dyn_eye_brow_mean_pred) - 1
+
+# standardize
 # dyn_eye_brow_mean_pred = dyn_eye_brow_mean_pred - np.amin(dyn_eye_brow_mean_pred)
 # dyn_eye_brow_mean_pred = dyn_eye_brow_mean_pred / np.amax(dyn_eye_brow_mean_pred)  # normalize so we can compare with the positions
+
+# spatial noise mean filter
+input = tf.convert_to_tensor(dyn_eye_brow_mean_pred, dtype=tf.float32)
+kernel = np.ones((3, 3)) / 9
+kernel = tf.convert_to_tensor(np.expand_dims(kernel, axis=(2, 3)), dtype=tf.float32)  # build 4D kernel with input and output size of 1
+dyn_eye_brow_mean_pred = tf.nn.convolution(input, kernel, strides=1, padding='SAME').numpy()
+
+# spatial noise median filter
+# dyn_eye_brow_mean_pred_clean = np.copy(dyn_eye_brow_mean_pred)
+# for frame in range(len(dyn_eye_brow_mean_pred)):
+#     for i in range(1, size_ft[0] - 1):
+#         for j in range(1, size_ft[1] - 1):
+#             patch = dyn_eye_brow_mean_pred[frame, (i-1):(i+2), (j-1):(j+2), 0]
+#             # dyn_eye_brow_mean_pred_clean[frame, i, j, 0] = np.median(patch)
+
+print("[TEST 4] Post-fm-process: min max dyn_eye_brow_mean_pred", np.amin(dyn_eye_brow_mean_pred), np.amax(dyn_eye_brow_mean_pred))
 print("[TEST 4] shape dyn_preds", np.shape(dyn_eye_brow_mean_pred))
 
 # set color to represent time
@@ -179,13 +199,13 @@ color_seq = np.arange(len(dyn_eye_brow_mean_pred))
 
 # print raw response
 plt.figure()
-slice_pos = 10
+slice_pos = 9
 plt.plot(eye_brow_mean_pred[:, :, slice_pos, 0])  # slice over the 10 column to trz to get the eyebrow
 plt.savefig(os.path.join("models/saved", config["config_name"], "test4_eyebrow_raw_slice_{}".format(slice_pos)))
 
 # plot raw responses of the dynamic
 plt.figure()
-slice_pos = 10
+slice_pos = 9
 plt.plot(dyn_eye_brow_mean_pred[:, :, slice_pos, 0])  # slice over the 10 column to trz to get the eyebrow
 plt.savefig(os.path.join("models/saved", config["config_name"], "test4_eyebrow_raw_dyn_slice_{}".format(slice_pos)))
 
