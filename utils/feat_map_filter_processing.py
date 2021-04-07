@@ -57,3 +57,44 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
         print("[FM_Filt_Proc] Post-filter: min max filt_pred", np.amin(filt_pred), np.amax(filt_pred))
 
     return filt_pred
+
+
+def get_feat_map_filt_preds(preds, ft_idx, ref_type="self0",  norm=None, activation='ReLu', filter=None, verbose=False):
+    """
+
+    :param preds:
+    :param ft_idx:
+    :param ref:
+    :param norm:
+    :param activation:
+    :param filter:
+    :param verbose:
+    :return:
+    """
+
+    # declare variables
+    filt_preds = []
+
+    # loop over each feture map idx to retain only the one of interest
+    for ft_index in ft_idx:
+        filt_pred = preds[..., ft_index]
+
+        if ref_type == "self0":
+            ref = filt_pred[0]
+        else:
+            raise ValueError("ref_type: {} is not yet implemented!".format(ref_type))
+
+        filt_pred = feat_map_filter_processing(filt_pred,
+                                               ref=ref,
+                                               norm=norm,
+                                               activation=activation,
+                                               filter=filter,
+                                               verbose=verbose)
+
+        filt_preds.append(filt_pred)
+
+    # build prediction to match the common (n_images, size, size, n_ft) dimensions
+    filt_preds = np.array(filt_preds)
+    filt_preds = np.squeeze(filt_preds)
+    filt_preds = np.moveaxis(filt_preds, 0, -1)
+    return filt_preds
