@@ -4,12 +4,12 @@ import pickle
 import tensorflow as tf
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.load_coco_semantic_annotations import load_coco_semantic_annotations
-from utils.load_coco_semantic_annotations import load_coco_categories
-from utils.load_coco_semantic_annotations import get_coco_cat_ids
+from utils.Semantic.load_coco_semantic_annotations import load_coco_semantic_annotations
+from utils.Semantic.load_coco_semantic_annotations import load_coco_categories
+from utils.Semantic.load_coco_semantic_annotations import get_coco_cat_ids
 from utils.load_extraction_model import load_extraction_model
-from utils.find_semantic_units import find_semantic_units
-from utils.find_semantic_units import get_IoU_per_category
+from utils.Semantic.find_semantic_units import find_semantic_units
+from utils.Semantic.find_semantic_units import get_IoU_per_category
 from utils.calculate_position import calculate_position
 from plots_utils.plot_cnn_output import plot_cnn_output
 """

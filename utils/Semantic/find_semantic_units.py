@@ -7,8 +7,14 @@ from tqdm import tqdm
 
 
 """
-take only labels that has at least 10 images 
+Methods that implement the paper: 
+Network Dissection: Quantifying Interpretability of Deep Visual Representations
+
+from David Bau, Bolei Zhou, Aditya Khosla, Aude Oliva, and Antonio Torralba
+
 """
+
+# todo: take only labels that has at least 10 images
 
 
 def find_semantic_units(model, data, config, save=False):

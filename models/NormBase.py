@@ -1,4 +1,3 @@
-import types
 import os
 import pickle
 import pandas as pd
@@ -11,6 +10,7 @@ import warnings
 from utils.load_extraction_model import load_extraction_model
 from utils.CSV_data_generator import CSVDataGen
 from utils.calculate_position import calculate_position
+from utils.Semantic.SemanticFeatureSelection import SemanticFeatureSelection
 
 
 class NormBase:
@@ -53,7 +53,7 @@ class NormBase:
             except RuntimeError as e:
                 # Memory growth must be set before GPUs have been initialized
                 print(e)
-        # -----------------------------------------------------------------
+        # ----------------------------------------------------------------
 
         # declare parameters
         try:
@@ -67,7 +67,6 @@ class NormBase:
             self.tun_func = '2-norm'
         # set dimensionality reduction
         try:
-            #set dim_red if available in config (only option 'PCA')
             self.dim_red = config['dim_red']
         except KeyError:
             self.dim_red = None
@@ -87,7 +86,42 @@ class NormBase:
         self.shape_v4 = np.shape(self.v4.layers[-1].output)
         print("[INIT] shape_v4", self.shape_v4)
 
-        #initialize n_features based on dimensionality reduction method
+        # initialize n_features based on dimensionality reduction method
+        self._set_feature_reduction(config)
+
+        # declare variables
+        self.r = np.zeros(self.n_features)  # reference vectors
+        self.t = np.zeros((self.n_category, self.n_features))  # tuning vectors
+        self.t_cumul = np.zeros(self.n_category)
+        self.t_mean = np.zeros((self.n_category, self.n_features))
+        threshold_divided = 50
+        self.threshold = self.n_features / threshold_divided
+        print("[INIT] Neutral threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
+
+        # v4 prediction of the training data set - used in external script t05_compare_retained_PCA_index.py
+        # TODO: eventually delete to save RAM
+        self.v4_predict = None
+
+        # load norm base model
+        if load_NB_model is not None:
+            self._load_NB_model(config, config["config_name"])
+            print("[INIT] saved model is loaded from file")
+
+        # set time constant for dynamic and competitive network
+        self._set_dynamic(config)
+
+        # set option to save the v4 raw predictions into a csv file
+        self.save_preds = False
+        self.preds_saved = False  # boolean to know if the predictions have been already saved since the predictions
+        # could be computed multiple times depending of the pipeline
+        if config.get('save_preds') is not None:
+            if config['save_preds']:
+                print("[INIT] Save raw prediction set")
+                self.save_preds = True
+                self.raw_preds_df = pd.DataFrame()
+        print()
+
+    def _set_feature_reduction(self, config):
         if self.dim_red is None:
             # initialize as output of network as default
             if len(self.shape_v4) == 2:  # use flatten... but self.v4.layers[-1].output is a tensorShape object
@@ -106,51 +140,30 @@ class NormBase:
             self.position_method = config['position_method']
             # initialize n_features as number of feature maps*2
             self.n_features = self.shape_v4[-1]*2
+        elif self.dim_red == "semantic":
+            self.n_features = len(config["semantic_units"])
+            self.semantic_feat_red = SemanticFeatureSelection(config)
+        else:
+            raise ValueError("Dimensionality reduction {} is not implemented".format(self.dim_red ))
         print("[INIT] n_features:", self.n_features)
 
-        self.r = np.zeros(self.n_features)
-        self.t = np.zeros((self.n_category, self.n_features))
-        self.t_cumul = np.zeros(self.n_category)
-        self.t_mean = np.zeros((self.n_category, self.n_features))
-        threshold_divided = 50
-        self.threshold = self.n_features / threshold_divided
-        print("[INIT] Neutral threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
-
-        # v4 prediction of the training data set - used in external script t05_compare_retained_PCA_index.py
-        # TODO: eventually delete to save RAM
-        self.v4_predict = None
-
-        # load norm base model
-        if load_NB_model is not None:
-            self._load_NB_model(config, save_name)
-            print("[INIT] saved model is loaded from file")
-
-        # set time constant for dynamic and competitive network
+    def _set_dynamic(self, config):
         if config.get('use_dynamic') is not None:
             if config['use_dynamic']:
                 print("[INIT] Model Dynamic Set")
-                # set parameters for differentiator and decision networks
-                self.tau_u = config['tau_u']  # time constant for pos and negative differentiator
-                self.tau_v = config['tau_v']  # time constant for IT resp differentitor
-                self.tau_y = config['tau_y']  # time constant for integral differentiator
+                # set parameters for differentiators and decision networks
+                self.tau_u = config['tau_u']  # time constant for pos and negative differentiators
+                self.tau_v = config['tau_v']  # time constant for IT resp differentiators
+                self.tau_y = config['tau_y']  # time constant for integral differentiators
                 self.tau_d = config['tau_d']  # time constant for competitive network
                 self.m_inhi_w = config['m_inhi_w']  # weights of mutual inhibition
 
-        # set option to save the v4 raw predictions into a csv file
-        self.save_preds = False
-        self.preds_saved = False
-        if config.get('save_preds') is not None:
-            if config['save_preds']:
-                print("[INIT] Save raw prediction set")
-                self.save_preds = True
-                self.raw_preds_df = pd.DataFrame()
-        print()
-
+    ### SAVE AND LOAD ###
     def _load_v4(self, config, input_shape):
         if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] =='ResNet50V2'):
-            model = load_extraction_model(config, input_shape)
-            self.v4 = tf.keras.Model(inputs=model.input,
-                                     outputs=model.get_layer(config['v4_layer']).output)
+            self.model = load_extraction_model(config, input_shape)
+            self.v4 = tf.keras.Model(inputs=self.model.input,
+                                     outputs=self.model.get_layer(config['v4_layer']).output)
         else:
             raise ValueError("model: {} does not exists! Please change config file or add the model"
                              .format(config['extraction_model']))
@@ -161,7 +174,6 @@ class NormBase:
             self.preprocessing = None
             warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
 
-    ### SAVE AND LOAD ###
 
     def save_NB_model(self, config):
         """
@@ -446,8 +458,13 @@ class NormBase:
 
         elif self.dim_red == 'position':
             print(f'[FIT] dimensionality reduction method: position with calculation method {self.position_method}')
+
+        elif self.dim_red == "semantic":
+            print("[FIT] Finding semantic units")
+            self.semantic_feat_red.fit(self.model)
+            print("[FIT] Finished to find the semantic units")
         else:
-            raise KeyError(f'self.dim_red={self.dim_red} is no valid value')
+            raise KeyError(f'self.dim_red={self.dim_red} is not a valid value')
 
         # set preds_saved to true so the predictions are saved only once
         if self.save_preds and self.dim_red is not None:
