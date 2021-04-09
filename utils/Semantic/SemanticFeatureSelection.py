@@ -32,11 +32,12 @@ class SemanticFeatureSelection:
         print("[FIT] Start computing semantic units")
         self.sem_idx_list = find_semantic_units(model, data, self.config)
 
-    def transform(self):
-        # todo
+    def transform(self, data):
         print("TODO WOULOUHOUOUOUOUOU")
+        if self.sem_idx_list is None:
+            raise ValueError("Semantic features units are None! Please either train the Semantic Feature Selection or "
+                             "load a pre-trained dictionary")
 
-    def save(self, path):
-        print("[SAVE] Semantic units")
-        with open(os.path.join(path, 'semantic_dictionary.pkl'), 'wb') as f:
-            pickle.dump(self.sem_idx_list, f, pickle.HIGHEST_PROTOCOL)
+    # def save(self, path):
+    #     with open(os.path.join(path, 'semantic_dictionary.pkl'), 'wb') as f:
+    #         pickle.dump(self.sem_idx_list, f, pickle.HIGHEST_PROTOCOL)

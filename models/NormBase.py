@@ -104,7 +104,7 @@ class NormBase:
 
         # load norm base model
         if load_NB_model is not None:
-            self._load_NB_model(config, config["config_name"])
+            self._load_NB_model(config)
             print("[INIT] saved model is loaded from file")
 
         # set time constant for dynamic and competitive network
@@ -160,7 +160,7 @@ class NormBase:
 
     ### SAVE AND LOAD ###
     def _load_v4(self, config, input_shape):
-        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] =='ResNet50V2'):
+        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] == 'ResNet50V2'):
             self.model = load_extraction_model(config, input_shape)
             self.v4 = tf.keras.Model(inputs=self.model.input,
                                      outputs=self.model.get_layer(config['v4_layer']).output)
@@ -192,17 +192,21 @@ class NormBase:
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 
-        #save reference and tuning vector
+        # save reference and tuning vector
         print("[SAVE] Save reference and tuning vectors")
         np.save(os.path.join(save_folder, "ref_vector"), self.r)
         np.save(os.path.join(save_folder, "tuning_vector"), self.t)
         np.save(os.path.join(save_folder, "tuning_mean"), self.t_mean)
-        #save PCA
+
+        # save feature reduction
         if self.dim_red == 'PCA':
             print("[SAVE] Save PCA")
-            #np.save(os.path.join(save_folder, "pca"), self.pca)
             pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
+        elif self.dim_red == 'semantic':
+            print("[SAVE] Save semantic units dictionary")
+            pickle.dump(self.semantic_feat_red, open(os.path.join(save_folder, "semantic_dictionary.pkl"), 'wb'))
 
+        # save raw predictions
         if self.save_preds and self.preds_saved:
             print("[SAVE] Save raw prediction to csv")
             self.raw_preds_df.to_csv(os.path.join(save_folder, "raw_pred.csv"))
@@ -210,7 +214,7 @@ class NormBase:
         print("[SAVE] Norm Base Model saved")
         print()
 
-    def _load_NB_model(self, config, save_name):
+    def _load_NB_model(self, config):
         """
         loads trained model from file, including dimensionality reduction
         this method should only be called by init
@@ -218,14 +222,17 @@ class NormBase:
         :param save_name: folder name
         :return:
         """
-        load_folder = os.path.join("models/saved", config['config_name'], save_name, "NormBase_saved")
-        ref_vector = np.load(os.path.join(load_folder, "ref_vector.npy"))
-        tun_vector = np.load(os.path.join(load_folder, "tuning_vector.npy"))
-        self.set_ref_vector(ref_vector)
-        self.set_tuning_vector(tun_vector)
+        # todo control if file exists!
+        load_folder = os.path.join("models/saved", config['config_name'], "NormBase")
+        self.r = np.load(os.path.join(load_folder, "ref_vector.npy"))
+        self.t = np.load(os.path.join(load_folder, "tuning_vector.npy"))
         self.t_mean = np.load(os.path.join(load_folder, "tuning_mean.npy"))
+
+        # load feature reduction
         if self.dim_red == 'PCA':
             self.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
+        if self.dim_red == 'semantic':
+            self.semantic_feat_red = pickle.load(open(os.path.join(load_folder, "semantic_dictionary.pkl"), 'rb'))
 
     ### HELPER FUNCTIONS ###
 
@@ -283,6 +290,9 @@ class NormBase:
                     self.evaluate_v4(data, flatten=False),
                     mode=self.position_method, return_mode="xy float"),
                 axis=1)
+        elif self.dim_red == 'semantic':
+            self.semantic_feat_red.transform(data)
+            preds = np.ones(self.n_features)
         else:
             raise KeyError(f'invalid value self.dim_red={self.dim_red}')
         return preds

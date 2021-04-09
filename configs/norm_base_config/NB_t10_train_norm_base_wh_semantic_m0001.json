@@ -20,6 +20,6 @@
   "dim_red": "semantic",
   "annotation_format": "coco",
   "coco_annot_json": "AffectNet_semantic_COCO.json",
-  "semantic_img_path": "D:/Dataset/AffectNet_semantic",
+  "semantic_img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/AffectNet_semantic",
   "semantic_units": ["eyebrow", "lips"]
 }
