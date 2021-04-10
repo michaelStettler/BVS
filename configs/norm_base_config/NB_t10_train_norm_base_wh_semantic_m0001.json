@@ -21,5 +21,8 @@
   "annotation_format": "coco",
   "coco_annot_json": "AffectNet_semantic_COCO.json",
   "semantic_img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/AffectNet_semantic",
-  "semantic_units": ["eyebrow", "lips"]
+  "semantic_units": ["eyebrow", "lips"],
+  "feat_map_filter_type": "spatial_mean",
+  "feat_map_filt_norm": 1000,
+  "feat_map_filt_activation": "ReLu"
 }

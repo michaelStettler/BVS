@@ -38,23 +38,26 @@ class SemanticFeatureSelection:
             raise ValueError("Semantic features units are None! Please either train the Semantic Feature Selection or "
                              "load a pre-trained dictionary")
         else:
-            print("TODO WOULOUHOUOUOUOUOU")
+            # get category IDs of interest (transform semantic units name to category id of COCO)
+            cat_ids = get_coco_cat_ids(self.config, self.config['semantic_units'], to_numpy=True)
 
-            # get category IDs of interest
-            cat_ids = get_coco_cat_ids(config, cat_of_interest, to_numpy=True)
+            # get CNN feature map indexes (gather all feature map index across the whole architecture for each category of interest)
+            cat_feature_map_indexes = get_IoU_per_category(self.sem_idx_list, cat_ids)
 
-            # translate categories IDs to CNN feature map indexes
-            cat_feature_map_indexes = get_IoU_per_category(sem_idx_list, cat_ids)  # todo save this in fit?
+            # build feature map index for the category and layer of interest
+            # todo if we want multiple layers ?
+            ft_index = []
+            for cat_id in cat_ids:
+                ft_index.append(cat_feature_map_indexes["category_{}".format(cat_id)][self.config['v4_layer']]["indexes"])
 
             # transform predictions
-            # todo add all parameters to config!
+            print("todo change the reference for the feature map filtering!!!!!!!!!!!!!!!")
             preds = get_feat_map_filt_preds(preds,
-                                                  ft_idx,
-                                                  ref_type="self0",
-                                                  norm=1000,
-                                                  activation='ReLu',
-                                                  filter='spatial_mean',
-                                                  verbose=True)
+                                            ft_index,
+                                            ref_type="self0",
+                                            norm=self.config['feat_map_filt_norm'],
+                                            activation=self.config['feat_map_filt_activation'],
+                                            filter=self.config['feat_map_filter_type'])
 
         return preds
 

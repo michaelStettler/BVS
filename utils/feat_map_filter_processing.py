@@ -77,6 +77,8 @@ def get_feat_map_filt_preds(preds, ft_idx, ref_type="self0",  norm=None, activat
 
     # loop over each feture map idx to retain only the one of interest
     for ft_index in ft_idx:
+        print("ft_index", ft_index)
+        print("shape preds", np.shape(preds))
         filt_pred = preds[..., ft_index]
 
         if ref_type == "self0":

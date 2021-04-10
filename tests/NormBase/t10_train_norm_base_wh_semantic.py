@@ -22,7 +22,7 @@ model = NormBase(config, input_shape=tuple(config['input_shape']), load_NB_model
 # train model
 data = load_data(config, train=True)
 model.fit(data,
-          fit_dim_red=False,
+          fit_dim_red=False,  # if first time change this to True -> time consuming
           fit_ref=True,
           fit_tun=True)
 model.save_NB_model(config)

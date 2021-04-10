@@ -174,7 +174,6 @@ class NormBase:
             self.preprocessing = None
             warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
 
-
     def save_NB_model(self, config):
         """
         This method saves the fitted model
@@ -204,7 +203,8 @@ class NormBase:
             pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
         elif self.dim_red == 'semantic':
             print("[SAVE] Save semantic units dictionary")
-            pickle.dump(self.semantic_feat_red, open(os.path.join(save_folder, "semantic_dictionary.pkl"), 'wb'))
+            # save only the semantic dictionary
+            pickle.dump(self.semantic_feat_red.sem_idx_list, open(os.path.join(save_folder, "semantic_dictionary.pkl"), 'wb'))
 
         # save raw predictions
         if self.save_preds and self.preds_saved:
@@ -232,7 +232,9 @@ class NormBase:
         if self.dim_red == 'PCA':
             self.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
         if self.dim_red == 'semantic':
-            self.semantic_feat_red = pickle.load(open(os.path.join(load_folder, "semantic_dictionary.pkl"), 'rb'))
+            # load the semantic index dictionary
+            sem_idx_list = pickle.load(open(os.path.join(load_folder, "semantic_dictionary.pkl"), 'rb'))
+            self.semantic_feat_red.sem_idx_list = sem_idx_list
 
     ### HELPER FUNCTIONS ###
 
@@ -291,7 +293,8 @@ class NormBase:
                     mode=self.position_method, return_mode="xy float"),
                 axis=1)
         elif self.dim_red == 'semantic':
-            self.semantic_feat_red.transform(data)
+            preds = self.evaluate_v4(data, flatten=False)
+            self.semantic_feat_red.transform(preds)
             preds = np.ones(self.n_features)
         else:
             raise KeyError(f'invalid value self.dim_red={self.dim_red}')
