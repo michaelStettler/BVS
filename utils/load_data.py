@@ -60,16 +60,13 @@ def load_data(config, train=True, sort_by=None, get_raw=False):
 def _load_monkey(config, train, sort_by):
     if train:
         df = pd.read_csv(config['csv_train'])
-        try:
-            directory = config['train_directory']
-        except KeyError:
-            directory = None
     else:
         df = pd.read_csv(config['csv_val'])
-        try:
-            directory = config['val_directory']
-        except KeyError:
-            directory = None
+
+    try:
+        directory = config['directory']
+    except KeyError:
+        directory = None
 
     if sort_by is not None:
         df = df.sort_values(by=sort_by)
@@ -85,14 +82,12 @@ def _load_monkey(config, train, sort_by):
 
     # create training and label data
     idx = 0
-    for index, row in tqdm(df.iterrows()):
+    for index, row in tqdm(df.iterrows(), total=num_data):
         # load img
-        if os.path.exists(os.path.join(directory, row['path'], row['image'])):
-            # Michael's dataset and csv file
-            im = cv2.imread(os.path.join(directory, row['path'], row['image']))
+        if directory is None:
+            im = cv2.imread(os.path.join(row['image_path']))
         else:
-            # Tim's dataset and csv file
-            im = cv2.imread(os.path.join(directory, row['image']))
+            im = cv2.imread(os.path.join(directory, row['image_path']))
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         # crop image
         im_crop = im_rgb[:, 280:1000, :]

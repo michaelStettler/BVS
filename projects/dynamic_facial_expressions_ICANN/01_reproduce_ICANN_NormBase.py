@@ -23,12 +23,12 @@ save_name = config["sub_folder"]
 data_train = load_data(config)
 
 # fit and save model
-norm_base = NormBase(config, input_shape=(224,224,3))
+norm_base = NormBase(config, input_shape=(224, 224, 3))
 norm_base.fit(data_train)
-norm_base.save_model(config, save_name)
+norm_base.save_NB_model(config)
 
 #load model
-norm_base = NormBase(config, input_shape=(224,224,3), save_name=save_name)
+norm_base = NormBase(config, input_shape=(224, 224, 3))
 data_test = load_data(config, train=False, sort_by=['image'])
 
 # evaluate model
