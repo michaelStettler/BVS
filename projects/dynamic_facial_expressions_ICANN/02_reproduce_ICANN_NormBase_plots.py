@@ -91,11 +91,11 @@ if do_normalize:
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------  plotting  ------------------------------------------------------------------------------
 # plot all it responses for one stimulus
-fig = plt.figure(figsize=(15,10))
-plt.subplots(n_condition,1)
+fig = plt.figure(figsize=(15, 10))
+plt.subplots(n_condition, 1)
 plt.suptitle("Face Neuron Responses")
 for i in range(n_condition):  # n_condition (i.e. anger fear lip_smack)
-    plt.subplot(n_condition,1,i+1)
+    plt.subplot(n_condition, 1, i+1)
     for j in range(n_cat):
         plt.plot(range(seq_length), sorted_it_resp[i, n_sequence - 1, :, j],
                  color=colors[j],

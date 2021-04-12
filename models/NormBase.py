@@ -65,6 +65,7 @@ class NormBase:
             self.tun_func = config['tun_func']
         except KeyError:
             self.tun_func = '2-norm'
+            print("tuning_function missing from json configuration file! Set to '2-norm'")
         # set dimensionality reduction
         try:
             self.dim_red = config['dim_red']
@@ -245,6 +246,11 @@ class NormBase:
         self.t = t
 
     def evaluate_v4(self, data, flatten=True):
+        # deprecated, but keep it
+        print("[WARNING] This function is deprecated, please change it to 'predict_v4'")
+        return self.predict_v4(data, flatten)
+
+    def predict_v4(self, data, flatten=True):
         """
         returns prediction of cnn including preprocessing of images
         in NormBase, must be used only to train dimensionality reduction and in _get_preds()
@@ -280,20 +286,20 @@ class NormBase:
         """
         if self.dim_red is None:
             # get prediction after cnn, before dimensionality reduction
-            preds = self.evaluate_v4(data)
+            preds = self.predict_v4(data)
         elif self.dim_red == 'PCA':
             # projection by PCA
-            preds = self.pca.transform(self.evaluate_v4(data))
+            preds = self.pca.transform(self.predict_v4(data))
         elif self.dim_red == 'position':
             # receive unflattened prediction
             # receive xy positions and flatten
             # output shape: (batch_size, n_feature_maps*2)
             preds = np.concatenate(calculate_position(
-                    self.evaluate_v4(data, flatten=False),
+                    self.predict_v4(data, flatten=False),
                     mode=self.position_method, return_mode="xy float"),
                 axis=1)
         elif self.dim_red == 'semantic':
-            preds = self.evaluate_v4(data, flatten=False)
+            preds = self.predict_v4(data, flatten=False)
             self.semantic_feat_red.transform(preds)
             preds = np.ones(self.n_features)
         else:
@@ -381,16 +387,16 @@ class NormBase:
             f = np.power(f, self.nu)
             return np.diag(v) @ f.T
         elif self.tun_func == 'simplified':
-            # this is the function published in the ICAAN paper with 1-norm and nu=1
+            # this is the function published in the ICANN paper with 1-norm and nu=1
             return 0.5 * (np.linalg.norm(batch_diff, ord=1, axis=1) + (self.t @ batch_diff.T)).T
         elif self.tun_func == 'direction-only':
             # return normalized scalar product between actual direction and tuning
             v = np.linalg.norm(batch_diff, ord=2, axis=1)
             f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
-            f[f<0] = 0
+            f[f < 0] = 0
             return f.T
         elif self.tun_func == 'expressivity-direction':
-            # tun_func = exprissivity * (direction^nu)
+            # tun_func = expressivity * (direction^nu)
             # expressivity = norm(d) / norm(tun_mean)
             # direction = f (like above)
             # can be simplified by reducing norm(d), but leave it in for better understanding
@@ -404,10 +410,10 @@ class NormBase:
             expressivity = np.outer(batch_diff_norm,
                                      np.true_divide(1, t_mean_norm, out=np.zeros_like(t_mean_norm), where=t_mean_norm!=0))
             it_resp = expressivity * f.T
-            #set response for reference category, to a sphere around reference vector with linear decay
+            # set response for reference category, to a sphere around reference vector with linear decay
             # activity=1 in the middle, activity=0 at half the distance to the closest category
             it_resp[:, self.ref_cat] = 1 - (0.5 *batch_diff_norm / np.delete(t_mean_norm, self.ref_cat).min())
-            it_resp[:, self.ref_cat][it_resp[:, self.ref_cat]<0] = 0
+            it_resp[:, self.ref_cat][it_resp[:, self.ref_cat] < 0] = 0
             return it_resp
         else:
             raise ValueError("{} is no valid choice for tun_func".format(self.tun_func))
@@ -456,9 +462,9 @@ class NormBase:
                 # data = data.getAllData()
                 raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
             elif isinstance(data, tf.keras.preprocessing.image.ImageDataGenerator):
-                self.v4_predict = self.evaluate_v4(data)
+                self.v4_predict = self.predict_v4(data)
             else:
-                self.v4_predict = self.evaluate_v4(data[0])
+                self.v4_predict = self.predict_v4(data[0])
             # old (w/o preprocessing):
             # v4_predict = self.v4.predict(data[0])
             # v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))

@@ -213,8 +213,10 @@ def _load_morphing_space(config, train, sort_by, get_raw=False):
     # select avatar
     if train:
         config_avatar = config['train_avatar']
+        expressions = config['train_expression']
     else:
         config_avatar = config['val_avatar']
+        expressions = config['val_expression']
 
     # build filter depending on avatar
     if config_avatar == 'all_orig':
@@ -230,7 +232,7 @@ def _load_morphing_space(config, train, sort_by, get_raw=False):
 
     # read out the expressions for training
     new_df = pd.DataFrame()
-    for expression in config['train_expression']:
+    for expression in expressions:
         sub_df = df.copy()
         if 'c1' in expression:  # 100% human - 100% angry
             h_exp = [1.0]
@@ -244,8 +246,11 @@ def _load_morphing_space(config, train, sort_by, get_raw=False):
         elif 'c4' in expression:  # 100% monkey - 100% fear
             h_exp = [0.0]
             anger = [0.0]
+        elif 'full' in expression:  # full morphing space
+            h_exp = [1.0, 0.75, 0.5, 0.25, 0.0]
+            anger = [0.0, 0.25, 0.5, 0.75, 1.0]
         else:
-            raise NotImplementedError('Expression {} is not yet implemented')
+            raise NotImplementedError('Expression "{}" is not yet implemented'.format(expression))
 
         # select anger expression
         sub_df = sub_df[sub_df['anger'].isin(anger)]

@@ -47,56 +47,56 @@ if __name__ == "__main__":
     run: python -m datasets_utils.filter_rendering_noise
     """
 
-    # # -----------------------------------------------------------------------------------------------------------------
-    # # single folder
-    # # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
-    # # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'
-    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    # ----------------------------------------------------------------------------------------------------------------
+    # single folder
+    # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'
+    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_c2_corrected/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
     # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+
+    list_file = sorted(os.listdir(path))
+    print("length list_file", len(list_file))
+
+    sequence = load_sequence(list_file, path)
+    print("shape sequence", np.shape(sequence))
+
+    filt_seq = filter_sequence(sequence, kernel_size=3)
+    print("shape filt_seq", np.shape(filt_seq))
+
+    save_sequence(filt_seq, path, list_file)
+
+    # # ----------------------------------------------------------------------------------------------------------------
+    # # complete directory
     #
-    # list_file = sorted(os.listdir(path))
-    # print("length list_file", len(list_file))
+    # # # Human orig
+    # # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_raw'
+    # # new_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_filt3'
+    # # monkey orig
+    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_raw'
+    # new_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_filt3'
     #
-    # sequence = load_sequence(list_file, path)
-    # print("shape sequence", np.shape(sequence))
+    # if not os.path.exists(new_path):
+    #     os.mkdir(new_path)
     #
-    # filt_seq = filter_sequence(sequence, kernel_size=3)
-    # print("shape filt_seq", np.shape(filt_seq))
+    # # get all sub directories
+    # list_dir = os.listdir(path)
     #
-    # save_sequence(filt_seq, path, list_file)
-
-    # -----------------------------------------------------------------------------------------------------------------
-    # complete directory
-
-    # # Human orig
-    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_raw'
-    # new_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_filt3'
-    # monkey orig
-    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_raw'
-    new_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_filt3'
-
-    if not os.path.exists(new_path):
-        os.mkdir(new_path)
-
-    # get all sub directories
-    list_dir = os.listdir(path)
-
-    for directory in list_dir:
-        if directory[0] != ".":
-            print("directory", directory)
-            list_file = sorted(os.listdir(os.path.join(path, directory)))
-            print("length list_file", len(list_file))
-
-            sequence = load_sequence(list_file, os.path.join(path, directory))
-            print("Sequence loaded:", np.shape(sequence))
-
-            filt_seq = filter_sequence(sequence, kernel_size=3)
-            print("Sequence filtered:", np.shape(filt_seq))
-
-            # create new directory
-            if not os.path.exists(os.path.join(new_path, directory)):
-                os.mkdir(os.path.join(new_path, directory))
-
-            save_sequence(filt_seq, os.path.join(new_path, directory), list_file)
-            print("Sequence saved!")
-            print()
+    # for directory in list_dir:
+    #     if directory[0] != ".":
+    #         print("directory", directory)
+    #         list_file = sorted(os.listdir(os.path.join(path, directory)))
+    #         print("length list_file", len(list_file))
+    #
+    #         sequence = load_sequence(list_file, os.path.join(path, directory))
+    #         print("Sequence loaded:", np.shape(sequence))
+    #
+    #         filt_seq = filter_sequence(sequence, kernel_size=3)
+    #         print("Sequence filtered:", np.shape(filt_seq))
+    #
+    #         # create new directory
+    #         if not os.path.exists(os.path.join(new_path, directory)):
+    #             os.mkdir(os.path.join(new_path, directory))
+    #
+    #         save_sequence(filt_seq, os.path.join(new_path, directory), list_file)
+    #         print("Sequence saved!")
+    #         print()
