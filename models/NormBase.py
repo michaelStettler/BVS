@@ -4,13 +4,15 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-from sklearn.decomposition import PCA
 import warnings
 
-from utils.load_extraction_model import load_extraction_model
+from utils.CNN.extraction_model import load_extraction_model
+from utils.feature_reduction import set_feature_selection
+from utils.feature_reduction import save_feature_selection
+from utils.feature_reduction import load_feature_selection
+from utils.feature_reduction import fit_dimensionality_reduction
 from utils.CSV_data_generator import CSVDataGen
 from utils.calculate_position import calculate_position
-from utils.Semantic.SemanticFeatureSelection import SemanticFeatureSelection
 
 
 class NormBase:
@@ -89,8 +91,9 @@ class NormBase:
 
         # initialize n_features based on dimensionality reduction method
         self._set_feature_reduction(config)
+        print("[INIT] n_features:", self.n_features)
 
-        # declare variables
+        # declare Model variables
         self.r = np.zeros(self.n_features)  # reference vectors
         self.t = np.zeros((self.n_category, self.n_features))  # tuning vectors
         self.t_cumul = np.zeros(self.n_category)
@@ -122,31 +125,30 @@ class NormBase:
                 self.raw_preds_df = pd.DataFrame()
         print()
 
-    def _set_feature_reduction(self, config):
-        if self.dim_red is None:
-            # initialize as output of network as default
-            if len(self.shape_v4) == 2:  # use flatten... but self.v4.layers[-1].output is a tensorShape object
-                self.n_features = self.shape_v4[1]
-            elif len(self.shape_v4) == 3:
-                self.n_features = self.shape_v4[1] * self.shape_v4[2]
-            elif len(self.shape_v4) == 4:
-                self.n_features = self.shape_v4[1] * self.shape_v4[2] * self.shape_v4[3]
-            else:
-                raise NotImplementedError("Dimensionality not implemented")
-        elif self.dim_red == "PCA":
-            self.pca = PCA(n_components=config['PCA'])
-            # initialize n_features as number of components of PCA
-            self.n_features = config['PCA']
-        elif self.dim_red == "position":
-            self.position_method = config['position_method']
-            # initialize n_features as number of feature maps*2
-            self.n_features = self.shape_v4[-1]*2
-        elif self.dim_red == "semantic":
-            self.n_features = len(config["semantic_units"])
-            self.semantic_feat_red = SemanticFeatureSelection(config)
+    def _load_v4(self, config, input_shape):
+        """
+        load the v4 pipeline extraction feature
+
+        :param config:
+        :param input_shape:
+        :return:
+        """
+        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] == 'ResNet50V2'):
+            self.model = load_extraction_model(config, input_shape)
+            self.v4 = tf.keras.Model(inputs=self.model.input,
+                                outputs=self.model.get_layer(config['v4_layer']).output)
         else:
-            raise ValueError("Dimensionality reduction {} is not implemented".format(self.dim_red ))
-        print("[INIT] n_features:", self.n_features)
+            raise ValueError("model: {} does not exists! Please change config file or add the model"
+                             .format(config['extraction_model']))
+        # define preprocessing for images
+        if config['extraction_model'] == 'VGG19':
+            self.preprocessing = 'VGG19'
+        else:
+            self.preprocessing = None
+            warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
+
+    def _set_feature_reduction(self, config):
+        set_feature_selection(self, config)
 
     def _set_dynamic(self, config):
         if config.get('use_dynamic') is not None:
@@ -160,21 +162,6 @@ class NormBase:
                 self.m_inhi_w = config['m_inhi_w']  # weights of mutual inhibition
 
     ### SAVE AND LOAD ###
-    def _load_v4(self, config, input_shape):
-        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] == 'ResNet50V2'):
-            self.model = load_extraction_model(config, input_shape)
-            self.v4 = tf.keras.Model(inputs=self.model.input,
-                                     outputs=self.model.get_layer(config['v4_layer']).output)
-        else:
-            raise ValueError("model: {} does not exists! Please change config file or add the model"
-                             .format(config['extraction_model']))
-        # define preprocessing for images
-        if config['extraction_model'] == 'VGG19':
-            self.preprocessing = 'VGG19'
-        else:
-            self.preprocessing = None
-            warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
-
     def save_NB_model(self, config):
         """
         This method saves the fitted model
@@ -199,13 +186,7 @@ class NormBase:
         np.save(os.path.join(save_folder, "tuning_mean"), self.t_mean)
 
         # save feature reduction
-        if self.dim_red == 'PCA':
-            print("[SAVE] Save PCA")
-            pickle.dump(self.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
-        elif self.dim_red == 'semantic':
-            print("[SAVE] Save semantic units dictionary")
-            # save only the semantic dictionary
-            pickle.dump(self.semantic_feat_red.sem_idx_list, open(os.path.join(save_folder, "semantic_dictionary.pkl"), 'wb'))
+        save_feature_selection(self, save_folder)
 
         # save raw predictions
         if self.save_preds and self.preds_saved:
@@ -230,12 +211,7 @@ class NormBase:
         self.t_mean = np.load(os.path.join(load_folder, "tuning_mean.npy"))
 
         # load feature reduction
-        if self.dim_red == 'PCA':
-            self.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
-        if self.dim_red == 'semantic':
-            # load the semantic index dictionary
-            sem_idx_list = pickle.load(open(os.path.join(load_folder, "semantic_dictionary.pkl"), 'rb'))
-            self.semantic_feat_red.sem_idx_list = sem_idx_list
+        load_feature_selection(self, load_folder)
 
     ### HELPER FUNCTIONS ###
 
@@ -253,7 +229,7 @@ class NormBase:
     def predict_v4(self, data, flatten=True):
         """
         returns prediction of cnn including preprocessing of images
-        in NormBase, must be used only to train dimensionality reduction and in _get_preds()
+        in NormBase, must be used only to train dimensionality reduction and in predict()
         :param data: batch of data
         :param flatten: if True, is flattened
         :return: prediction
@@ -277,7 +253,7 @@ class NormBase:
 
         return preds
 
-    def get_preds(self, data):
+    def predict(self, data):
         """
         returns prediction of pipeline before norm-base
         pipeline consists of preprocessing, cnn, and dimensionality reduction
@@ -314,7 +290,7 @@ class NormBase:
         """
         n_ref = np.shape(data)[0]
         if n_ref > 0:
-            preds = self.get_preds(data)
+            preds = self.predict(data)
             # update ref_vector m
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
             self.ref_cumul += n_ref
@@ -326,7 +302,7 @@ class NormBase:
         :return: difference vector
         """
         len_batch = len(data)  # take care of last epoch if size is not equal as the batch_size
-        preds = self.get_preds(data)
+        preds = self.predict(data)
         # compute batch diff
         return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
 
@@ -453,37 +429,7 @@ class NormBase:
         :param data: input data
         :return:
         """
-        print("[FIT] dimensionality reduction")
-        # in the case of dimensionality reduction set up the pipeline
-        if self.dim_red is None:
-            print("[FIT] no dimensionality reduction")
-        elif self.dim_red == 'PCA':
-            if isinstance(data, CSVDataGen):
-                # data = data.getAllData()
-                raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
-            elif isinstance(data, tf.keras.preprocessing.image.ImageDataGenerator):
-                self.v4_predict = self.predict_v4(data)
-            else:
-                self.v4_predict = self.predict_v4(data[0])
-            # old (w/o preprocessing):
-            # v4_predict = self.v4.predict(data[0])
-            # v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
-            # self.v4_predict = v4_predict
-
-            # perform PCA on this output
-            print("[FIT] Fitting PCA")
-            self.pca.fit(self.v4_predict)
-            print("[FIT] PCA: explained variance", self.pca.explained_variance_ratio_)
-
-        elif self.dim_red == 'position':
-            print(f'[FIT] dimensionality reduction method: position with calculation method {self.position_method}')
-
-        elif self.dim_red == "semantic":
-            print("[FIT] Finding semantic units")
-            self.semantic_feat_red.fit(self.model)
-            print("[FIT] Finished to find the semantic units")
-        else:
-            raise KeyError(f'self.dim_red={self.dim_red} is not a valid value')
+        fit_dimensionality_reduction(self, data)
 
         # set preds_saved to true so the predictions are saved only once
         if self.save_preds and self.dim_red is not None:

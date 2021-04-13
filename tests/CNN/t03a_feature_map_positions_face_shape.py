@@ -2,14 +2,12 @@ import os
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.load_extraction_model import load_extraction_model
+from utils.CNN.extraction_model import load_extraction_model
 from utils.feat_map_filter_processing import get_feat_map_filt_preds
 from utils.calculate_position import calculate_position
-from plots_utils.plot_cnn_output import plot_cnn_output
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)

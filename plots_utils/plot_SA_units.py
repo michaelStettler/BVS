@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('tkagg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def plot_SA_units(SA_units, layer_names, max_columns=4):
@@ -25,7 +24,7 @@ def plot_SA_units(SA_units, layer_names, max_columns=4):
 
 
 if __name__ == "__main__":
-    from utils.load_extraction_model import load_model
+    from utils.CNN.extraction_model import load_model
 
     config_file_path = 'configs/face_units/find_SA_units_mac.json'
 

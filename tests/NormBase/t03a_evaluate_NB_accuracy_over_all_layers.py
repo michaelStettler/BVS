@@ -1,8 +1,7 @@
 import tensorflow as tf
-import os
 import numpy as np
 
-from utils.load_extraction_model import load_model
+from utils.CNN.extraction_model import load_model
 from utils.load_config import load_config
 from utils.evaluate_model import evaluate_model
 

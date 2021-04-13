@@ -7,9 +7,8 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.load_extraction_model import load_model
 
-from utils.load_extraction_model import load_model
+from utils.CNN.extraction_model import load_model
 
 config_path = '../../configs/norm_base_config'
 config_name = 'norm_base_affectNet_sub8_4000_t0005.json'

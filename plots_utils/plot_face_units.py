@@ -31,7 +31,7 @@ def plot_face_units(face_units, layer_names):
 
 
 if __name__ == "__main__":
-    from utils.load_extraction_model import load_model
+    from utils.CNN.extraction_model import load_model
 
     config_file_path = 'configs/face_units/find_face_units_test_mac.json'
 

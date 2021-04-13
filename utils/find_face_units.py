@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from utils.load_data import load_data
-from utils.load_extraction_model import load_model
+from utils.CNN.extraction_model import load_model
 
 
 def find_face_units(model, data, verbose=False):
