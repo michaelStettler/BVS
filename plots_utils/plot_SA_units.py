@@ -24,7 +24,7 @@ def plot_SA_units(SA_units, layer_names, max_columns=4):
 
 
 if __name__ == "__main__":
-    from utils.CNN.extraction_model import load_model
+    from utils.extraction_model import load_model
 
     config_file_path = 'configs/face_units/find_SA_units_mac.json'
 

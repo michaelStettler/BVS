@@ -1,12 +1,9 @@
 import os
-import pickle
 import pandas as pd
 import numpy as np
-import tensorflow as tf
 from tqdm import tqdm
-import warnings
 
-from utils.CNN.extraction_model import load_extraction_model
+from utils.extraction_model import load_v4
 from utils.feature_reduction import set_feature_selection
 from utils.feature_reduction import save_feature_selection
 from utils.feature_reduction import load_feature_selection
@@ -41,23 +38,10 @@ class NormBase:
         :param input_shape: Tuple with the input size of the model (height, width, channels)
         :param load_NB_model: if given the fitted model is loaded from config["config_name"] subfolder save_name
         """
-        # -----------------------------------------------------------------
-        # limit GPU memory as it appear windows have an issue with this, from:
-        # https://forums.developer.nvidia.com/t/could-not-create-cudnn-handle-cudnn-status-alloc-failed/108261/3
-        gpus = tf.config.experimental.list_physical_devices('GPU')
-        if gpus:
-            try:
-                # Currently, memory growth needs to be the same across GPUs
-                for gpu in gpus:
-                    tf.config.experimental.set_memory_growth(gpu, True)
-                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-            except RuntimeError as e:
-                # Memory growth must be set before GPUs have been initialized
-                print(e)
-        # ----------------------------------------------------------------
-
         # declare parameters
+        self.config = config
+        self.input_shape = input_shape
+
         try:
             self.nu = config['nu']
         except KeyError:
@@ -79,7 +63,7 @@ class NormBase:
         self.ref_cumul = 0  # cumulative count of the number of reference frame passed in the fitting
 
         # load front end feature extraction model
-        self._load_v4(config, input_shape)  # load extraction model
+        load_v4(self, config, input_shape)  # load extraction model
         print()
         print("[INIT] -- Model loaded --")
         print("[INIT] Extraction Model:", config['extraction_model'])
@@ -90,7 +74,7 @@ class NormBase:
         print("[INIT] shape_v4", self.shape_v4)
 
         # initialize n_features based on dimensionality reduction method
-        self._set_feature_reduction(config)
+        set_feature_selection(self, config)
         print("[INIT] n_features:", self.n_features)
 
         # declare Model variables
@@ -108,8 +92,8 @@ class NormBase:
 
         # load norm base model
         if load_NB_model is not None:
-            self._load_NB_model(config)
-            print("[INIT] saved model is loaded from file")
+            if load_NB_model:
+                self.load(config)
 
         # set time constant for dynamic and competitive network
         self._set_dynamic(config)
@@ -125,31 +109,6 @@ class NormBase:
                 self.raw_preds_df = pd.DataFrame()
         print()
 
-    def _load_v4(self, config, input_shape):
-        """
-        load the v4 pipeline extraction feature
-
-        :param config:
-        :param input_shape:
-        :return:
-        """
-        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] == 'ResNet50V2'):
-            self.model = load_extraction_model(config, input_shape)
-            self.v4 = tf.keras.Model(inputs=self.model.input,
-                                outputs=self.model.get_layer(config['v4_layer']).output)
-        else:
-            raise ValueError("model: {} does not exists! Please change config file or add the model"
-                             .format(config['extraction_model']))
-        # define preprocessing for images
-        if config['extraction_model'] == 'VGG19':
-            self.preprocessing = 'VGG19'
-        else:
-            self.preprocessing = None
-            warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
-
-    def _set_feature_reduction(self, config):
-        set_feature_selection(self, config)
-
     def _set_dynamic(self, config):
         if config.get('use_dynamic') is not None:
             if config['use_dynamic']:
@@ -162,14 +121,21 @@ class NormBase:
                 self.m_inhi_w = config['m_inhi_w']  # weights of mutual inhibition
 
     ### SAVE AND LOAD ###
-    def save_NB_model(self, config):
+    def save_NB_model(self, config=None):
+        print("Deprecated, please change to 'save'")
+        self.save(config)
+
+    def save(self, config=None):
         """
         This method saves the fitted model
         :param config: saves under the specified path in config
         :param save_name: subfolder name
         can be loaded with load_extraction_model(config, save_name)
         """
-        print()
+        # modify config if one is given
+        if config is None:
+            config = self.config
+
         # control that config folder exists
         save_folder = os.path.join("models/saved", config['config_name'])
         if not os.path.exists(save_folder):
@@ -193,25 +159,29 @@ class NormBase:
             print("[SAVE] Save raw prediction to csv")
             self.raw_preds_df.to_csv(os.path.join(save_folder, "raw_pred.csv"))
 
-        print("[SAVE] Norm Base Model saved")
+        print("[SAVE] Norm Base Model saved!")
         print()
 
-    def _load_NB_model(self, config):
+    def load(self):
         """
         loads trained model from file, including dimensionality reduction
         this method should only be called by init
-        :param config: configuration file
-        :param save_name: folder name
+
         :return:
         """
-        # todo control if file exists!
-        load_folder = os.path.join("models/saved", config['config_name'], "NormBase")
+        load_folder = os.path.join("models/saved", self.config['config_name'], "NormBase")
+
+        if not os.path.exists(load_folder):
+            raise ValueError("Loading path does not exists! Please control your path")
+
         self.r = np.load(os.path.join(load_folder, "ref_vector.npy"))
         self.t = np.load(os.path.join(load_folder, "tuning_vector.npy"))
         self.t_mean = np.load(os.path.join(load_folder, "tuning_mean.npy"))
 
         # load feature reduction
         load_feature_selection(self, load_folder)
+
+        print("[LOAD] Norm Based model has been loaded from file: {}".format(self.config['config_name']))
 
     ### HELPER FUNCTIONS ###
 
@@ -409,6 +379,7 @@ class NormBase:
     def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True):
         """
         fit model on data
+
         :param data: input
         :param batch_size:
         :param fit_dim_red: whether to fit dimensionality reduction

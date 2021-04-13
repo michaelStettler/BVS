@@ -5,7 +5,7 @@ import cv2
 
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.CNN.extraction_model import load_extraction_model
+from utils.extraction_model import load_extraction_model
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)

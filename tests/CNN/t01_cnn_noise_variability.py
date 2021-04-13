@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from utils.load_config import load_config
 from utils.load_from_csv import load_from_csv
-from utils.CNN.extraction_model import load_extraction_model
+from utils.extraction_model import load_extraction_model
 
 plt.style.use('ggplot')
 

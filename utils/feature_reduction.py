@@ -47,7 +47,6 @@ def fit_dimensionality_reduction(model, data):
     :param data: input data
     :return:
     """
-    print("[FIT] dimensionality reduction")
     # in the case of dimensionality reduction set up the pipeline
     if model.dim_red is None:
         print("[FIT] no dimensionality reduction")

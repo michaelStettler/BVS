@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.CNN.extraction_model import load_extraction_model
+from utils.extraction_model import load_extraction_model
 from utils.feat_map_filter_processing import get_feat_map_filt_preds
 from utils.calculate_position import calculate_position
 

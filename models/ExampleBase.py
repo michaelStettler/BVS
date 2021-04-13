@@ -1,10 +1,10 @@
 import os
+import pickle
 import numpy as np
-import pandas as pd
-import tensorflow as tf
-import warnings
 
-from utils.CNN.extraction_model import load_extraction_model
+from models.RBF import RBF
+from models.Amari import Amari
+from utils.extraction_model import load_v4
 from utils.feature_reduction import set_feature_selection
 from utils.feature_reduction import save_feature_selection
 from utils.feature_reduction import load_feature_selection
@@ -21,22 +21,6 @@ class ExampleBase:
     """
 
     def __init__(self, config, input_shape, load_EB_model=None):
-        # -----------------------------------------------------------------
-        # limit GPU memory as it appear windows have an issue with this, from:
-        # https://forums.developer.nvidia.com/t/could-not-create-cudnn-handle-cudnn-status-alloc-failed/108261/3
-        gpus = tf.config.experimental.list_physical_devices('GPU')
-        if gpus:
-            try:
-                # Currently, memory growth needs to be the same across GPUs
-                for gpu in gpus:
-                    tf.config.experimental.set_memory_growth(gpu, True)
-                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-            except RuntimeError as e:
-                # Memory growth must be set before GPUs have been initialized
-                print(e)
-        # ----------------------------------------------------------------
-
         # declare variable
         self.config = config
         self.input_shape = input_shape
@@ -47,8 +31,11 @@ class ExampleBase:
         except KeyError:
             self.dim_red = None
 
+        self.normalize = True  # todo add to config
+        self.norm = None
+
         # load front end feature extraction model
-        self._load_v4(config, input_shape)  # load extraction model
+        load_v4(self, config, input_shape)  # load extraction model
         print()
         print("[INIT] -- Model loaded --")
         print("[INIT] Extraction Model:", config['extraction_model'])
@@ -57,47 +44,27 @@ class ExampleBase:
             print("[INIT] dim_red:", self.dim_red)
         self.shape_v4 = np.shape(self.v4.layers[-1].output)
         print("[INIT] shape_v4", self.shape_v4)
+        self.snapshots = RBF(config)
 
         # initialize n_features based on dimensionality reduction method
-        self._set_feature_reduction(config)
+        set_feature_selection(self, config)
         print("[INIT] n_features:", self.n_features)
+
+        # initialize Neural Field
+        self.neural_field = Amari(config)
 
         # load norm base model
         if load_EB_model is not None:
-            self.load()
-            print("[INIT] Example Based model has been loaded from file: {}".format(config['config_name']))
-
-    def _load_v4(self, config, input_shape):
-        """
-        load the v4 pipeline extraction feature
-
-        :param config:
-        :param input_shape:
-        :return:
-        """
-        if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] == 'ResNet50V2'):
-            self.model = load_extraction_model(config, input_shape)
-            self.v4 = tf.keras.Model(inputs=self.model.input,
-                                outputs=self.model.get_layer(config['v4_layer']).output)
-        else:
-            raise ValueError("model: {} does not exists! Please change config file or add the model"
-                             .format(config['extraction_model']))
-        # define preprocessing for images
-        if config['extraction_model'] == 'VGG19':
-            self.preprocessing = 'VGG19'
-        else:
-            self.preprocessing = None
-            warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
-
-    def _set_feature_reduction(self, config):
-        set_feature_selection(self, config)
+            if load_EB_model:
+                self.load()
 
     # ------------------------------------------------------------------------------------------------------------------
     # Save and Load
     def save(self, config=None):
+        # modify config if one is given
         if config is None:
             config = self.config
-        print("save")
+
         # create folder if it does not exist
         save_folder = os.path.join("models/saved", config['config_name'])
         if not os.path.exists(save_folder):
@@ -107,18 +74,39 @@ class ExampleBase:
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 
+        # save ExampleBase parameters
+        np.save(os.path.join(save_folder, "norm"), self.norm)
+
         # save feature reduction
         save_feature_selection(self, save_folder)
+
+        # save snapshots
+        pickle.dump(self.snapshots, open(os.path.join(save_folder, "snapshots.pkl"), 'wb'))
+        print("[SAVE] Snapshot neurons saved")
+
+        print("[SAVE] Example Base Model saved!")
+        print()
 
     def load(self):
         load_folder = os.path.join("models/saved", self.config['config_name'], "ExampleBase")
 
+        if not os.path.exists(load_folder):
+            raise ValueError("Loading path does not exists! Please control your path")
+
+        # load ExampleBase parameters
+        self.norm = np.load(os.path.join(load_folder, "norm.npy"))
+
         # load feature reduction
         load_feature_selection(self, load_folder)
 
+        # load snapshots
+        self.snapshots = pickle.load(open(os.path.join(load_folder, "snapshots.pkl"), 'rb'))
+
+        print("[LOAD] Example Based model has been loaded from file: {}".format(self.config['config_name']))
+
     # ------------------------------------------------------------------------------------------------------------------
     # fit / train functions
-    def predict_v4(self, data, flatten=True):
+    def predict_v4(self, data, flatten=True, normalize=True):
         """
         returns prediction of cnn including preprocessing of images
         in ExampleBase, must be used only to train dimensionality reduction and in predict()
@@ -131,6 +119,10 @@ class ExampleBase:
         preds = self.v4.predict(data)
         if flatten:
             preds = np.reshape(preds, (np.shape(preds)[0], -1))
+
+        # normalize the data
+        if normalize:
+            preds /= self.norm
 
         return preds
 
@@ -149,9 +141,10 @@ class ExampleBase:
             preds = self.pca.transform(self.predict_v4(data))
         else:
             raise KeyError(f'invalid value self.dim_red={self.dim_red}')
+
         return preds
 
-    def fit(self, data, batch_size=32, fit_dim_red=True, fit_snapshot=True):
+    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True, tune_neural_field=True):
         """
         fit function. We can select what part of the model we want to train.
 
@@ -163,9 +156,28 @@ class ExampleBase:
         :param fit_snapshot:
         :return:
         """
-        print("fit")
+        if fit_normalize:
+            print("[FIT] Fitting normalization")
+            self._fit_normalize(data)
+
         if fit_dim_red:
+            print("[FIT] Fitting dimensionality reduction")
             self._fit_dim_red(data)
+
+        if fit_snapshots:
+            print("[FIT] Fitting Snapshots neurons")
+            self._fit_snapshots(data)
+
+        if tune_neural_field:
+            print("[FIT] Computing Neural Field")
+            self._tune_neural_field(data)
+
+        print("[FIT] Finished training Example Based model!")
+        print()
+
+    def _fit_normalize(self, data):
+        preds = self.predict_v4(data[0], normalize=False)  # predict without normalizing!
+        self.norm = np.amax(preds)
 
     def _fit_dim_red(self, data):
         """
@@ -174,3 +186,22 @@ class ExampleBase:
         :return:
         """
         fit_dimensionality_reduction(self, data)
+
+    def _fit_snapshots(self, data, normalize=True):
+        """
+        fit the snapshots neurons
+
+        :param data:
+        :return:
+        """
+        preds = self.predict(data[0])
+        self.snapshots.fit(preds, verbose=True)
+
+    def _tune_neural_field(self, data):
+        """
+
+        :param data:
+        :return:
+        """
+        print("prout :p")
+

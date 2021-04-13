@@ -1,4 +1,5 @@
 import tensorflow as tf
+import warnings
 
 
 def load_extraction_model(config, input_shape=None):
@@ -42,3 +43,27 @@ def load_extraction_model(config, input_shape=None):
         raise ValueError("Model {} not found!".format(config['model']))
 
     return model
+
+
+def load_v4(model, config, input_shape):
+    """
+    load the v4 pipeline extraction feature
+    When using a CNN, it is essentially cutting of the CNN to a selected layer
+
+    :param config:
+    :param input_shape:
+    :return:
+    """
+    if (config['extraction_model'] == 'VGG19') | (config['extraction_model'] == 'ResNet50V2'):
+        model.model = load_extraction_model(config, input_shape)
+        model.v4 = tf.keras.Model(inputs=model.model.input,
+                                 outputs=model.model.get_layer(config['v4_layer']).output)
+    else:
+        raise ValueError("model: {} does not exists! Please change config file or add the model"
+                         .format(config['extraction_model']))
+    # define preprocessing for images
+    if config['extraction_model'] == 'VGG19':
+        model.preprocessing = 'VGG19'
+    else:
+        model.preprocessing = None
+        warnings.warn(f'no preprocessing for images defined for config["model"]={config["extraction_model"]}')
