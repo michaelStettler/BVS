@@ -50,33 +50,45 @@ def fit_dimensionality_reduction(model, data):
     # in the case of dimensionality reduction set up the pipeline
     if model.dim_red is None:
         print("[FIT] no dimensionality reduction")
+        preds = data
     elif model.dim_red == 'PCA':
-        if isinstance(data, CSVDataGen):
-            # data = data.getAllData()
-            raise ValueError("PCA and DataGenerator has to be implemented first to be usable")
-        elif isinstance(data, tf.keras.preprocessing.image.ImageDataGenerator):
-            model.v4_predict = model.predict_v4(data)
-        else:
-            model.v4_predict = model.predict_v4(data[0])
-        # old (w/o preprocessing):
-        # v4_predict = model.v4.predict(data[0])
-        # v4_predict = np.reshape(v4_predict, (data[0].shape[0], -1))
-        # model.v4_predict = v4_predict
-
         # perform PCA on this output
         print("[FIT] Fitting PCA")
-        model.pca.fit(model.v4_predict)
+        model.pca.fit(data)
         print("[FIT] PCA: explained variance", model.pca.explained_variance_ratio_)
+        preds = model.pca.transform(data)
 
     elif model.dim_red == 'position':
         print(f'[FIT] dimensionality reduction method: position with calculation method {model.position_method}')
 
     elif model.dim_red == "semantic":
         print("[FIT] Finding semantic units")
-        model.semantic_feat_red.fit(model.model)
+        model.semantic_feat_red.fit(data)
         print("[FIT] Finished to find the semantic units")
     else:
         raise KeyError(f'model.dim_red={model.dim_red} is not a valid value')
+
+    return preds
+
+
+def predict_dimensionality_reduction(model, data):
+    """
+    Helper function to apply the dimensionality reduction as set in the configuation before the model
+
+    :param model: model instance
+    :param data:
+    :return: prediction
+    """
+    if model.dim_red is None:
+        # get prediction after cnn, before dimensionality reduction
+        preds = data
+    elif model.dim_red == 'PCA':
+        # projection by PCA
+        preds = model.pca.transform(data)
+    else:
+        raise KeyError(f'invalid value self.dim_red={model.dim_red}')
+
+    return preds
 
 
 def save_feature_selection(model, save_folder):

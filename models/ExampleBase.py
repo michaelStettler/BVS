@@ -9,6 +9,7 @@ from utils.feature_reduction import set_feature_selection
 from utils.feature_reduction import save_feature_selection
 from utils.feature_reduction import load_feature_selection
 from utils.feature_reduction import fit_dimensionality_reduction
+from utils.feature_reduction import predict_dimensionality_reduction
 
 
 class ExampleBase:
@@ -57,6 +58,7 @@ class ExampleBase:
         if load_EB_model is not None:
             if load_EB_model:
                 self.load()
+        print()
 
     # ------------------------------------------------------------------------------------------------------------------
     # Save and Load
@@ -106,7 +108,7 @@ class ExampleBase:
 
     # ------------------------------------------------------------------------------------------------------------------
     # fit / train functions
-    def predict_v4(self, data, flatten=True, normalize=True):
+    def predict_v4(self, data, flatten=True):
         """
         returns prediction of cnn including preprocessing of images
         in ExampleBase, must be used only to train dimensionality reduction and in predict()
@@ -120,35 +122,40 @@ class ExampleBase:
         if flatten:
             preds = np.reshape(preds, (np.shape(preds)[0], -1))
 
-        # normalize the data
-        if normalize:
-            preds /= self.norm
-
         return preds
 
     def predict(self, data):
         """
-        returns prediction of pipeline before norm-base
-        pipeline consists of preprocessing, cnn, and dimensionality reduction
-        :param data: batch of data
-        :return: prediction
+        Predict expression neurons of the model
+
+        :param data:
+        :return:
         """
-        if self.dim_red is None:
-            # get prediction after cnn, before dimensionality reduction
-            preds = self.predict_v4(data)
-        elif self.dim_red == 'PCA':
-            # projection by PCA
-            preds = self.pca.transform(self.predict_v4(data))
-        else:
-            raise KeyError(f'invalid value self.dim_red={self.dim_red}')
+        # predict v4
+        v4_preds = self.predict_v4(data[0])
 
-        return preds
+        # normalize predictions
+        v4_preds /= self.norm
 
-    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True, tune_neural_field=True):
+        # apply dimensionality reduction
+        v4_preds_red = predict_dimensionality_reduction(v4_preds)
+
+        # compute snapshot
+        snaps = self.snapshots.predict(v4_preds_red)
+
+        # compute expression neurons
+        expr_neurons = self._tune_neural_field(snaps)
+
+        return expr_neurons
+
+    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True):
         """
         fit function. We can select what part of the model we want to train.
 
-        Note: the Amary field can be tuned but is not trained!
+        The boolean allows to speed up training by re-training only part of the model
+
+        Note: the Amari field can be tuned but it is not trained! -> check Amari class to see how to fine tune its
+        parameters
 
         :param data:
         :param batch_size:
@@ -156,46 +163,51 @@ class ExampleBase:
         :param fit_snapshot:
         :return:
         """
+
+        # predict v4 responses
+        print("[FIT] Compute v4")
+        v4_preds = self.predict_v4(data[0])
+
         if fit_normalize:
             print("[FIT] Fitting normalization")
-            self._fit_normalize(data)
+            self._fit_normalize(v4_preds)
+        else:
+            v4_preds /= self.norm
+        print("[FIT] Data normalized")
 
         if fit_dim_red:
             print("[FIT] Fitting dimensionality reduction")
-            self._fit_dim_red(data)
+            v4_preds_red = fit_dimensionality_reduction(self, v4_preds)
+        else:
+            v4_preds_red = self.predict_dim_red(v4_preds)
+        print("[FIT] Data reduced")
 
         if fit_snapshots:
             print("[FIT] Fitting Snapshots neurons")
-            self._fit_snapshots(data)
+            snaps = self.snapshots.fit(v4_preds_red)
+        else:
+            snaps = self.snapshots.predict(v4_preds_red)
+        print("[FIT] Snapshot neurons computed")
+        self.snapshots.get_response_statistics(snaps)
 
-        if tune_neural_field:
-            print("[FIT] Computing Neural Field")
-            self._tune_neural_field(data)
+        print("[FIT] Computing Neural Field")
+        expr_neurons = self._tune_neural_field(snaps)
+        print("[FIT] Expression neurons computed")
 
         print("[FIT] Finished training Example Based model!")
         print()
+        return expr_neurons
 
     def _fit_normalize(self, data):
-        preds = self.predict_v4(data[0], normalize=False)  # predict without normalizing!
-        self.norm = np.amax(preds)
-
-    def _fit_dim_red(self, data):
         """
-        fit dimensionality reduction selected by config
-        :param data: input data
-        :return:
-        """
-        fit_dimensionality_reduction(self, data)
-
-    def _fit_snapshots(self, data, normalize=True):
-        """
-        fit the snapshots neurons
+        compute the maximum of the prediction to normalize over it
 
         :param data:
         :return:
         """
-        preds = self.predict(data[0])
-        self.snapshots.fit(preds, verbose=True)
+        self.norm = np.amax(data)
+
+        return data / self.norm
 
     def _tune_neural_field(self, data):
         """
@@ -203,5 +215,21 @@ class ExampleBase:
         :param data:
         :return:
         """
-        print("prout :p")
+        # transform to space of the snapshot neurons
+        # todo transform snapshot space!
 
+        # feed neural field
+        nn_field = self.neural_field.predict_neural_field(data)
+        expression_neurons = self.neural_field.predict_output_neurons(nn_field)
+
+        return expression_neurons
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # plots
+    def plot_snapshots(self, title=None):
+        self.snapshots.plot_rbf_kernel(save_folder=os.path.join("models/saved", self.config['config_name']),
+                                       title=title)
+
+    def plot_neural_field(self, title=None):
+        self.neural_field.plot_neural_field(save_folder=os.path.join("models/saved", self.config['config_name']),
+                                       title=title)

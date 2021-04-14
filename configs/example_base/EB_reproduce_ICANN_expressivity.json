@@ -1,8 +1,10 @@
 {
+  "config_name": "EB_reproduce_ICANN_expressivity_m0001",
   "train_data": "monkey_test",
   "n_category": 3,
-  "csv_train": "/app/expressivity_level/csv/monkey_expressivity_full.csv",
-  "csv_val": "/app/expressivity_level/csv/monkey_expressivity_full.csv",
+  "csv_train": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_expressivity_full.csv",
+  "csv_val": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_expressivity_full.csv",
+  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels",
   "model": "VGG19",
   "include_top": false,
   "weights": "imagenet",

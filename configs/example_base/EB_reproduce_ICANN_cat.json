@@ -10,7 +10,6 @@
   "include_top": false,
   "weights": "imagenet",
   "v4_layer": "block3_pool",
-  "n_category": 3,
   "batch_size": 80,
   "dim_red": "PCA",
   "PCA": 25,

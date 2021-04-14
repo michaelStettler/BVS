@@ -33,12 +33,14 @@ train_data[0] = seg_data
 model.fit(train_data,
           fit_normalize=False,
           fit_dim_red=False,
-          fit_snapshots=False,
-          tune_neural_field=True)
+          fit_snapshots=False)
 model.save()
 
 # --------------------------------------------------------------------------------------------------------------------
 # plot training
 
 # plot training snapshots
-model.snapshots.plot_rbf_kernel(save_folder=os.path.join("models/saved", config['config_name']))
+model.plot_snapshots(title="01_train")
+
+# plot neural field
+model.plot_neural_field(title="02_train")

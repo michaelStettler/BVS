@@ -32,7 +32,7 @@ if train_model:
               fit_dim_red=True,
               fit_ref=True,
               fit_tun=True)
-    model.save_NB_model(config)
+    model.save()
 
 # --------------------------------------------------------------------------------------------------------------------
 # predict model
