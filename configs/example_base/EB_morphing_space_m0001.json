@@ -1,5 +1,5 @@
 {
-  "config_name": "EB_reproduce_ICANN_expressivity_m0001",
+  "config_name": "EB_morphing_space_m0001",
   "train_data": "morphing_space",
   "use_data_generator": false,
   "x_col": "image_path",
@@ -11,6 +11,7 @@
   "train_avatar": "human_orig",
   "val_avatar": "human_orig",
   "train_expression": ["c1", "c2", "c3", "c4"],
+  "colors": [[0.773, 0.224, 0.196], [0.937, 0.522, 0.212], [0.2235, 0.4667, 0.686], [0, 0, 0]],
   "val_expression": ["full"],
   "extraction_model": "VGG19",
   "input_shape": [224, 224, 3],
@@ -33,7 +34,6 @@
   "Amari_nker_s_amp": 25,
   "Amari_nker_s_alpha": 40,
   "Amari_nker_s_beta": 0.4,
-  "colors": [[0.773, 0.224, 0.196], [0.937, 0.522, 0.212], [0.2235, 0.4667, 0.686]],
   "remove_neutral_frames": true,
   "neutral_frames_idx": [[0, 7], [74, 80], [80, 87], [154, 160], [160, 167], [234, 240],[240, 247], [314, 320],
     [320, 330], [388, 400], [400, 410], [468, 480], [480, 490], [556, 560], [560, 570], [638, 640],

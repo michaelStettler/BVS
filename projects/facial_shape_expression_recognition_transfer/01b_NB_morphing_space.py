@@ -28,7 +28,8 @@ model = NormBase(config, input_shape=tuple(config['input_shape']), load_NB_model
 # train model
 if train_model:
     print("[FIT] Train model]")
-    model.fit(load_data(config, train=True),
+    data = load_data(config, train=True)
+    model.fit(data,
               fit_dim_red=True,
               fit_ref=True,
               fit_tun=True)
@@ -37,8 +38,8 @@ if train_model:
 # --------------------------------------------------------------------------------------------------------------------
 # predict model
 if predict_it_resp:
-    print("[Test] Predict model]")
     data = load_data(config, train=False)
+    print("[Test] Predict model")
     accuracy, it_resp, labels = model.evaluate(data)
     print("[Test] model predicted")
     np.save(os.path.join("models/saved", config['config_name'], "NormBase", "it_resp"), it_resp)

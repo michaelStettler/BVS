@@ -84,6 +84,7 @@ class ExampleBase:
 
         # save snapshots
         pickle.dump(self.snapshots, open(os.path.join(save_folder, "snapshots.pkl"), 'wb'))
+
         print("[SAVE] Snapshot neurons saved")
 
         print("[SAVE] Example Base Model saved!")
@@ -124,7 +125,7 @@ class ExampleBase:
 
         return preds
 
-    def predict(self, data):
+    def predict(self, data, get_snapshots=False):
         """
         Predict expression neurons of the model
 
@@ -133,22 +134,30 @@ class ExampleBase:
         """
         # predict v4
         v4_preds = self.predict_v4(data[0])
+        print("[PREDS] v4 predicted")
 
         # normalize predictions
         v4_preds /= self.norm
+        print("[PREDS] v4 normalized")
 
         # apply dimensionality reduction
-        v4_preds_red = predict_dimensionality_reduction(v4_preds)
+        v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
+        print("[PREDS] dimensionality feature reduced")
 
         # compute snapshot
         snaps = self.snapshots.predict(v4_preds_red)
+        print("[PREDS] Snapshot neurons computed")
 
         # compute expression neurons
         expr_neurons = self._tune_neural_field(snaps)
+        print("[PREDS] Expression neurons computed")
 
-        return expr_neurons
+        if get_snapshots:
+            return expr_neurons, snaps
+        else:
+            return expr_neurons
 
-    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True):
+    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True, get_snapshots=False):
         """
         fit function. We can select what part of the model we want to train.
 
@@ -167,36 +176,41 @@ class ExampleBase:
         # predict v4 responses
         print("[FIT] Compute v4")
         v4_preds = self.predict_v4(data[0])
+        print("shape v4_preds", np.shape(v4_preds))
 
         if fit_normalize:
-            print("[FIT] Fitting normalization")
-            self._fit_normalize(v4_preds)
+            print("[FIT] - Fitting normalization -")
+            v4_preds = self._fit_normalize(v4_preds)
         else:
             v4_preds /= self.norm
         print("[FIT] Data normalized")
 
         if fit_dim_red:
-            print("[FIT] Fitting dimensionality reduction")
+            print("[FIT] - Fitting dimensionality reduction -")
             v4_preds_red = fit_dimensionality_reduction(self, v4_preds)
         else:
             v4_preds_red = self.predict_dim_red(v4_preds)
         print("[FIT] Data reduced")
 
         if fit_snapshots:
-            print("[FIT] Fitting Snapshots neurons")
+            print("[FIT] - Fitting Snapshots neurons -")
             snaps = self.snapshots.fit(v4_preds_red)
         else:
             snaps = self.snapshots.predict(v4_preds_red)
         print("[FIT] Snapshot neurons computed")
         self.snapshots.get_response_statistics(snaps)
 
-        print("[FIT] Computing Neural Field")
+        print("[FIT] - Computing Neural Field -")
         expr_neurons = self._tune_neural_field(snaps)
         print("[FIT] Expression neurons computed")
 
         print("[FIT] Finished training Example Based model!")
         print()
-        return expr_neurons
+
+        if get_snapshots:
+            return expr_neurons, snaps
+        else:
+            return expr_neurons
 
     def _fit_normalize(self, data):
         """
@@ -215,21 +229,24 @@ class ExampleBase:
         :param data:
         :return:
         """
-        # transform to space of the snapshot neurons
-        # todo transform snapshot space!
+        # reshape snapshots to train/test format
+        # todo transform snapshot space! -> think how to do it better
+        data = self.snapshots.reshape_preds(data)
 
         # feed neural field
         nn_field = self.neural_field.predict_neural_field(data)
+
+        # compute expression neurons
         expression_neurons = self.neural_field.predict_output_neurons(nn_field)
 
         return expression_neurons
 
     # ------------------------------------------------------------------------------------------------------------------
     # plots
-    def plot_snapshots(self, title=None):
-        self.snapshots.plot_rbf_kernel(save_folder=os.path.join("models/saved", self.config['config_name']),
+    def plot_snapshots(self, snaps, title=None):
+        self.snapshots.plot_rbf_kernel(snaps, save_folder=os.path.join("models/saved", self.config['config_name']),
                                        title=title)
 
     def plot_neural_field(self, title=None):
         self.neural_field.plot_neural_field(save_folder=os.path.join("models/saved", self.config['config_name']),
-                                       title=title)
+                                            title=title)

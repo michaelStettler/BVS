@@ -36,18 +36,29 @@ class RBF:
         #             -np.linalg.norm(x_tmp, 2) ** 2 / 2 / self.sigma ** 2)  # norm(var,2)= 2-norm = matlab's norm
         #         self.cov_kernel[m, n] = x_tmp
 
-        # # reorder
-        # self.kernel = np.zeros((seq_length, self.n_category, seq_length, self.n_category))
-        # print("[RBF FIT] shape kernel", np.shape(self.kernel))
-        # for n in range(int(self.n_category)):
-        #     for m in range(int(self.n_category)):
-        #         mindex = np.arange(seq_length) + m * seq_length
-        #         pindex = np.arange(seq_length) + n * seq_length
-        #         mlen = len(mindex)  # not really needed
-        #         plen = len(pindex)  # not really needed
-        #         self.kernel[:, m, :, n] = self.cov_kernel[mindex[0]:mindex[mlen - 1] + 1, pindex[0]:pindex[plen - 1] + 1]
-
         return preds
+
+    def reshape_preds(self, preds):
+        """
+        this function sort the neural field into train/tet 4D array
+
+        -> think to modify this in the future
+        :param preds:
+        :return:
+        """
+        seq_length = self.config['batch_size']
+
+        # reorder
+        kernel = np.zeros((seq_length, self.n_category, seq_length, self.n_category))
+        for n in range(int(self.n_category)):
+            for m in range(int(self.n_category)):
+                mindex = np.arange(seq_length) + m * seq_length
+                pindex = np.arange(seq_length) + n * seq_length
+                mlen = len(mindex)  # not really needed
+                plen = len(pindex)  # not really needed
+                kernel[:, m, :, n] = preds[mindex[0]:mindex[mlen - 1] + 1, pindex[0]:pindex[plen - 1] + 1]
+
+        return kernel
 
     def get_response_statistics(self, data):
         sig_fire = data > self.firing_threshold
@@ -55,6 +66,9 @@ class RBF:
         print('[RBF FIT] RBF neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
 
     def predict(self, data):
+        data = np.transpose(data)
+
+        # compute RBF kernel according to the centers
         preds = self._compute_rbf_kernel(data)
 
         return preds
@@ -77,21 +91,22 @@ class RBF:
 
         return kernel
 
-    def plot_rbf_kernel(self, save_folder=None, title=None):
-        n_neuron = np.shape(self.cov_kernel)[0]
-        n_frames = np.shape(self.cov_kernel)[1]
+    def plot_rbf_kernel(self, kernel, save_folder=None, title=None):
+        print("shape kernel", np.shape(kernel))
+        n_neuron = np.shape(kernel)[0]
+        n_frames = np.shape(kernel)[1]
 
-        n_train_seq = np.shape(self.kernel)[1]
-        n_test_seq = np.shape(self.kernel)[3]
+        n_cat = self.config['n_category']
         seq_length = self.config['batch_size']
+        n_test_seq = n_frames // seq_length
 
-        plt.figure()
-        im = plt.imshow(self.cov_kernel)
+        plt.figure(figsize=(n_frames/100, n_neuron/100))
+        im = plt.imshow(kernel)
         plt.colorbar(im)
         for m in range(1, n_test_seq):
             # draw vertical line
             plt.plot([m*seq_length, m*seq_length], [0, n_neuron - 1], color='r')
-        for n in range(1, n_train_seq):
+        for n in range(1, n_cat):
             # draw hori line
             plt.plot([0, n_frames - 1], [n*seq_length, n*seq_length], color='r')
         plt.title('IT neuron (RBF) responses')

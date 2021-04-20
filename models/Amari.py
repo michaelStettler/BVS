@@ -284,7 +284,7 @@ class Amari:
                 plt.plot(np.transpose(VDA_norm[m, :, n]),
                          color=self.config['colors'][n],
                          linewidth=2)
-                plt.ylabel(self.config['condition'][m])
+                plt.ylabel(self.config['train_expression'][m])
                 plt.ylim(-0.05, 1.1)
 
         plt.xlabel('Frames')

@@ -15,7 +15,7 @@ run: python -m projects.dynamic_facial_expressions_ICANN.03_reproduce_ICANN_Exam
 config = load_config("EB_reproduce_ICANN_cat.json", path="configs/example_base")
 
 # load model
-model = ExampleBase(config, input_shape=tuple(config['input_shape']), load_EB_model=True)
+model = ExampleBase(config, input_shape=tuple(config['input_shape']), load_EB_model=False)
 
 # load data
 train_data = load_data(config)
@@ -30,17 +30,18 @@ print("shape segmentated data", np.shape(seg_data))
 train_data[0] = seg_data
 
 # fit model
-model.fit(train_data,
-          fit_normalize=False,
-          fit_dim_red=False,
-          fit_snapshots=False)
+it_resp, snaps = model.fit(train_data,
+          fit_normalize=True,
+          fit_dim_red=True,
+          fit_snapshots=True,
+          get_snapshots=True)
 model.save()
 
 # --------------------------------------------------------------------------------------------------------------------
 # plot training
 
 # plot training snapshots
-model.plot_snapshots(title="01_train")
+model.plot_snapshots(snaps, title="01_train")
 
 # plot neural field
 model.plot_neural_field(title="02_train")
