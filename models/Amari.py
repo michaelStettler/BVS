@@ -136,7 +136,8 @@ class Amari:
         for m in range(n_test_seq):  # number of testing condition
             for n in range(self.seq_length):
                 # S_tmp = np.squeeze(F_IT[n, m, :, :])  # -> 80x3
-                S_tmp = np.squeeze(data[:, m, n, :])  # marginalize field over the neuron axis
+                # S_tmp = np.squeeze(data[:, m, n, :])  # marginalize field over the neuron axis
+                S_tmp = np.squeeze(data[:, :, n, m])  # marginalize field over the neuron axis
                 for k in range(self.n_category):  # number of training condition
                     # reshape for convenience
                     S_tmp_k = np.reshape(S_tmp[:, k], (S_tmp[:, k].shape[0], 1))
@@ -180,11 +181,11 @@ class Amari:
 
             UFA[:, :, :, m] = UF
 
-        self.UFA = np.maximum(UFA, np.zeros(UFA.shape))
+        UFA = np.maximum(UFA, np.zeros(UFA.shape))
 
-        return self.UFA
+        return UFA
 
-    def predict_output_neurons(self, data):
+    def predict_dynamic(self, data):
         n_test_seq = np.shape(data)[-1]
 
         #    compute activity of output neurons (sum over individ. patterns)
@@ -197,8 +198,8 @@ class Amari:
                 SVDA[:, n, m] = SV_tmp
 
         # Prededine VD, VDA
-        VD = np.zeros((n_test_seq, self.seq_length))  # Double-check this later
-        self.VDA = np.zeros((n_test_seq, self.seq_length, self.n_category))  # Double-check later
+        VD = np.zeros((n_test_seq, self.seq_length))
+        dyn_resp = np.zeros((n_test_seq, self.seq_length, self.n_category))
 
         # compute expression neuron dynamics with Euler approximation
         for m in range(self.n_category):
@@ -208,9 +209,9 @@ class Amari:
                 VD_new = (self.tau_v - 1) * VD_tmp + np.squeeze(SVDA[:, n, m])
                 VD_new = VD_new / self.tau
                 VD[:, n] = VD_new
-            self.VDA[:, :, m] = VD
+            dyn_resp[:, :, m] = VD
 
-        return self.VDA
+        return dyn_resp
 
     def plot_integral(self, integral, save_name):
         max_integral = np.amax(integral)
@@ -220,43 +221,61 @@ class Amari:
         plt.plot([160, 160], [0, max_integral])
         plt.savefig(save_name)
 
-    def plot_neural_field(self, save_folder=None, title=None):
-        n_test_seq = self.UFA.shape[-1]
-
+    def plot_kernels(self, save_folder=None, title=None):
         # plot interaction kernel
         plt.figure()
         plt.plot(self.wx[0, :])
         plt.title('Interaction kernel')
-        if save_folder is not None:
-            plt.savefig(os.path.join(save_folder, 'Interaction_kernel.png'))
-        else:
-            plt.savefig('Interaction_kernel.png')
 
+        fig_title = 'Interaction_kernel.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
+        if save_folder is not None:
+            plt.savefig(os.path.join(save_folder, fig_title))
+        else:
+            plt.savefig(fig_title)
+
+        # --------------------------------------------------------------------------
         # plot sf_integral
         sf_integral = np.reshape(np.array(self.sf_integral), -1)
+
+        fig_title = 'sf_integral.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
         if save_folder is not None:
-            save_name = os.path.join(save_folder, 'sf_integral.png')
+            save_name = os.path.join(save_folder, fig_title)
         else:
-            save_name = 'sf_integral.png'
+            save_name = fig_title
         self.plot_integral(sf_integral, save_name=save_name)
 
+        # --------------------------------------------------------------------------
         # plot sf_integral_norm
         sf_integral_norm = np.reshape(np.array(self.sf_integral_norm), -1)
+
+        fig_title = 'sf_integral_norm.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
         if save_folder is not None:
-            save_name = os.path.join(save_folder, 'sf_integral_norm.png')
+            save_name = os.path.join(save_folder, fig_title)
         else:
-            save_name = 'sf_integral_norm.png'
+            save_name = fig_title
         self.plot_integral(sf_integral_norm, save_name=save_name)
 
+    def plot_neural_field(self, nn_field, save_folder=None, title=None):
+        n_test_seq = nn_field.shape[-1]
+
         # Section added for plotting F_DFNF_UNF
-        print("UFA size", self.UFA.shape)
+        print("nn_field size", nn_field.shape)
         UNFc = np.zeros((self.seq_length * self.n_category, self.seq_length * n_test_seq))
         for m in range(n_test_seq):
             for n in range(self.n_category):
                 # CAREFUL UFA AXES ARE SWAP WITH RBF!!!!!!!!!!!!!!!!!!!!
                 m_start = m * self.seq_length
                 n_start = n * self.seq_length
-                UNFc[n_start:n_start + self.seq_length, m_start:m_start + self.seq_length] = np.squeeze(self.UFA[:, n, :, m])
+                UNFc[n_start:n_start + self.seq_length, m_start:m_start + self.seq_length] = np.squeeze(nn_field[:, n, :, m])
 
         plt.figure()
         im = plt.imshow(np.multiply(UNFc, ((UNFc > 0).astype(int))))
@@ -265,31 +284,42 @@ class Amari:
         plt.xlabel('stimulus frame')
         plt.ylabel('Neuron #')
         print('[testing] neural field response')
-        if save_folder is not None:
-            plt.savefig(os.path.join(save_folder, 'neural_field_response_test.png'))
-        else:
-            plt.savefig('neural_field_response_test.png')
 
+        fig_title = 'neural_field_response_test.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
+        if save_folder is not None:
+            plt.savefig(os.path.join(save_folder, fig_title))
+        else:
+            plt.savefig(fig_title)
+
+    def plot_dynamic(self, dynamic_resp, save_folder=None, title=None):
+        print("shape dynamic_resp", np.shape(dynamic_resp))
+        n_test_seq = np.shape(dynamic_resp)[0]
         # plot expression responses
-        VDA_max = np.amax(self.VDA)
-        print("VDA Max", VDA_max)
-        VDA_norm = self.VDA / VDA_max
+        dyn_max = np.amax(dynamic_resp)
+        print("dynamic_resp Max", dyn_max)
+        dyn_norm = dynamic_resp / dyn_max
         # VDA_norm = VDA / 10.221712329980704  # for reverse
         plt.figure()
         plt.title('Expression Neuron Responses')
-        print("shape VDA", np.shape(self.VDA))
         for m in np.arange(n_test_seq):  # n_condition
             plt.subplot(n_test_seq, 1, m + 1)
             for n in range(self.n_category):
-                plt.plot(np.transpose(VDA_norm[m, :, n]),
+                plt.plot(np.transpose(dyn_norm[m, :, n]),
                          color=self.config['colors'][n],
                          linewidth=2)
-                plt.ylabel(self.config['train_expression'][m])
+                plt.ylabel(self.config['train_expression'][n])
                 plt.ylim(-0.05, 1.1)
 
         plt.xlabel('Frames')
 
+        fig_title = 'Expr_Neurons.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
         if save_folder is not None:
-            plt.savefig(os.path.join(save_folder, 'Expr_Neurons.png'))
+            plt.savefig(os.path.join(save_folder, fig_title))
         else:
-            plt.savefig('Expr_Neurons.png')
+            plt.savefig(fig_title)

@@ -42,16 +42,18 @@ class RBF:
         """
         this function sort the neural field into train/tet 4D array
 
-        -> think to modify this in the future
+        -> think to modify this in the future?
         :param preds:
         :return:
         """
         seq_length = self.config['batch_size']
+        n_sequence = np.shape(preds)[1] // seq_length
+        print("n_sequence", n_sequence)
 
         # reorder
-        kernel = np.zeros((seq_length, self.n_category, seq_length, self.n_category))
-        for n in range(int(self.n_category)):
-            for m in range(int(self.n_category)):
+        kernel = np.zeros((seq_length, self.n_category, seq_length, n_sequence))
+        for n in range(n_sequence):
+            for m in range(self.n_category):
                 mindex = np.arange(seq_length) + m * seq_length
                 pindex = np.arange(seq_length) + n * seq_length
                 mlen = len(mindex)  # not really needed

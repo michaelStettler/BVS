@@ -119,13 +119,13 @@ class ExampleBase:
         """
 
         # prediction of v4 layer
-        preds = self.v4.predict(data)
+        preds = self.v4.predict(data, verbose=1)
         if flatten:
             preds = np.reshape(preds, (np.shape(preds)[0], -1))
 
         return preds
 
-    def predict(self, data, get_snapshots=False):
+    def predict(self, data, get_snapshots=False, get_nn_field=False):
         """
         Predict expression neurons of the model
 
@@ -149,15 +149,25 @@ class ExampleBase:
         print("[PREDS] Snapshot neurons computed")
 
         # compute expression neurons
-        expr_neurons = self._tune_neural_field(snaps)
+        expr_neurons = self._tune_neural_field(snaps, get_nn_field=get_nn_field)
+        if get_nn_field:
+            nn_field = expr_neurons[1]
+            expr_neurons = expr_neurons[0]
         print("[PREDS] Expression neurons computed")
 
         if get_snapshots:
-            return expr_neurons, snaps
+            if get_nn_field:
+                return expr_neurons, snaps, nn_field
+            else:
+                return expr_neurons, snaps
         else:
-            return expr_neurons
+            if get_nn_field:
+                return expr_neurons, nn_field
+            else:
+                return expr_neurons
 
-    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True, get_snapshots=False):
+    def fit(self, data, batch_size=32, fit_normalize=True, fit_dim_red=True, fit_snapshots=True, get_snapshots=False,
+            get_nn_field=False):
         """
         fit function. We can select what part of the model we want to train.
 
@@ -201,16 +211,25 @@ class ExampleBase:
         self.snapshots.get_response_statistics(snaps)
 
         print("[FIT] - Computing Neural Field -")
-        expr_neurons = self._tune_neural_field(snaps)
+        expr_neurons = self._tune_neural_field(snaps, get_nn_field=get_nn_field)
+        if get_nn_field:
+            nn_field = expr_neurons[1]
+            expr_neurons = expr_neurons[0]
         print("[FIT] Expression neurons computed")
 
         print("[FIT] Finished training Example Based model!")
         print()
 
         if get_snapshots:
-            return expr_neurons, snaps
+            if get_nn_field:
+                return expr_neurons, snaps, nn_field
+            else:
+                return expr_neurons, snaps
         else:
-            return expr_neurons
+            if get_nn_field:
+                return expr_neurons, nn_field
+            else:
+                return expr_neurons
 
     def _fit_normalize(self, data):
         """
@@ -223,23 +242,28 @@ class ExampleBase:
 
         return data / self.norm
 
-    def _tune_neural_field(self, data):
+    def _tune_neural_field(self, data, get_nn_field=False):
         """
 
         :param data:
         :return:
         """
+        print("shape data tune neural field", np.shape(data))
         # reshape snapshots to train/test format
         # todo transform snapshot space! -> think how to do it better
         data = self.snapshots.reshape_preds(data)
+        print("reshape data tune neural field", np.shape(data))
 
         # feed neural field
         nn_field = self.neural_field.predict_neural_field(data)
 
         # compute expression neurons
-        expression_neurons = self.neural_field.predict_output_neurons(nn_field)
+        expression_neurons = self.neural_field.predict_dynamic(nn_field)
 
-        return expression_neurons
+        if get_nn_field:
+            return expression_neurons, nn_field
+        else:
+            return expression_neurons
 
     # ------------------------------------------------------------------------------------------------------------------
     # plots
@@ -247,6 +271,16 @@ class ExampleBase:
         self.snapshots.plot_rbf_kernel(snaps, save_folder=os.path.join("models/saved", self.config['config_name']),
                                        title=title)
 
-    def plot_neural_field(self, title=None):
-        self.neural_field.plot_neural_field(save_folder=os.path.join("models/saved", self.config['config_name']),
+    def plot_nn_kernels(self, title=None):
+        self.neural_field.plot_kernels(save_folder=os.path.join("models/saved", self.config['config_name']),
+                                       title=title)
+
+    def plot_neural_field(self, nn_field, title=None):
+        self.neural_field.plot_neural_field(nn_field,
+                                            save_folder=os.path.join("models/saved", self.config['config_name']),
                                             title=title)
+
+    def plot_expression_neurons(self, expr_neurons, title=None):
+        self.neural_field.plot_dynamic(expr_neurons,
+                                       save_folder=os.path.join("models/saved", self.config['config_name']),
+                                       title=title)

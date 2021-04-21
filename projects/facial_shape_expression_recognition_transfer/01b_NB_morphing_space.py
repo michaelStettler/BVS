@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from datasets_utils.tranform_morph_space_list2space import transform_morph_space_list2space
+from datasets_utils.morphing_space import transform_morph_space_list2space
 from utils.load_config import load_config
 from utils.load_data import load_data
 from models.NormBase import NormBase
