@@ -12,7 +12,8 @@ run: python -m projects.dynamic_facial_expressions_ICANN.03_reproduce_ICANN_Exam
 """
 
 # load config
-config = load_config("EB_reproduce_ICANN_cat.json", path="configs/example_base")
+# config = load_config("EB_reproduce_ICANN_cat.json", path="configs/example_base")
+config = load_config("EB_reproduce_ICANN_expressivity.json", path="configs/example_base")
 
 # load model
 model = ExampleBase(config, input_shape=tuple(config['input_shape']), load_EB_model=False)
@@ -30,11 +31,12 @@ print("shape segmentated data", np.shape(seg_data))
 train_data[0] = seg_data
 
 # fit model
-it_resp, snaps = model.fit(train_data,
-          fit_normalize=True,
-          fit_dim_red=True,
-          fit_snapshots=True,
-          get_snapshots=True)
+expr_resp, snaps, nn_field = model.fit(train_data,
+                                       fit_normalize=True,
+                                       fit_dim_red=True,
+                                       fit_snapshots=True,
+                                       get_snapshots=True,
+                                       get_nn_field=True)
 model.save()
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -43,5 +45,11 @@ model.save()
 # plot training snapshots
 model.plot_snapshots(snaps, title="01_train")
 
+# plot neural field kernels
+model.plot_nn_kernels(title="02_train")
+
 # plot neural field
-model.plot_neural_field(title="02_train")
+model.plot_neural_field(nn_field, title="03_train")
+
+# plot expression neurons
+model.plot_expression_neurons(expr_resp, title="04_train")

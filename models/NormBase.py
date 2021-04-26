@@ -8,6 +8,7 @@ from utils.feature_reduction import set_feature_selection
 from utils.feature_reduction import save_feature_selection
 from utils.feature_reduction import load_feature_selection
 from utils.feature_reduction import fit_dimensionality_reduction
+from utils.feature_reduction import predict_dimensionality_reduction
 from utils.CSV_data_generator import CSVDataGen
 from utils.calculate_position import calculate_position
 
@@ -252,17 +253,17 @@ class NormBase:
             raise KeyError(f'invalid value self.dim_red={self.dim_red}')
         return preds
 
-    def _update_ref_vector(self, data):
+    def _update_ref_vector(self, ref):
         """
         updates reference vector wrt to new data
-        :param data: input of self.ref_cat
+        :param ref:  input reference features
         :return:
         """
-        n_ref = np.shape(data)[0]
+        # control if there's some reference features' input
+        n_ref = np.shape(ref)[0]
         if n_ref > 0:
-            preds = self.predict(data)
             # update ref_vector m
-            self.r = (self.ref_cumul * self.r + n_ref * np.mean(preds, axis=0)) / (self.ref_cumul + n_ref)
+            self.r = (self.ref_cumul * self.r + n_ref * np.mean(ref, axis=0)) / (self.ref_cumul + n_ref)
             self.ref_cumul += n_ref
 
     def _get_reference_pred(self, data):
@@ -387,24 +388,43 @@ class NormBase:
         :param fit_tun: whether to fit tuning vector
         :return:
         """
-        if fit_dim_red:
-            self._fit_dim_red(data)
-        if fit_ref:
-            self._fit_reference(data, batch_size)
-        if fit_tun:
-            self._fit_tuning(data, batch_size)
+        # todo build pathway
 
-    def _fit_dim_red(self, data):
-        """
-        fit dimensionality reduction selected by config
-        :param data: input data
-        :return:
-        """
-        fit_dimensionality_reduction(self, data)
+        # predict v4 responses
+        print("[FIT] Compute v4")
+        v4_preds = self.predict_v4(data[0])
+        print("[FIT] Shape v4_preds", np.shape(v4_preds))
 
         # set preds_saved to true so the predictions are saved only once
         if self.save_preds and self.dim_red is not None:
             self.preds_saved = True
+
+        if fit_dim_red:
+            print("[FIT] - Fitting dimensionality reduction -")
+            v4_preds_red = fit_dimensionality_reduction(self, v4_preds)
+        else:
+            v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
+        print("[FIT] Data reduced")
+
+        if fit_ref:
+            print("[FIT] - Fitting Reference Pattern -")
+            # self._fit_reference(v4_preds_red, batch_size)
+            ref = self._fit_reference(v4_preds_red, batch_size)
+        else:
+            ref = self.r
+        # 
+        # if fit_tun:
+        #     print("[FIT] - Fitting Tuning Vector -")
+        #     # self._fit_tuning(data, batch_size)
+        #     tuning_vector = self._fit_tuning(v4_preds_red, ref, batch_size)
+        # else:
+        #     print("TODO load tuning")
+        #
+        # # compute projections
+        # print("[FIT] todo compute it response")
+        #
+        # # compute differentiator if dynamic is set
+        # print("[FIT] compute differentiaor")
 
     def _fit_reference(self, data, batch_size):
         """
@@ -413,7 +433,7 @@ class NormBase:
         :param batch_size:
         :return:
         """
-        print("[FIT] Learning reference pose")
+        print("[FIT] Learning reference pattern")
         # reset reference
         self.r = np.zeros(self.r.shape)
         self.ref_cumul = 0
@@ -442,9 +462,7 @@ class NormBase:
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
 
-        # set preds_saved to true so the predictions are saved only once
-        if self.save_preds:
-            self.preds_saved = True
+        return self.r
 
     def _fit_tuning(self, data, batch_size):
         """
@@ -475,10 +493,6 @@ class NormBase:
                 self._update_dir_tuning(data_batch[0], data_batch[1])
         else:
             raise ValueError("Type {} od data is not recognize!".format(type(data)))
-
-        # set preds_saved to true so the predictions are saved only once
-        if self.save_preds:
-            self.preds_saved = True
 
     ### EVALUATION / PREDICTION
 

@@ -25,13 +25,14 @@ data_train = load_data(config)
 # fit and save model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
 norm_base.fit(data_train)
-norm_base.save_NB_model(config)
+norm_base.save()
 
 #load model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
 data_test = load_data(config, train=False, sort_by=['image'])
 
 # evaluate model
+norm_base.predict(data_test, get_face_neurons=True, get_differentiator=True)
 accuracy1, it_resp1, labels1 = norm_base.evaluate(data_train)
 accuracy2, it_resp2, labels2 = norm_base.evaluate(data_test)
 

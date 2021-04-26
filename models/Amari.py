@@ -268,7 +268,6 @@ class Amari:
         n_test_seq = nn_field.shape[-1]
 
         # Section added for plotting F_DFNF_UNF
-        print("nn_field size", nn_field.shape)
         UNFc = np.zeros((self.seq_length * self.n_category, self.seq_length * n_test_seq))
         for m in range(n_test_seq):
             for n in range(self.n_category):

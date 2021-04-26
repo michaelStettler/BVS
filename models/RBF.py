@@ -102,7 +102,12 @@ class RBF:
         seq_length = self.config['batch_size']
         n_test_seq = n_frames // seq_length
 
-        plt.figure(figsize=(n_frames/100, n_neuron/100))
+        # set fig size
+        fig_height = np.amax([n_neuron/100, 6.4])
+        fig_width = np.amax([n_frames/100, 4.8])
+
+        # create figure
+        plt.figure(figsize=(fig_height, fig_width))
         im = plt.imshow(kernel)
         plt.colorbar(im)
         for m in range(1, n_test_seq):

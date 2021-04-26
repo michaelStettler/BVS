@@ -186,7 +186,7 @@ class ExampleBase:
         # predict v4 responses
         print("[FIT] Compute v4")
         v4_preds = self.predict_v4(data[0])
-        print("shape v4_preds", np.shape(v4_preds))
+        print("[FIT] Shape v4_preds", np.shape(v4_preds))
 
         if fit_normalize:
             print("[FIT] - Fitting normalization -")
@@ -199,7 +199,7 @@ class ExampleBase:
             print("[FIT] - Fitting dimensionality reduction -")
             v4_preds_red = fit_dimensionality_reduction(self, v4_preds)
         else:
-            v4_preds_red = self.predict_dim_red(v4_preds)
+            v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
         print("[FIT] Data reduced")
 
         if fit_snapshots:
