@@ -40,7 +40,7 @@ class RBF:
 
     def reshape_preds(self, preds):
         """
-        this function sort the neural field into train/tet 4D array
+        this function sort the neural field into train/test 4D array
 
         -> think to modify this in the future?
         :param preds:
@@ -48,7 +48,8 @@ class RBF:
         """
         seq_length = self.config['batch_size']
         n_sequence = np.shape(preds)[1] // seq_length
-        print("n_sequence", n_sequence)
+        print("[RESHAPE] shape preds", np.shape(preds))
+        print("[RESHAPE] n_sequence", n_sequence)
 
         # reorder
         kernel = np.zeros((seq_length, self.n_category, seq_length, n_sequence))

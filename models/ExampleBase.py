@@ -248,11 +248,9 @@ class ExampleBase:
         :param data:
         :return:
         """
-        print("shape data tune neural field", np.shape(data))
         # reshape snapshots to train/test format
         # todo transform snapshot space! -> think how to do it better
         data = self.snapshots.reshape_preds(data)
-        print("reshape data tune neural field", np.shape(data))
 
         # feed neural field
         nn_field = self.neural_field.predict_neural_field(data)
@@ -280,7 +278,8 @@ class ExampleBase:
                                             save_folder=os.path.join("models/saved", self.config['config_name']),
                                             title=title)
 
-    def plot_expression_neurons(self, expr_neurons, title=None):
+    def plot_expression_neurons(self, expr_neurons, title=None, val=False):
         self.neural_field.plot_dynamic(expr_neurons,
                                        save_folder=os.path.join("models/saved", self.config['config_name']),
-                                       title=title)
+                                       title=title,
+                                       val=val)

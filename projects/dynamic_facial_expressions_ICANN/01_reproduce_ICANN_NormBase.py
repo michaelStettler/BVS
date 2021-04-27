@@ -5,6 +5,8 @@ This script calculates the response of the neurons like in the ICANN paper (Fig3
 Use 02_reproduce_ICANN_NormBase_plots.py to plot the saved results.
 2021/01/18
 only the function "expressivity-direction" is used by now
+
+run: python -m projects.dynamic_facial_expressions_ICANN.01_reproduce_ICANN_NormBase
 """
 
 import numpy as np
@@ -17,22 +19,25 @@ from models.NormBase import NormBase
 # t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
 # t0006: 2-norm-monkey_morph
 
-config = load_config("norm_base_reproduce_ICANN_t0015.json", path="configs/norm_base_config")
+# config = load_config("norm_base_reproduce_ICANN_t0015.json", path="configs/norm_base_config")
+config = load_config("norm_base_reproduce_ICANN_m0002.json", path="configs/norm_base_config")
 save_name = config["sub_folder"]
 
 data_train = load_data(config)
 
 # fit and save model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
-norm_base.fit(data_train)
+face_neurons = norm_base.fit(data_train)
 norm_base.save()
 
 #load model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
-data_test = load_data(config, train=False, sort_by=['image'])
+data_test = load_data(config, train=False)
 
 # evaluate model
-norm_base.predict(data_test, get_face_neurons=True, get_differentiator=True)
+expr_neurons, face_neurons, differentiators = norm_base.predict(data_test,
+                                                                get_it_neurons=True,
+                                                                get_differentiator=True)  # needs to set get_it_neurons to True in order to get the face neurons since the model is dynamic
 accuracy1, it_resp1, labels1 = norm_base.evaluate(data_train)
 accuracy2, it_resp2, labels2 = norm_base.evaluate(data_test)
 

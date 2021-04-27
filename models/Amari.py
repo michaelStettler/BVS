@@ -137,6 +137,7 @@ class Amari:
             for n in range(self.seq_length):
                 # S_tmp = np.squeeze(F_IT[n, m, :, :])  # -> 80x3
                 # S_tmp = np.squeeze(data[:, m, n, :])  # marginalize field over the neuron axis
+                # todo check normalization!
                 S_tmp = np.squeeze(data[:, :, n, m])  # marginalize field over the neuron axis
                 for k in range(self.n_category):  # number of training condition
                     # reshape for convenience
@@ -293,14 +294,15 @@ class Amari:
         else:
             plt.savefig(fig_title)
 
-    def plot_dynamic(self, dynamic_resp, save_folder=None, title=None):
-        print("shape dynamic_resp", np.shape(dynamic_resp))
+    def plot_dynamic(self, dynamic_resp, save_folder=None, title=None, val=False):
         n_test_seq = np.shape(dynamic_resp)[0]
-        # plot expression responses
+
+        # normalize responses for plotting
         dyn_max = np.amax(dynamic_resp)
-        print("dynamic_resp Max", dyn_max)
         dyn_norm = dynamic_resp / dyn_max
         # VDA_norm = VDA / 10.221712329980704  # for reverse
+
+        # plot expression responses
         plt.figure()
         plt.title('Expression Neuron Responses')
         for m in np.arange(n_test_seq):  # n_condition
@@ -309,7 +311,11 @@ class Amari:
                 plt.plot(np.transpose(dyn_norm[m, :, n]),
                          color=self.config['colors'][n],
                          linewidth=2)
-                plt.ylabel(self.config['train_expression'][n])
+                if val:
+                    plt.ylabel(self.config['val_expression'][n])
+                else:
+                    plt.ylabel(self.config['train_expression'][n])
+
                 plt.ylim(-0.05, 1.1)
 
         plt.xlabel('Frames')

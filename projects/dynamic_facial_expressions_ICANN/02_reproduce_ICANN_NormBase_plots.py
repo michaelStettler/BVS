@@ -155,10 +155,10 @@ plt.savefig(os.path.join(save_folder, "plot_ICANN_Fig4A.png"))
 
 # plot activity in function of expressivity level
 fig = plt.figure(figsize=(15,10))
-plt.subplots(n_condition,1)
+plt.subplots(n_condition, 1)
 plt.suptitle("Expression Neuron Responses")
 for i in range(n_condition):  # n_condition (anger fear lip_smack)
-    plt.subplot(n_condition,1,i+1)
+    plt.subplot(n_condition, 1, i+1)
     maximums = np.amax(sorted_it_resp[i, :, :, i+1], axis=1)
     maximums = np.sum(sorted_it_resp[i, :, :, i+1], axis=1)
     max_normed = maximums / np.amax(maximums)

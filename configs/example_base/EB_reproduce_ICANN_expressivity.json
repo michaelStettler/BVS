@@ -2,8 +2,8 @@
   "config_name": "EB_reproduce_ICANN_expressivity_m0001",
   "train_data": "monkey_test",
   "n_category": 3,
-  "csv_train": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_expressivity_full.csv",
-  "csv_val": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_expressivity_full.csv",
+  "csv_train": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_train.csv",
+  "csv_val": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_full.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels",
   "extraction_model": "VGG19",
   "input_shape": [224, 224, 3],
@@ -26,12 +26,14 @@
   "Amari_nker_s_amp": 25,
   "Amari_nker_s_alpha": 40,
   "Amari_nker_s_beta": 0.4,
-  "concat_seg_start": [160, 1226, 27, 515, 755, 615, 1332, 375, 260, 1100, 980, 870],
-  "train_expression": ["Threat", "Threat", "Threat","Threat", "Fear", "Fear", "Fear", "Fear", "LipSmacking", "LipSmacking", "LipSmacking", "LipSmacking"],
+  "concat_seg_start": [270, 15, 155],
+  "concat_val_seg_start": [880, 626, 147, 1355, 395, 15, 1212, 495, 980, 740, 260, 1110],
+  "train_expression": ["Threat", "Fear", "LipSmacking"],
+  "val_expression": ["Threat", "Threat", "Threat", "Threat", "Fear", "Fear", "Fear", "Fear", "LipSmacking", "LipSmacking", "LipSmacking", "LipSmacking"],
   "colors": [[0.773, 0.224, 0.196], [0.937, 0.522, 0.212], [0.2235, 0.4667, 0.686]],
   "remove_neutral_frames": 1,
-  "neutral_frames_idx": [[0, 7], [74, 80], [80, 87], [154, 160], [160, 167], [234, 240],[240, 247], [314, 320],
-    [320, 330], [388, 400], [400, 410], [468, 480], [480, 490], [556, 560], [560, 570], [638, 640],
-    [640, 642], [717, 720], [720, 722], [797, 800], [800, 802], [877, 880], [880, 882],[957, 960]]
+  "train_neutral_frames_idx": [],
+  "val_neutral_frames_idx": [[20, 55], [15,60], [10, 60], [5, 70], [25, 80], [25, 80], [25, 80], [25, 80],
+    [20, 70], [15,70], [10, 70], [0, 80]]
 }
 

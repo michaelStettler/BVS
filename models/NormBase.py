@@ -111,8 +111,10 @@ class NormBase:
         print()
 
     def _set_dynamic(self, config):
+        self.is_dynamic = False
         if config.get('use_dynamic') is not None:
             if config['use_dynamic']:
+                self.is_dynamic = True
                 print("[INIT] Model Dynamic Set")
                 # set parameters for differentiators and decision networks
                 self.tau_u = config['tau_u']  # time constant for pos and negative differentiators
@@ -120,6 +122,7 @@ class NormBase:
                 self.tau_y = config['tau_y']  # time constant for integral differentiators
                 self.tau_d = config['tau_d']  # time constant for competitive network
                 self.m_inhi_w = config['m_inhi_w']  # weights of mutual inhibition
+                print("[INIT] Model fit and predict will return first the dynamic decision neurons")
 
     ### SAVE AND LOAD ###
     def save_NB_model(self, config=None):
@@ -207,7 +210,7 @@ class NormBase:
         """
 
         # prediction of v4 layer
-        preds = self.v4.predict(data)
+        preds = self.v4.predict(data, verbose=1)
         if flatten:
             preds = np.reshape(preds, (np.shape(preds)[0], -1))
 
@@ -224,34 +227,48 @@ class NormBase:
 
         return preds
 
-    def predict(self, data):
+    def predict(self, data, get_it_resp=False, get_differentiator=False):
         """
-        returns prediction of pipeline before norm-base
+        predict expression neurons of Norm base
         pipeline consists of preprocessing, cnn, and dimensionality reduction
         :param data: batch of data
         :return: prediction
         """
-        if self.dim_red is None:
-            # get prediction after cnn, before dimensionality reduction
-            preds = self.predict_v4(data)
-        elif self.dim_red == 'PCA':
-            # projection by PCA
-            preds = self.pca.transform(self.predict_v4(data))
-        elif self.dim_red == 'position':
-            # receive unflattened prediction
-            # receive xy positions and flatten
-            # output shape: (batch_size, n_feature_maps*2)
-            preds = np.concatenate(calculate_position(
-                    self.predict_v4(data, flatten=False),
-                    mode=self.position_method, return_mode="xy float"),
-                axis=1)
-        elif self.dim_red == 'semantic':
-            preds = self.predict_v4(data, flatten=False)
-            self.semantic_feat_red.transform(preds)
-            preds = np.ones(self.n_features)
+        print("[PREDICT] Compute v4")
+        v4_preds = self.predict_v4(data[0])
+
+        print("[PREDICT] - Fitting dimensionality reduction -")
+        v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
+
+        print("[FIT] compute IT responses")
+        it_resp = self._get_it_resp(v4_preds_red)
+
+        # if self.dim_red is None:
+        #     # get prediction after cnn, before dimensionality reduction
+        #     preds = self.predict_v4(data)
+        # elif self.dim_red == 'PCA':
+        #     # projection by PCA
+        #     preds = self.pca.transform(self.predict_v4(data))
+        # elif self.dim_red == 'position':
+        #     # receive unflattened prediction
+        #     # receive xy positions and flatten
+        #     # output shape: (batch_size, n_feature_maps*2)
+        #     preds = np.concatenate(calculate_position(
+        #             self.predict_v4(data, flatten=False),
+        #             mode=self.position_method, return_mode="xy float"),
+        #         axis=1)
+        # elif self.dim_red == 'semantic':
+        #     preds = self.predict_v4(data, flatten=False)
+        #     self.semantic_feat_red.transform(preds)
+        #     preds = np.ones(self.n_features)
+        # else:
+        #     raise KeyError(f'invalid value self.dim_red={self.dim_red}')
+
+        if self.is_dynamic:
+            # return expr_neurons  # todo set differentiator
+            return it_resp
         else:
-            raise KeyError(f'invalid value self.dim_red={self.dim_red}')
-        return preds
+            return it_resp
 
     def _update_ref_vector(self, ref):
         """
@@ -266,14 +283,13 @@ class NormBase:
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(ref, axis=0)) / (self.ref_cumul + n_ref)
             self.ref_cumul += n_ref
 
-    def _get_reference_pred(self, data):
+    def _get_reference_pred(self, preds):
         """
         returns difference vector between prediction and reference vector
         :param data: batch data
         :return: difference vector
         """
-        len_batch = len(data)  # take care of last epoch if size is not equal as the batch_size
-        preds = self.predict(data)
+        len_batch = len(preds)  # take care of last epoch if size is not equal as the batch_size
         # compute batch diff
         return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
 
@@ -306,7 +322,7 @@ class NormBase:
                     # update tuning vector n
                     self.t[i] = self.t_mean[i] / np.linalg.norm(self.t_mean[i])
 
-    def _get_it_resp(self, data):
+    def _get_it_resp(self, preds):
         """
         computes the activity of norm-based neurons
         for different tuning functions selected in config
@@ -314,7 +330,7 @@ class NormBase:
         :return: activity for each category
         """
         # compute batch diff
-        batch_diff = self._get_reference_pred(data)
+        batch_diff = self._get_reference_pred(preds)
 
         # compute norm-reference neurons
         #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
@@ -377,7 +393,7 @@ class NormBase:
     # ## FIT FUNCTIONS ###
     # -----------------------------------------------------------------------------------------------------------------
     # -----------------------------------------------------------------------------------------------------------------
-    def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True):
+    def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True, get_it_resp=False, get_differentiator=False):
         """
         fit model on data
 
@@ -386,9 +402,10 @@ class NormBase:
         :param fit_dim_red: whether to fit dimensionality reduction
         :param fit_ref: whether to fit reference vector
         :param fit_tun: whether to fit tuning vector
+        :param get_it_resp: allows to get the NormBase it neurons if model is dynamic, otherwise it is the normal output
+        :param get_differentiator: allows to get the intermediate differentiators output
         :return:
         """
-        # todo build pathway
 
         # predict v4 responses
         print("[FIT] Compute v4")
@@ -409,22 +426,36 @@ class NormBase:
         if fit_ref:
             print("[FIT] - Fitting Reference Pattern -")
             # self._fit_reference(v4_preds_red, batch_size)
-            ref = self._fit_reference(v4_preds_red, batch_size)
+            self._fit_reference([v4_preds_red, data[1]], batch_size)
+            print("[FIT] Reference pattern learned")
+
+        if fit_tun:
+            print("[FIT] - Fitting Tuning Vector -")
+            # self._fit_tuning(data, batch_size)
+            self._fit_tuning([v4_preds_red, data[1]], batch_size)
+            print("[FIT] Tuning pattern learned")
+
+        # compute projections
+        print("[FIT] compute IT responses")
+        it_resp = self._get_it_resp(v4_preds_red)
+
+        # compute differentiator if dynamic is set
+        if self.is_dynamic:
+            print("[FIT] compute dynamic")
+            if get_differentiator:
+                ds_neurons, differentiators = self._get_decisions_neurons(it_resp,
+                                                                          self.config['seq_length'],
+                                                                          get_differentiator=get_differentiator)
+            else:
+                ds_neurons = self._get_decisions_neurons(it_resp, self.config['seq_length'])
+
+        if self.is_dynamic:
+            if get_it_resp:
+                return ds_neurons, it_resp
+            else:
+                return ds_neurons
         else:
-            ref = self.r
-        # 
-        # if fit_tun:
-        #     print("[FIT] - Fitting Tuning Vector -")
-        #     # self._fit_tuning(data, batch_size)
-        #     tuning_vector = self._fit_tuning(v4_preds_red, ref, batch_size)
-        # else:
-        #     print("TODO load tuning")
-        #
-        # # compute projections
-        # print("[FIT] todo compute it response")
-        #
-        # # compute differentiator if dynamic is set
-        # print("[FIT] compute differentiaor")
+            return it_resp
 
     def _fit_reference(self, data, batch_size):
         """
@@ -449,7 +480,6 @@ class NormBase:
                 ref_data = batch_data[data[1][batch_idx] == self.ref_cat]
                 # update reference vector
                 self._update_ref_vector(ref_data)
-
         elif isinstance(data, CSVDataGen):
             # train using a generator
             data.reset()
@@ -460,7 +490,7 @@ class NormBase:
 
                 self._update_ref_vector(ref_data)
         else:
-            raise ValueError("Type {} od data is not recognize!".format(type(data)))
+            raise ValueError("Type {} of data is not recognize!".format(type(data)))
 
         return self.r
 
@@ -475,7 +505,8 @@ class NormBase:
         self.t = np.zeros(self.t.shape)
         self.t_mean = np.zeros(self.t_mean.shape)
         self.t_cumul = np.zeros(self.t_cumul.shape)
-        if isinstance(data, list):
+
+        if isinstance(data, list) or type(data).__module__ == np.__name__:
             num_data = data[0].shape[0]
             indices = np.arange(num_data)
             for b in tqdm(range(0, num_data, batch_size)):
@@ -492,7 +523,7 @@ class NormBase:
             for data_batch in tqdm(data.generate()):
                 self._update_dir_tuning(data_batch[0], data_batch[1])
         else:
-            raise ValueError("Type {} od data is not recognize!".format(type(data)))
+            raise ValueError("Type {} of data is not recognize!".format(type(data)))
 
     ### EVALUATION / PREDICTION
 
@@ -651,7 +682,27 @@ class NormBase:
             lines[:,i] = np.sqrt(lines[:,i])
         return x, lines
 
-    def compute_dynamic_responses(self, seq_resp):
+    def _get_decisions_neurons(self, it_resp, seq_length, get_differentiator=False):
+        decisions_neurons = []
+
+        num_data = np.shape(it_resp)[0]
+        indices = np.arange(num_data)
+        for b in tqdm(range(0, num_data, seq_length)):
+            # build batch
+            end = min(b + seq_length, num_data)
+            batch_idx = indices[b:end]
+            batch_data = it_resp[batch_idx]
+
+            # calculate decision neuron
+            if get_differentiator:
+                ds_neurons, diff = self.compute_dynamic_responses(batch_data, get_differentiator)
+            else:
+                ds_neurons = self.compute_dynamic_responses(batch_data)
+            decisions_neurons.append(ds_neurons)
+
+        return decisions_neurons
+
+    def compute_dynamic_responses(self, seq_resp, get_differentiator=False):
         """
         Compute the dynamic responses of recognition neurons
         Compute first a differentiation circuit followed bz a competitive network
@@ -698,4 +749,7 @@ class NormBase:
             ds_neur[ds_neur < 0] = 0
             ds_neuron[f] = ds_neur
 
-        return ds_neuron
+        if get_differentiator:
+            return ds_neuron, [pos_df, neg_df]
+        else:
+            return ds_neuron

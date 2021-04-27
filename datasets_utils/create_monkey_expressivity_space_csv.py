@@ -1,6 +1,12 @@
 import os
 import pandas as pd
 
+"""
+Helper function to build the ICANN dataset form the expressivity monkey set
+
+run: python -m datasets_utils.create_monkey_expressivity_space_csv
+"""
+
 path = '/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels'  # mac
 # path = 'D:/Dataset/ExpressivityLevels/'
 neutral_frame = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009',
@@ -9,9 +15,11 @@ neutral_frame = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007',
 avatar_type = "monkey"
 csv_train_name = "monkey_train.csv"
 csv_val_name = "monkey_val.csv"
+csv_full_name = "monkey_full.csv"
 
 df_train = pd.DataFrame(columns=("image_path", "image_name", "category", "avatar", "strength"))
-df_val = pd.DataFrame(columns=("image_path", "image_name", "category", "avatar", "strength", "path"))
+df_val = pd.DataFrame(columns=("image_path", "image_name", "category", "avatar", "strength"))
+df_full = pd.DataFrame(columns=("image_path", "image_name", "category", "avatar", "strength"))
 for root, dirs, files in os.walk(os.path.join(path, "images")):
     print("num files:", len(files))
     print("root", root)
@@ -44,8 +52,13 @@ for root, dirs, files in os.walk(os.path.join(path, "images")):
                     df_val = df_val.append({'image_path': image_path, 'image_name': file, 'category': category,
                                             'avatar': avatar_type, 'strength': words[2]}, ignore_index=True)
 
+                # add all entry to one csv
+                df_full = df_full.append({'image_path': image_path, 'image_name': file, 'category': category,
+                                        'avatar': avatar_type, 'strength': words[2]}, ignore_index=True)
+
 print(df_train.head())
 print(df_val.head())
 # save to csv
 df_train.to_csv(os.path.join(path, "csv", csv_train_name), index=False)
 df_val.to_csv(os.path.join(path, "csv", csv_val_name), index=False)
+df_full.to_csv(os.path.join(path, "csv", csv_full_name), index=False)
