@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-paper')
 
 from utils.extraction_model import load_v4
 from utils.feature_reduction import set_feature_selection
@@ -163,7 +165,7 @@ class NormBase:
             print("[SAVE] Save raw prediction to csv")
             self.raw_preds_df.to_csv(os.path.join(save_folder, "raw_pred.csv"))
 
-        print("[SAVE] Norm Base Model saved!")
+        print("[SAVE] Norm-Based Model saved!")
         print()
 
     def load(self):
@@ -194,81 +196,6 @@ class NormBase:
 
     def set_tuning_vector(self, t):
         self.t = t
-
-    def evaluate_v4(self, data, flatten=True):
-        # deprecated, but keep it
-        print("[WARNING] This function is deprecated, please change it to 'predict_v4'")
-        return self.predict_v4(data, flatten)
-
-    def predict_v4(self, data, flatten=True):
-        """
-        returns prediction of cnn including preprocessing of images
-        in NormBase, must be used only to train dimensionality reduction and in predict()
-        :param data: batch of data
-        :param flatten: if True, is flattened
-        :return: prediction
-        """
-
-        # prediction of v4 layer
-        preds = self.v4.predict(data, verbose=1)
-        if flatten:
-            preds = np.reshape(preds, (np.shape(preds)[0], -1))
-
-        # save raw extraction prediction
-        if self.save_preds and not self.preds_saved:
-            # ensure that the data are flatten for the csv file
-            if not flatten:
-                save_preds = np.reshape(preds, (np.shape(preds)[0], -1))
-            else:
-                save_preds = preds
-            # save predictions
-            df = pd.DataFrame(save_preds)
-            self.raw_preds_df = self.raw_preds_df.append(df, ignore_index=True)
-
-        return preds
-
-    def predict(self, data, get_it_resp=False, get_differentiator=False):
-        """
-        predict expression neurons of Norm base
-        pipeline consists of preprocessing, cnn, and dimensionality reduction
-        :param data: batch of data
-        :return: prediction
-        """
-        print("[PREDICT] Compute v4")
-        v4_preds = self.predict_v4(data[0])
-
-        print("[PREDICT] - Fitting dimensionality reduction -")
-        v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
-
-        print("[FIT] compute IT responses")
-        it_resp = self._get_it_resp(v4_preds_red)
-
-        # if self.dim_red is None:
-        #     # get prediction after cnn, before dimensionality reduction
-        #     preds = self.predict_v4(data)
-        # elif self.dim_red == 'PCA':
-        #     # projection by PCA
-        #     preds = self.pca.transform(self.predict_v4(data))
-        # elif self.dim_red == 'position':
-        #     # receive unflattened prediction
-        #     # receive xy positions and flatten
-        #     # output shape: (batch_size, n_feature_maps*2)
-        #     preds = np.concatenate(calculate_position(
-        #             self.predict_v4(data, flatten=False),
-        #             mode=self.position_method, return_mode="xy float"),
-        #         axis=1)
-        # elif self.dim_red == 'semantic':
-        #     preds = self.predict_v4(data, flatten=False)
-        #     self.semantic_feat_red.transform(preds)
-        #     preds = np.ones(self.n_features)
-        # else:
-        #     raise KeyError(f'invalid value self.dim_red={self.dim_red}')
-
-        if self.is_dynamic:
-            # return expr_neurons  # todo set differentiator
-            return it_resp
-        else:
-            return it_resp
 
     def _update_ref_vector(self, ref):
         """
@@ -381,12 +308,82 @@ class NormBase:
         else:
             raise ValueError("{} is no valid choice for tun_func".format(self.tun_func))
 
-    def _get_correct_count(self, x, label):
-        one_hot_encoder = np.eye(self.n_category)
-        one_hot_cats = one_hot_encoder[x]
-        one_hot_label = one_hot_encoder[label]
+    def _get_decisions_neurons(self, it_resp, seq_length, get_differentiator=False):
+        decisions_neurons = []
+        differentiators = []
 
-        return np.count_nonzero(np.multiply(one_hot_cats, one_hot_label))
+        num_data = np.shape(it_resp)[0]
+        indices = np.arange(num_data)
+        for b in tqdm(range(0, num_data, seq_length)):
+            # build batch
+            end = min(b + seq_length, num_data)
+            batch_idx = indices[b:end]
+            batch_data = it_resp[batch_idx]
+
+            # calculate decision neuron
+            if get_differentiator:
+                ds_neurons, diff = self.compute_dynamic_responses(batch_data, get_differentiator)
+                differentiators.append(diff)
+            else:
+                ds_neurons = self.compute_dynamic_responses(batch_data)
+            decisions_neurons.append(ds_neurons)
+
+        if get_differentiator:
+            return np.array(decisions_neurons), np.array(differentiators)
+        else:
+            return np.array(decisions_neurons)
+
+    def compute_dynamic_responses(self, seq_resp, get_differentiator=False):
+        """
+        Compute the dynamic responses of recognition neurons
+        Compute first a differentiation circuit followed bz a competitive network
+        :param seq_resp:
+        :return:
+        """
+        seq_length = np.shape(seq_resp)[0]
+
+        # --------------------------------------------------------------------------------------------------------------
+        # compute differentitator
+
+        # declare differentiator
+        pos_df = np.zeros((seq_length, self.n_category))
+        neg_df = np.zeros((seq_length, self.n_category))
+        v_df = np.zeros((seq_length, self.n_category))
+        y_df = np.zeros((seq_length, self.n_category))
+
+        for f in range(1, seq_length):
+            # compute differences
+            pos_dif = seq_resp[f - 1] - v_df[f - 1]
+            pos_dif[pos_dif < 0] = 0
+            neg_dif = v_df[f - 1] - seq_resp[f - 1]
+            neg_dif[neg_dif < 0] = 0
+
+            # update differentiator states
+            pos_df[f] = ((self.tau_u - 1) * pos_df[f - 1] + pos_dif) / self.tau_u
+            neg_df[f] = ((self.tau_u - 1) * neg_df[f - 1] + neg_dif) / self.tau_u
+            v_df[f] = ((self.tau_v - 1) * v_df[f - 1] + seq_resp[f - 1]) / self.tau_v
+            y_df[f] = ((self.tau_y - 1) * y_df[f - 1] + pos_df[f - 1] + neg_df[f - 1]) / self.tau_y
+
+        # --------------------------------------------------------------------------------------------------------------
+        # compute decision network
+
+        # declare inhibition kernel
+        inhib_k = (1 - np.eye(self.n_category) * 0.8) * self.m_inhi_w
+        # declare decision neurons
+        ds_neuron = np.zeros((seq_length, self.n_category))
+
+        for f in range(1, seq_length):
+            # update decision neurons
+            ds_neur = ((self.tau_d - 1) * ds_neuron[f - 1] + y_df[f - 1] - inhib_k @ ds_neuron[f - 1]) / self.tau_d
+
+            # apply activation to decision neuron
+            ds_neur[ds_neur < 0] = 0
+            ds_neuron[f] = ds_neur
+
+        if get_differentiator:
+            return ds_neuron, np.array([pos_df, neg_df])
+        else:
+            return ds_neuron
 
     # -----------------------------------------------------------------------------------------------------------------
     # -----------------------------------------------------------------------------------------------------------------
@@ -449,9 +446,14 @@ class NormBase:
             else:
                 ds_neurons = self._get_decisions_neurons(it_resp, self.config['seq_length'])
 
+        print()
         if self.is_dynamic:
-            if get_it_resp:
+            if get_it_resp and get_differentiator:
+                return ds_neurons, it_resp, differentiators
+            elif get_it_resp:
                 return ds_neurons, it_resp
+            elif get_differentiator:
+                return ds_neurons, differentiators
             else:
                 return ds_neurons
         else:
@@ -525,7 +527,76 @@ class NormBase:
         else:
             raise ValueError("Type {} of data is not recognize!".format(type(data)))
 
-    ### EVALUATION / PREDICTION
+    ### PREDICTION / EVALUATION
+
+    def evaluate_v4(self, data, flatten=True):
+        # deprecated, but keep it
+        print("[WARNING] This function is deprecated, please change it to 'predict_v4'")
+        return self.predict_v4(data, flatten)
+
+    def predict_v4(self, data, flatten=True):
+        """
+        returns prediction of cnn including preprocessing of images
+        in NormBase, must be used only to train dimensionality reduction and in predict()
+        :param data: batch of data
+        :param flatten: if True, is flattened
+        :return: prediction
+        """
+
+        # prediction of v4 layer
+        preds = self.v4.predict(data, verbose=1)
+        if flatten:
+            preds = np.reshape(preds, (np.shape(preds)[0], -1))
+
+        # save raw extraction prediction
+        if self.save_preds and not self.preds_saved:
+            # ensure that the data are flatten for the csv file
+            if not flatten:
+                save_preds = np.reshape(preds, (np.shape(preds)[0], -1))
+            else:
+                save_preds = preds
+            # save predictions
+            df = pd.DataFrame(save_preds)
+            self.raw_preds_df = self.raw_preds_df.append(df, ignore_index=True)
+
+        return preds
+
+    def predict(self, data, get_it_resp=False, get_differentiator=False):
+        """
+        predict expression neurons of Norm base Mechanism
+        pipeline consists of preprocessing, cnn, and dimensionality reduction
+        :param data: batch of data
+        :return: prediction
+        """
+        print("[PREDICT] Compute v4")
+        v4_preds = self.predict_v4(data[0])
+
+        print("[PREDICT] - Fitting dimensionality reduction -")
+        v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
+
+        print("[PREDICT] compute IT responses")
+        it_resp = self._get_it_resp(v4_preds_red)
+
+        if self.is_dynamic:
+            print("[PREDICT] compute dynamic")
+            if get_differentiator:
+                ds_neurons, differentiators = self._get_decisions_neurons(it_resp,
+                                                                          self.config['seq_length'],
+                                                                          get_differentiator=get_differentiator)
+            else:
+                ds_neurons = self._get_decisions_neurons(it_resp, self.config['seq_length'])
+
+        if self.is_dynamic:
+            if get_it_resp and get_differentiator:
+                return ds_neurons, it_resp, differentiators
+            elif get_it_resp:
+                return ds_neurons, it_resp
+            elif get_differentiator:
+                return ds_neurons, differentiators
+            else:
+                return ds_neurons
+        else:
+            return it_resp
 
     def evaluate(self, data, batch_size=32):
         """
@@ -609,9 +680,16 @@ class NormBase:
         print("[EVALUATE] accuracy {:.4f}".format(accuracy))
         return accuracy, np.reshape(it_resp, (-1, self.n_category)), np.concatenate(labels, axis=None)
 
+    def _get_correct_count(self, x, label):
+        one_hot_encoder = np.eye(self.n_category)
+        one_hot_cats = one_hot_encoder[x]
+        one_hot_label = one_hot_encoder[label]
+
+        return np.count_nonzero(np.multiply(one_hot_cats, one_hot_label))
+
     ### PLOTTING
 
-    def projection_tuning(self, data, batch_size = 32):
+    def projection_tuning(self, data, batch_size=32):
         """
         This function calculates how the data projects onto a plane.
         It returns the projection and correct labels
@@ -682,74 +760,121 @@ class NormBase:
             lines[:,i] = np.sqrt(lines[:,i])
         return x, lines
 
-    def _get_decisions_neurons(self, it_resp, seq_length, get_differentiator=False):
-        decisions_neurons = []
+    def plot_it_neurons(self, it_neurons, title=None, save_folder=None):
+        plt.figure()
+        for i in range(self.config['n_category']):
+                plt.plot(it_neurons[:, i])
 
-        num_data = np.shape(it_resp)[0]
-        indices = np.arange(num_data)
-        for b in tqdm(range(0, num_data, seq_length)):
-            # build batch
-            end = min(b + seq_length, num_data)
-            batch_idx = indices[b:end]
-            batch_data = it_resp[batch_idx]
+        # set figure title
+        fig_title = 'IT_responses.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
 
-            # calculate decision neuron
-            if get_differentiator:
-                ds_neurons, diff = self.compute_dynamic_responses(batch_data, get_differentiator)
-            else:
-                ds_neurons = self.compute_dynamic_responses(batch_data)
-            decisions_neurons.append(ds_neurons)
-
-        return decisions_neurons
-
-    def compute_dynamic_responses(self, seq_resp, get_differentiator=False):
-        """
-        Compute the dynamic responses of recognition neurons
-        Compute first a differentiation circuit followed bz a competitive network
-        :param seq_resp:
-        :return:
-        """
-        seq_length = np.shape(seq_resp)[0]
-
-        # --------------------------------------------------------------------------------------------------------------
-        # compute differentitator
-
-        # declare differentiator
-        pos_df = np.zeros((seq_length, self.n_category))
-        neg_df = np.zeros((seq_length, self.n_category))
-        v_df = np.zeros((seq_length, self.n_category))
-        y_df = np.zeros((seq_length, self.n_category))
-
-        for f in range(1, seq_length):
-            # compute differences
-            pos_dif = seq_resp[f - 1] - v_df[f - 1]
-            pos_dif[pos_dif < 0] = 0
-            neg_dif = v_df[f - 1] - seq_resp[f - 1]
-            neg_dif[neg_dif < 0] = 0
-
-            # update differentiator states
-            pos_df[f] = ((self.tau_u - 1) * pos_df[f - 1] + pos_dif) / self.tau_u
-            neg_df[f] = ((self.tau_u - 1) * neg_df[f - 1] + neg_dif) / self.tau_u
-            v_df[f] = ((self.tau_v - 1) * v_df[f - 1] + seq_resp[f - 1]) / self.tau_v
-            y_df[f] = ((self.tau_y - 1) * y_df[f - 1] + pos_df[f - 1] + neg_df[f - 1]) / self.tau_y
-
-        # --------------------------------------------------------------------------------------------------------------
-        # compute decision network
-
-        # declare inhibition kernel
-        inhib_k = (1 - np.eye(self.n_category) * 0.8) * self.m_inhi_w
-        # declare decision neurons
-        ds_neuron = np.zeros((seq_length, self.n_category))
-
-        for f in range(1, seq_length):
-            # update decision neurons
-            ds_neur = ((self.tau_d - 1) * ds_neuron[f - 1] + y_df[f - 1] - inhib_k @ ds_neuron[f - 1]) / self.tau_d
-
-            # apply activation to decision neuron
-            ds_neur[ds_neur < 0] = 0
-            ds_neuron[f] = ds_neur
-
-        if get_differentiator:
-            return ds_neuron, [pos_df, neg_df]
+        if save_folder is not None:
+            plt.savefig(os.path.join(save_folder, fig_title))
         else:
-            return ds_neuron
+            plt.savefig(fig_title)
+
+    def plot_it_neurons_per_sequence(self, it_neurons, title=None, save_folder=None, normalize=False):
+        # compute the number of sequence depending on the number of frames and seuence length
+        n_sequence = np.shape(it_neurons)[0] // self.config['seq_length']
+
+        plt.figure()
+        for s in range(n_sequence):
+            # create subplot for each sequence
+            plt.subplot(n_sequence, 1, s + 1)
+            start = s * self.config['seq_length']
+            stop = start + self.config['seq_length']
+
+            # normalize activity
+            if normalize:
+                norm = np.amax(it_neurons[start:stop])
+
+            # plot for each category
+            for i in range(self.config['n_category']):
+                if normalize:
+                    plt.plot(it_neurons[start:stop, i] / norm)
+                else:
+                    plt.plot(it_neurons[start:stop, i])
+
+        # set figure title
+        fig_title = 'IT_responses.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
+        if save_folder is not None:
+            plt.savefig(os.path.join(save_folder, fig_title))
+        else:
+            plt.savefig(fig_title)
+
+    def plot_differentiators(self, differentiators, title=None, save_folder=None, normalize=False):
+        # get the number of sequence and number of differentiators
+        n_sequence = np.shape(differentiators)[0]
+        n_differentiators = np.shape(differentiators)[1]
+
+        plt.figure()
+        for s in range(n_sequence):
+            # create subplot for each sequence
+            plt.subplot(n_sequence, 1, s + 1)
+
+            # normalize activity
+            if normalize:
+                norm = np.amax(differentiators[s])
+
+            # plot for each category
+            for i in range(self.config['n_category']):
+                #  change color depending on the category
+                color = self.config['colors'][i]
+                for d in range(n_differentiators):
+
+                    # changed linestyle depending on the differentiator
+                    if d % 2 == 0:
+                        linestyle = 'solid'
+                    else:
+                        linestyle = 'dashed'
+
+                    # plot normalized differentiator
+                    if normalize:
+                        plt.plot(differentiators[s, d, :, i] / norm, color=color, linestyle=linestyle)
+                    else:
+                        plt.plot(differentiators[s, d, :, i], color=color, linestyle=linestyle)
+
+        # set figure title
+        fig_title = 'differentiators_responses.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
+        if save_folder is not None:
+            plt.savefig(os.path.join(save_folder, fig_title))
+        else:
+            plt.savefig(fig_title)
+
+    def plot_decision_neurons(self, ds_neurons, title=None, save_folder=None, normalize=False):
+        # get the number of sequence
+        n_sequence = np.shape(ds_neurons)[0]
+
+        plt.figure()
+        for s in range(n_sequence):
+            # create subplot for each sequence
+            plt.subplot(n_sequence, 1, s + 1)
+
+            # normalize activity
+            if normalize:
+                norm = np.amax(ds_neurons[s])
+
+            # plot for each category
+            for i in range(self.config['n_category']):
+                if normalize:
+                    plt.plot(ds_neurons[s, :, i] / norm)
+                else:
+                    plt.plot(ds_neurons[s, :, i])
+
+        # set figure title
+        fig_title = 'decision_neurons_responses.png'
+        if title is not None:
+            fig_title = title + '_' + fig_title
+
+        if save_folder is not None:
+            plt.savefig(os.path.join(save_folder, fig_title))
+        else:
+            plt.savefig(fig_title)

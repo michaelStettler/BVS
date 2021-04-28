@@ -2,6 +2,7 @@
   "config_name": "EB_reproduce_ICANN_cat",
   "train_data": "monkey_test",
   "n_category": 3,
+  "remove_neutral_frames": 1,
   "csv_train": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_train.csv",
   "csv_val": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/csv/monkey_train.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels",
@@ -29,7 +30,6 @@
   "concat_seg_start": [270, 15, 155],
   "train_expression": ["Threat", "Fear", "LipSmacking"],
   "colors": [[0.773, 0.224, 0.196], [0.937, 0.522, 0.212], [0.2235, 0.4667, 0.686]],
-  "remove_neutral_frames": 1,
   "neutral_frames_idx": [[0, 7], [74, 80], [80, 90], [148, 160], [160, 162],[237, 240]]
 }
 
