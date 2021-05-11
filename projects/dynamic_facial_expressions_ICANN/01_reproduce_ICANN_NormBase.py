@@ -15,52 +15,78 @@ import os
 from utils.load_data import load_data
 from utils.load_config import load_config
 from models.NormBase import NormBase
+from datasets_utils.expressivity_level import segment_sequence
 
 # t0001: 2-norm     t0002: 1-norm   t0003: simplified   t0004: direction-only   t0005: expressitivity-direction
 # t0006: 2-norm-monkey_morph
 
 # config = load_config("norm_base_reproduce_ICANN_t0015.json", path="configs/norm_base_config")
 config = load_config("NB_reproduce_ICANN_m0002.json", path="configs/norm_base_config")
+# config["tau_u"] = 3
+# config["tau_v"] = 3
+config['tau_y'] = 2  # 15
+config['tau_d'] = 2
 
 # --------------------------------------------------------------------------------------------------------------------
 # train model
 # load training data
-data_train = load_data(config)
+train_data = load_data(config)
+train_data[0] = segment_sequence(train_data[0], config['train_seq_start_idx'], config['seq_length'])
+train_data[1] = segment_sequence(train_data[1], config['train_seq_start_idx'], config['seq_length'])
+print("[LOAD] Shape train_data segmented", np.shape(train_data[0]))
+print("[LOAD] Shape train_label segmented", np.shape(train_data[1]))
 
 # fit and save model
 norm_base = NormBase(config, input_shape=(224, 224, 3))
-face_neurons = norm_base.fit(data_train)
+expr_neurons, face_neurons, differentiators = norm_base.fit(train_data, get_differentiator=True, get_it_resp=True)
 norm_base.save()
-
-# --------------------------------------------------------------------------------------------------------------------
-# predict
-# load testing data
-data_test = load_data(config, train=False)
-
-# predict model
-expr_neurons, face_neurons, differentiators = norm_base.predict(data_test,
-                                                                get_it_resp=True,  # needs to set get_it_resp to True in order to get the face neurons since the model is dynamic
-                                                                get_differentiator=True)
-print("shape expr_neurons", np.shape(expr_neurons))
-print("shape face_neurons", np.shape(face_neurons))
-print("shape differentiators", np.shape(differentiators))
 
 # --------------------------------------------------------------------------------------------------------------------
 # plot
 norm_base.plot_it_neurons_per_sequence(face_neurons,
-                                       title="01_test",
+                                       title="01_train",
                                        save_folder=os.path.join("models/saved", config['config_name']),
                                        normalize=True)
-
+# re-arrange condition from fear lip_smack threat to threat fear lip_smack
 norm_base.plot_differentiators(differentiators,
-                               title="02_test",
+                               title="02_train",
                                save_folder=os.path.join("models/saved", config['config_name']),
                                normalize=True)
 
 norm_base.plot_decision_neurons(expr_neurons,
-                                title="03_test",
+                                title="03_train",
                                 save_folder=os.path.join("models/saved", config['config_name']),
                                 normalize=True)
+
+# # --------------------------------------------------------------------------------------------------------------------
+# # predict
+# # load testing data
+# data_test = load_data(config, train=False)
+#
+# # predict model
+# expr_neurons, face_neurons, differentiators = norm_base.predict(data_test,
+#                                                                 get_it_resp=True,  # needs to set get_it_resp to True in order to get the face neurons since the model is dynamic
+#                                                                 get_differentiator=True)
+# print("shape expr_neurons", np.shape(expr_neurons))
+# print("shape face_neurons", np.shape(face_neurons))
+# print("shape differentiators", np.shape(differentiators))
+#
+# # --------------------------------------------------------------------------------------------------------------------
+# # plot
+# norm_base.plot_it_neurons_per_sequence(face_neurons,
+#                                        title="01_test",
+#                                        save_folder=os.path.join("models/saved", config['config_name']),
+#                                        normalize=True)
+#
+# norm_base.plot_differentiators(differentiators,
+#                                title="02_test",
+#                                save_folder=os.path.join("models/saved", config['config_name']),
+#                                normalize=True)
+#
+# norm_base.plot_decision_neurons(expr_neurons,
+#                                 title="03_test",
+#                                 save_folder=os.path.join("models/saved", config['config_name']),
+#                                 normalize=True)
 
 # deprecated
 # accuracy1, it_resp1, labels1 = norm_base.evaluate(data_train)

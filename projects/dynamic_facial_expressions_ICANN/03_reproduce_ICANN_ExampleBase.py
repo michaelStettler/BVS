@@ -4,6 +4,7 @@ import numpy as np
 from utils.load_config import load_config
 from utils.load_data import load_data
 from models.ExampleBase import ExampleBase
+from datasets_utils.expressivity_level import segment_sequence
 from plots_utils.plot_expressivity_space import plot_expressivity_level
 
 """
@@ -24,15 +25,10 @@ model = ExampleBase(config, input_shape=tuple(config['input_shape']), load_EB_mo
 
 # load data
 train_data = load_data(config)
-# segment sequence based on config
-seg_data = []
-if config.get('concat_seg_start') is not None:
-    for start in config['concat_seg_start']:
-        seg_data.append(train_data[0][start:start + config['batch_size']])
-seg_data = np.array(seg_data)
-seg_data = np.reshape(seg_data, (-1, seg_data.shape[2], seg_data.shape[3], seg_data.shape[4]))
-print("shape segmentated data", np.shape(seg_data))
-train_data[0] = seg_data
+train_data[0] = segment_sequence(train_data[0], config['train_seg_start_idx'], config['seq_length'])
+train_data[1] = segment_sequence(train_data[1], config['train_seg_start_idx'], config['seq_length'])
+print("[LOAD] Shape train_data segmented", np.shape(train_data[0]))
+print("[LOAD] Shape train_label segmented", np.shape(train_data[1]))
 
 # fit model
 expr_resp, snaps, nn_field = model.fit(train_data,

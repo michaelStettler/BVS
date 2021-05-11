@@ -12,7 +12,6 @@ from utils.feature_reduction import load_feature_selection
 from utils.feature_reduction import fit_dimensionality_reduction
 from utils.feature_reduction import predict_dimensionality_reduction
 from utils.CSV_data_generator import CSVDataGen
-from utils.calculate_position import calculate_position
 
 
 class NormBase:
@@ -96,7 +95,7 @@ class NormBase:
         # load norm base model
         if load_NB_model is not None:
             if load_NB_model:
-                self.load(config)
+                self.load()
 
         # set time constant for dynamic and competitive network
         self._set_dynamic(config)
@@ -218,7 +217,7 @@ class NormBase:
         """
         len_batch = len(preds)  # take care of last epoch if size is not equal as the batch_size
         # compute batch diff
-        return preds - np.repeat(np.expand_dims(self.r, axis=1), len_batch, axis=1).T
+        return preds - np.repeat(np.expand_dims(self.r, axis=0), len_batch, axis=0)
 
     def _update_dir_tuning(self, data, label):
         """
@@ -346,10 +345,10 @@ class NormBase:
         # compute differentitator
 
         # declare differentiator
-        pos_df = np.zeros((seq_length, self.n_category))
-        neg_df = np.zeros((seq_length, self.n_category))
-        v_df = np.zeros((seq_length, self.n_category))
-        y_df = np.zeros((seq_length, self.n_category))
+        v_df = np.zeros((seq_length, self.n_category))      # raw difference
+        pos_df = np.zeros((seq_length, self.n_category))    # positive flanks
+        neg_df = np.zeros((seq_length, self.n_category))    # negative flanks
+        y_df = np.zeros((seq_length, self.n_category))      # integrator
 
         for f in range(1, seq_length):
             # compute differences
@@ -359,9 +358,9 @@ class NormBase:
             neg_dif[neg_dif < 0] = 0
 
             # update differentiator states
+            v_df[f] = ((self.tau_v - 1) * v_df[f - 1] + seq_resp[f - 1]) / self.tau_v
             pos_df[f] = ((self.tau_u - 1) * pos_df[f - 1] + pos_dif) / self.tau_u
             neg_df[f] = ((self.tau_u - 1) * neg_df[f - 1] + neg_dif) / self.tau_u
-            v_df[f] = ((self.tau_v - 1) * v_df[f - 1] + seq_resp[f - 1]) / self.tau_v
             y_df[f] = ((self.tau_y - 1) * y_df[f - 1] + pos_df[f - 1] + neg_df[f - 1]) / self.tau_y
 
         # --------------------------------------------------------------------------------------------------------------
@@ -406,7 +405,12 @@ class NormBase:
 
         # predict v4 responses
         print("[FIT] Compute v4")
-        v4_preds = self.predict_v4(data[0])
+
+        flatten = True
+        if self.dim_red == 'semantic':
+            flatten = False
+
+        v4_preds = self.predict_v4(data[0], flatten=flatten)
         print("[FIT] Shape v4_preds", np.shape(v4_preds))
 
         # set preds_saved to true so the predictions are saved only once
@@ -507,6 +511,9 @@ class NormBase:
         self.t = np.zeros(self.t.shape)
         self.t_mean = np.zeros(self.t_mean.shape)
         self.t_cumul = np.zeros(self.t_cumul.shape)
+        print("shape self.t", np.shape(self.t))
+        print("shape self.t_mean", np.shape(self.t_mean))
+        print("shape self.t_cumul", np.shape(self.t_cumul))
 
         if isinstance(data, list) or type(data).__module__ == np.__name__:
             num_data = data[0].shape[0]
@@ -760,9 +767,15 @@ class NormBase:
             lines[:,i] = np.sqrt(lines[:,i])
         return x, lines
 
-    def plot_it_neurons(self, it_neurons, title=None, save_folder=None):
+    def plot_it_neurons(self, it_neurons, title=None, save_folder=None, normalize = True):
         plt.figure()
+
+        if normalize:
+            norm = np.amax(it_neurons)
         for i in range(self.config['n_category']):
+            if normalize:
+                plt.plot(it_neurons[:, i] / norm)
+            else:
                 plt.plot(it_neurons[:, i])
 
         # set figure title
@@ -777,14 +790,15 @@ class NormBase:
 
     def plot_it_neurons_per_sequence(self, it_neurons, title=None, save_folder=None, normalize=False):
         # compute the number of sequence depending on the number of frames and seuence length
-        n_sequence = np.shape(it_neurons)[0] // self.config['seq_length']
+        seq_length = self.config['seq_length']
+        n_sequence = np.shape(it_neurons)[0] // seq_length
 
         plt.figure()
         for s in range(n_sequence):
             # create subplot for each sequence
             plt.subplot(n_sequence, 1, s + 1)
-            start = s * self.config['seq_length']
-            stop = start + self.config['seq_length']
+            start = s * seq_length
+            stop = start + seq_length
 
             # normalize activity
             if normalize:
@@ -792,10 +806,13 @@ class NormBase:
 
             # plot for each category
             for i in range(self.config['n_category']):
+                # select color
+                color = self.config['colors'][i]
+
                 if normalize:
-                    plt.plot(it_neurons[start:stop, i] / norm)
+                    plt.plot(it_neurons[start:stop, i] / norm, color=color)
                 else:
-                    plt.plot(it_neurons[start:stop, i])
+                    plt.plot(it_neurons[start:stop, i], color=color)
 
         # set figure title
         fig_title = 'IT_responses.png'
@@ -864,10 +881,12 @@ class NormBase:
 
             # plot for each category
             for i in range(self.config['n_category']):
+                color = self.config['colors'][i]
+
                 if normalize:
-                    plt.plot(ds_neurons[s, :, i] / norm)
+                    plt.plot(ds_neurons[s, :, i] / norm, color=color)
                 else:
-                    plt.plot(ds_neurons[s, :, i])
+                    plt.plot(ds_neurons[s, :, i], color=color)
 
         # set figure title
         fig_title = 'decision_neurons_responses.png'

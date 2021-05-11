@@ -258,6 +258,10 @@ def _load_morphing_space(config, train, sort_by, get_raw=False):
     num_data = len(new_df.index)
     print("[DATA] Found {} images".format(num_data))
 
+    # set use_generator to false if non existant
+    if config.get('use_data_generator') is None:
+        config['use_data_generator'] = False
+
     if config['use_data_generator']:
         # get image target size
         input_shape = config['input_shape']

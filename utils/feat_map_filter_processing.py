@@ -96,7 +96,9 @@ def get_feat_map_filt_preds(preds, ft_idx, ref_type="self0",  norm=None, activat
         filt_preds.append(filt_pred)
 
     # build prediction to match the common (n_images, size, size, n_ft) dimensions
+    print("shape filt preds raw", np.shape(filt_preds))
     filt_preds = np.array(filt_preds)
     filt_preds = np.squeeze(filt_preds)
     filt_preds = np.moveaxis(filt_preds, 0, -1)
+    print("shape filt preds", np.shape(filt_preds))
     return filt_preds

@@ -1,6 +1,6 @@
 import os
 import pickle
-import tensorflow as tf
+import numpy as np
 from sklearn.decomposition import PCA
 
 from utils.CSV_data_generator import CSVDataGen
@@ -34,7 +34,7 @@ def set_feature_selection(model, config):
         # initialize n_features as number of feature maps*2
         model.n_features = model.shape_v4[-1] * 2
     elif model.dim_red == "semantic":
-        model.n_features = len(config["semantic_units"])
+        model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
         model.semantic_feat_red = SemanticFeatureSelection(config)
     else:
         raise ValueError("Dimensionality reduction {} is not implemented".format(model.dim_red))
@@ -63,7 +63,9 @@ def fit_dimensionality_reduction(model, data):
 
     elif model.dim_red == "semantic":
         print("[FIT] Finding semantic units")
-        model.semantic_feat_red.fit(data)
+        model.semantic_feat_red.fit(model.v4)
+        preds = model.semantic_feat_red.transform(data)
+        preds = np.reshape(preds, (len(preds), -1))
         print("[FIT] Finished to find the semantic units")
     else:
         raise KeyError(f'model.dim_red={model.dim_red} is not a valid value')
@@ -85,6 +87,9 @@ def predict_dimensionality_reduction(model, data):
     elif model.dim_red == 'PCA':
         # projection by PCA
         preds = model.pca.transform(data)
+    elif model.dim_red == "semantic":
+        preds = model.semantic_feat_red.transform(data)
+        preds = np.reshape(preds, (len(preds), -1))
     else:
         raise KeyError(f'invalid value self.dim_red={model.dim_red}')
 

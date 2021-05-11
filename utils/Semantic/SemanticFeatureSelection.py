@@ -14,7 +14,6 @@ class SemanticFeatureSelection:
     class to implement the semantic feature selection pipeline
     """
     def __init__(self, config):
-        print("prout")
         self.config = config
 
         # declare variables
