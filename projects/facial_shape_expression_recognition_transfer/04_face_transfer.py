@@ -51,3 +51,15 @@ model.plot_it_neurons(face_neurons,
 model.plot_it_neurons_per_sequence(face_neurons,
                                    title="train",
                                    save_folder=os.path.join("models/saved", config['config_name']))
+
+# --------------------------------------------------------------------------------------------------------------------
+# predict model
+# load data
+data = load_data(config, train=False)
+
+# predict model
+face_neurons = model.predict(data)
+
+model.plot_it_neurons_per_sequence(face_neurons,
+                                   title="test",
+                                   save_folder=os.path.join("models/saved", config['config_name']))

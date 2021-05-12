@@ -576,10 +576,15 @@ class NormBase:
         :return: prediction
         """
         print("[PREDICT] Compute v4")
-        v4_preds = self.predict_v4(data[0])
+        flatten = True
+        if self.dim_red == 'semantic':
+            flatten = False
+
+        v4_preds = self.predict_v4(data[0], flatten=flatten)
 
         print("[PREDICT] - Fitting dimensionality reduction -")
         v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
+        print("shape v4_preds_red", np.shape(v4_preds_red))
 
         print("[PREDICT] compute IT responses")
         it_resp = self._get_it_resp(v4_preds_red)

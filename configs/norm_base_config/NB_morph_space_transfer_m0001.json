@@ -8,6 +8,7 @@
   "train_avatar": "human_orig",
   "val_avatar": "monkey_orig",
   "train_expression": ["c2", "c3"],
+  "val_expression": ["c2", "c3"],
   "extraction_model": "VGG19",
   "input_shape": [224, 224, 3],
   "include_top": false,
