@@ -22,6 +22,7 @@
   "feat_map_filter_type": "spatial_mean",
   "feat_map_filt_norm": 1000,
   "feat_map_filt_activation": "ReLu",
+  "feat_map_position_mode": "raw",
   "tun_func": "2-norm",
   "nu": 2.0,
   "batch_size": 32,

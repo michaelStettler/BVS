@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 
 from utils.CSV_data_generator import CSVDataGen
 from utils.Semantic.SemanticFeatureSelection import SemanticFeatureSelection
+from utils.calculate_position import calculate_position
 
 
 def set_feature_selection(model, config):
@@ -34,7 +35,16 @@ def set_feature_selection(model, config):
         # initialize n_features as number of feature maps*2
         model.n_features = model.shape_v4[-1] * 2
     elif model.dim_red == "semantic":
-        model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
+        # set number of features depending on the way positions are computed
+        if config['feat_map_position_mode'] == 'raw':
+            model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
+        elif config['feat_map_position_mode'] == 'xy_float':
+            model.n_features = len(config["semantic_units"]) * 2
+        elif config['feat_map_position_mode'] == 'weighted_array':
+            model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
+        else:
+            raise NotImplementedError("feat_map_position_mode {} not implemented".format(config["semantic_units"]))
+        # declare semanticFeature object
         model.semantic_feat_red = SemanticFeatureSelection(config)
     else:
         raise ValueError("Dimensionality reduction {} is not implemented".format(model.dim_red))
@@ -65,6 +75,14 @@ def fit_dimensionality_reduction(model, data):
         print("[FIT] Finding semantic units")
         model.semantic_feat_red.fit(model.v4)
         preds = model.semantic_feat_red.transform(data)
+
+        # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
+        if model.config['feat_map_position_mode'] != 'raw':
+            print("[FIT] Using position mode: {}".format(model.config['feat_map_position_mode']))
+            preds = calculate_position(preds,
+                                       mode=model.config['feat_map_position_mode'],
+                                       return_mode='xy float')
+
         preds = np.reshape(preds, (len(preds), -1))
         print("[FIT] Finished to find the semantic units")
     else:
@@ -89,6 +107,13 @@ def predict_dimensionality_reduction(model, data):
         preds = model.pca.transform(data)
     elif model.dim_red == "semantic":
         preds = model.semantic_feat_red.transform(data)
+
+        # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
+        if model.config['feat_map_position_mode'] != 'raw':
+            print("[PREDS] Using position mode: {}".format(model.config['feat_map_position_mode']))
+            preds = calculate_position(preds,
+                                       mode=model.config['feat_map_position_mode'],
+                                       return_mode='xy float')
         preds = np.reshape(preds, (len(preds), -1))
     else:
         raise KeyError(f'invalid value self.dim_red={model.dim_red}')

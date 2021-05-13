@@ -25,5 +25,5 @@ model.fit(data,
           fit_dim_red=False,  # if it is the first time to run this script change this to True -> time consuming
           fit_ref=True,
           fit_tun=True)
-model.save_NB_model(config)
+model.save()
 

@@ -15,7 +15,7 @@ run: python -m projects.facial_shape_expression_recognition_transfer.04_face_tra
 config_name = 'NB_morph_space_transfer_m0001.json'
 config = load_config(config_name, path='configs/norm_base_config')
 
-full_train = False
+full_train = True
 
 # --------------------------------------------------------------------------------------------------------------------
 # train model
@@ -44,22 +44,30 @@ else:
     model.save()
 
 # plot training
-model.plot_it_neurons(face_neurons,
-              title="train_full",
-              save_folder=os.path.join("models/saved", config['config_name']))
-
 model.plot_it_neurons_per_sequence(face_neurons,
                                    title="train",
                                    save_folder=os.path.join("models/saved", config['config_name']))
 
+
 # --------------------------------------------------------------------------------------------------------------------
-# predict model
+# apply face transfer using the monkey avatar
 # load data
 data = load_data(config, train=False)
 
+# --------------------------------------------------------------------------------------------------------------------
 # predict model
 face_neurons = model.predict(data)
 
 model.plot_it_neurons_per_sequence(face_neurons,
                                    title="test",
+                                   save_folder=os.path.join("models/saved", config['config_name']))
+
+# --------------------------------------------------------------------------------------------------------------------
+# fit reference frames and predict model
+face_neurons = model.fit(data, fit_dim_red=False,
+          fit_ref=True,
+          fit_tun=False)
+
+model.plot_it_neurons_per_sequence(face_neurons,
+                                   title="test_wh_ref",
                                    save_folder=os.path.join("models/saved", config['config_name']))
