@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import cv2
+from tqdm import tqdm
 
 
 def load_sequence(list, path):
@@ -20,15 +21,32 @@ def filter_sequence(sequence, kernel_size=3, stride=1):
     filt_seq = np.copy(sequence)
 
     # loop over each image
-    for i in range(ker_padding, len(sequence) - ker_padding, stride):
+    for i in tqdm(range(ker_padding, len(sequence) - ker_padding, stride)):
         # get the kernel sequence
         ker_seq = sequence[(i-ker_padding):(i + ker_padding + 1)]
 
         # get mean of the kernel sequence
-        ker_mean = np.mean(ker_seq, axis=0)
+        ker_mean = np.rint(np.mean(ker_seq, axis=0))
 
         # set new seq with mean
         filt_seq[i] = ker_mean
+
+    return filt_seq
+
+
+def spatial_median_filter(sequence, kernel_size=3, stride=1):
+    # compute kernel padding
+    ker_padding = kernel_size // 2
+
+    # copy sequence
+    filt_seq = np.copy(sequence)
+
+    # loop over each image
+    for i in tqdm(range(len(sequence))):
+        for x in range(ker_padding, np.shape(sequence)[1] - ker_padding, stride):
+            for y in range(ker_padding, np.shape(sequence)[2] - ker_padding, stride):
+                median = np.median(sequence[i, x-ker_padding:x+ker_padding+1 , y-ker_padding:y+ker_padding+1], axis=[0, 1])
+                filt_seq[i, x, y] = median
 
     return filt_seq
 
@@ -51,8 +69,10 @@ if __name__ == "__main__":
     # single folder
     # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
     # path = 'D:/Dataset/MorphingSpace/human_orig_filt3/HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'
-    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_c2_corrected/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_c2_corrected/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
     # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_median/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_median_filt3/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
 
     list_file = sorted(os.listdir(path))
     print("length list_file", len(list_file))
@@ -60,6 +80,7 @@ if __name__ == "__main__":
     sequence = load_sequence(list_file, path)
     print("shape sequence", np.shape(sequence))
 
+    # filt_seq = spatial_median_filter(sequence, kernel_size=3)
     filt_seq = filter_sequence(sequence, kernel_size=3)
     print("shape filt_seq", np.shape(filt_seq))
 

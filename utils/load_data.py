@@ -221,7 +221,7 @@ def _load_morphing_space(config, train, sort_by, get_raw=False):
     elif config_avatar == 'monkey_orig':
         avatar = ['Monkey_orig']
     else:
-        raise ValueError('Avatar {} does not exists in morphing_space dataset!'.format(train))
+        raise ValueError('Avatar {} does not exists in morphing_space dataset!'.format(config_avatar))
     # apply filter
     df = df[df['avatar'].isin(avatar)]
 

@@ -7,7 +7,7 @@ The script train a norm base model with the three following conditions:
     - human + monkey
 and compare the most important features kept by the PCA
 
-run: python t05_compare_retained_PCA_index.py
+run: python -m tests.NormBase.t05_compare_retained_PCA_index.py
 """
 
 import numpy as np

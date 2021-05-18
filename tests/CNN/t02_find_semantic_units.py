@@ -13,7 +13,7 @@ from utils.Semantic.find_semantic_units import get_IoU_per_category
 from utils.calculate_position import calculate_position
 from plots_utils.plot_cnn_output import plot_cnn_output
 """
-test script to try the find_semantic_units function which implement the paper:
+test script to run the "find_semantic_units" function which implement the paper:
 
 Network Dissection: Quantifying Interpretability of Deep Visual Representations
 
@@ -99,12 +99,10 @@ print("shape preds", np.shape(preds))
 # dynamic actiavtion by removing the neutral pose
 # ReLu activations of dynamic filter
 # compute positions with weighted average
-# todo per feature mal filtering
-# todo sorting strongest feature map index
 
 # keep only selected feature maps
 preds_eyebrow = preds[:, :, :, feature_map_of_eyebrow]
-# preds_eyebrow[preds_eyebrow < 1000] = 0  # todo per feature map cleaning
+# preds_eyebrow[preds_eyebrow < 1000] = 0
 print("[TEST] num of feature map for eyebrow", len(feature_map_of_eyebrow))
 preds_lips = preds[:, :, :, feature_map_of_lips]
 print("[TEST] num of feature map for lips", len(feature_map_of_lips))
