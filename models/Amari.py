@@ -24,7 +24,7 @@ class Amari:
     """
     def __init__(self, config):
         self.config = config
-        self.seq_length = config['batch_size']
+        self.seq_length = config['seq_length']
         self.n_category = config['n_category']
 
         # declare neural field tuning parameters

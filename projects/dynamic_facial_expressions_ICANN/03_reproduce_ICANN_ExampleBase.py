@@ -58,18 +58,13 @@ model.plot_expression_neurons(expr_resp, title="04_train")
 # predict model
 # load data
 val_data = load_data(config, train=False)
-seg_data = []
-if config.get('concat_seg_start') is not None:
-    for start in config['concat_val_seg_start']:
-        seg_data.append(val_data[0][start:start + config['batch_size']])
-seg_data = np.array(seg_data)
-seg_data = np.reshape(seg_data, (-1, seg_data.shape[2], seg_data.shape[3], seg_data.shape[4]))
-print("shape segmentated data", np.shape(seg_data))
-val_data[0] = seg_data
+val_data[0] = segment_sequence(val_data[0], config['val_seg_start_idx'], config['seq_length'])
+val_data[1] = segment_sequence(val_data[1], config['val_seg_start_idx'], config['seq_length'])
+print("[LOAD] Shape val_data segmented", np.shape(val_data[0]))
+print("[LOAD] Shape val_label segmented", np.shape(val_data[1]))
 
 # predict model
-expr_resp, snaps, nn_field = model.predict(val_data, get_snapshots=True, get_nn_field=True,
-                                           neutral_idx=config['val_neutral_frames_idx'])
+expr_resp, snaps, nn_field = model.predict(val_data, get_snapshots=True, get_nn_field=True)
 
 # --------------------------------------------------------------------------------------------------------------------
 # plot testing

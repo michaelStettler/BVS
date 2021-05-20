@@ -5,7 +5,13 @@ import matplotlib.pyplot as plt
 
 class RBF:
 
-    def __init__(self, config):
+    def __init__(self, config, use_convolution=False):
+        """
+        Radial Bais Function (RFB) implementation
+
+
+        :param config:
+        """
 
         # declare parameters
         self.config = config
@@ -13,30 +19,33 @@ class RBF:
         self.sigma = config["rbf_sigma"]
         self.firing_threshold = config["rbg_firing_threshold"]
         self.centers = None  # (n_feature, n)
-        self.cov_kernel = None  # (n_neurons, n_total_frame)
         self.kernel = None  # (seq_length, n_category, seq_length, n_test_sequence)
 
     def fit(self, data):
-        data = np.transpose(data)
+        num_dim = len(np.shape(data))
 
-        # initialize centers
+        # flatten array if not in format (num_data, n_features)
+        if num_dim > 2:
+            data = np.reshape(data, (len(data), -1))
+
+        # initialize centers (fit)
+        self.centers = data
+        print("[RBF FIT] shape centers", np.shape(self.centers))
+
+        # predict RBF kernel
+        return self._compute_rbf_kernel(data)
+
+    def fit2D(self, data):
+        """
+        Allow to fit 2D templates
+
+        :return:
+        """
+
+        # initialize centers (fit)
         self.centers = data
 
-        # test predict
-        preds = self._compute_rbf_kernel(data)
-
-        # # compute rbf function
-        # size_centers = self.centers.shape
-        # self.cov_kernel = np.zeros((size_centers[1], size_centers[1]))
-        # print("[RBF FIT] shape cov_kernel", np.shape(self.cov_kernel))
-        # for n in range(0, size_centers[1]):
-        #     for m in range(0, size_centers[1]):
-        #         x_tmp = data[:, n] - self.centers[:, m]
-        #         x_tmp = np.exp(
-        #             -np.linalg.norm(x_tmp, 2) ** 2 / 2 / self.sigma ** 2)  # norm(var,2)= 2-norm = matlab's norm
-        #         self.cov_kernel[m, n] = x_tmp
-
-        return preds
+        return self._compute_2D_rbf_kernel(data)
 
     def reshape_preds(self, preds):
         """
@@ -46,10 +55,10 @@ class RBF:
         :param preds:
         :return:
         """
-        seq_length = self.config['batch_size']
+        seq_length = self.config['seq_length']
         n_sequence = np.shape(preds)[1] // seq_length
-        print("[RESHAPE] shape preds", np.shape(preds))
-        print("[RESHAPE] n_sequence", n_sequence)
+        print("[RBF RESHAPE] shape preds", np.shape(preds))
+        print("[RBF RESHAPE] n_sequence", n_sequence)
 
         # reorder
         kernel = np.zeros((seq_length, self.n_category, seq_length, n_sequence))
@@ -69,8 +78,6 @@ class RBF:
         print('[RBF FIT] RBF neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
 
     def predict(self, data):
-        data = np.transpose(data)
-
         # compute RBF kernel according to the centers
         preds = self._compute_rbf_kernel(data)
 
@@ -80,14 +87,24 @@ class RBF:
         """
         Compute the rbf encoding from trained rbf center to new input
 
-        m := n_frames * n_test_seq
-        n := n_neurons * n_train_seq
+        m := num_data
+        n := n_centers
 
         :param data: (n_feature, m)
         :return:
         """
+
+        # self.cov_kernel = np.zeros((size_centers[1], size_centers[1]))
+        # print("[RBF FIT] shape cov_kernel", np.shape(self.cov_kernel))
+        # for n in range(0, size_centers[1]):
+        #     for m in range(0, size_centers[1]):
+        #         x_tmp = data[:, n] - self.centers[:, m]
+        #         x_tmp = np.exp(
+        #             -np.linalg.norm(x_tmp, 2) ** 2 / 2 / self.sigma ** 2)  # norm(var,2)= 2-norm = matlab's norm
+        #         self.cov_kernel[m, n] = x_tmp
+
         # compute difference between rbf center and input for each frame/neurons
-        diff = [[data[:, m] - self.centers[:, n] for m in range(data.shape[1])] for n in range(self.centers.shape[1])]
+        diff = [[data[m] - self.centers[n] for m in range(len(data))] for n in range(len(self.centers))]
 
         # apply gaussian activation to each
         kernel = np.exp(-np.linalg.norm(diff, ord=2, axis=2) ** 2 / 2 / self.sigma ** 2)
@@ -100,7 +117,7 @@ class RBF:
         n_frames = np.shape(kernel)[1]
 
         n_cat = self.config['n_category']
-        seq_length = self.config['batch_size']
+        seq_length = self.config['seq_length']
         n_test_seq = n_frames // seq_length
 
         # set fig size
