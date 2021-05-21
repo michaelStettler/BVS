@@ -5,6 +5,7 @@ from matplotlib import animation
 from matplotlib.animation import FuncAnimation
 import math
 import os
+from tqdm import tqdm
 
 
 def plot_cnn_output(output, path, name, title=None, image=None, video=False, verbose=True, highlight=None):
@@ -69,8 +70,8 @@ def plot_cnn_output(output, path, name, title=None, image=None, video=False, ver
     update_list = []
 
     def update(n_frame):
-        if verbose and n_frame >= 0:
-            print("frame", n_frame)
+        # if verbose and n_frame >= 0:
+        #     print("frame", n_frame)
         if not video:
             data = output
         else:
@@ -115,7 +116,7 @@ def plot_cnn_output(output, path, name, title=None, image=None, video=False, ver
     else:
         def init_func():
             return []
-        anim = FuncAnimation(fig, update, frames=output.shape[0], init_func=init_func, blit=True, interval=33)
+        anim = tqdm(FuncAnimation(fig, update, frames=output.shape[0], init_func=init_func, blit=True, interval=33))
         writergif = animation.PillowWriter(fps=30)
         anim.save(os.path.join(path, name), writer=writergif)
 

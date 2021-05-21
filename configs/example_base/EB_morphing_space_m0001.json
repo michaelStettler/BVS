@@ -22,7 +22,7 @@
   "dim_red": "PCA",
   "PCA": 25,
   "rbf_sigma": 2.5,
-  "rbg_firing_threshold": 0.15,
+  "rbf_firing_threshold": 0.15,
   "Amari_Aker": 1.15,
   "Amari_Bker": -0.5,
   "Amari_Dker": 3.1,

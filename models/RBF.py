@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 class RBF:
 
-    def __init__(self, config, use_convolution=False):
+    def __init__(self, config):
         """
-        Radial Bais Function (RFB) implementation
+        Radial Basis Function (RFB) implementation
 
 
         :param config:
@@ -17,7 +17,7 @@ class RBF:
         self.config = config
         self.n_category = config['n_category']
         self.sigma = config["rbf_sigma"]
-        self.firing_threshold = config["rbg_firing_threshold"]
+        self.firing_threshold = config["rbf_firing_threshold"]
         self.centers = None  # (n_feature, n)
         self.kernel = None  # (seq_length, n_category, seq_length, n_test_sequence)
 
@@ -35,7 +35,7 @@ class RBF:
         # predict RBF kernel
         return self._compute_rbf_kernel(data)
 
-    def fit2D(self, data):
+    def fit2d(self, data):
         """
         Allow to fit 2D templates
 
@@ -45,7 +45,7 @@ class RBF:
         # initialize centers (fit)
         self.centers = data
 
-        return self._compute_2D_rbf_kernel(data)
+        return self._compute_2d_rbf_kernel(data)
 
     def reshape_preds(self, preds):
         """
@@ -79,9 +79,11 @@ class RBF:
 
     def predict(self, data):
         # compute RBF kernel according to the centers
-        preds = self._compute_rbf_kernel(data)
+        return self._compute_rbf_kernel(data)
 
-        return preds
+    def predict2d(self, data):
+        # compute RBF kernel according to the centers
+        return self._compute_2d_rbf_kernel(data)
 
     def _compute_rbf_kernel(self, data):
         """
@@ -110,6 +112,46 @@ class RBF:
         kernel = np.exp(-np.linalg.norm(diff, ord=2, axis=2) ** 2 / 2 / self.sigma ** 2)
 
         return kernel
+
+    def _compute_2d_rbf_kernel(self, data):
+        # get shapes of input data
+        n_entry = len(data)
+        shape_x = np.shape(data)[1]
+        shape_y = np.shape(data)[2]
+        n_channels = np.shape(data)[3]
+
+        # get shapes of centers (kernel)
+        ker_size = (np.shape(self.centers)[1], np.shape(self.centers)[2])
+        padd_x = ker_size[0] // 2
+        padd_y = ker_size[1] // 2
+
+        # build padded prediction
+        # == 'SAME'
+        padd_data = np.zeros(
+            (n_entry, shape_x + ker_size[0] - 1, shape_y + ker_size[1] - 1, n_channels))
+        padd_data[:, padd_x:padd_x + shape_x, padd_y:padd_y + shape_y, :] = data
+
+        # convolve with the eyebrow template
+        diffs = []
+        for center in self.centers:
+            for x in range(shape_x):
+                for y in range(shape_y):
+                    patch = padd_data[:, x:x + ker_size[0], y:y + ker_size[1]]
+
+                    diffs.append(patch - np.repeat(np.expand_dims(center, axis=0), len(data), axis=0))
+
+        # compute rbf kernel
+        kernels = []
+        for diff in diffs:
+            diff_ = np.reshape(diff, (len(diff), -1))  # flatten so we could compute the norm on axis 1
+            kernels.append(np.exp(-np.linalg.norm(diff_, ord=2, axis=1) ** 2 / 2 / self.sigma ** 2))
+
+        # reshape kernels to fit the dimensions (n_data, ker_x, ker_y, n_centers)
+        kernels = np.moveaxis(kernels, -1, 0)
+        kernels = np.reshape(kernels, (len(self.centers), n_entry, shape_x, shape_y))
+        kernels = np.moveaxis(kernels, 0, -1)
+
+        return kernels
 
     def plot_rbf_kernel(self, kernel, save_folder=None, title=None):
         print("shape kernel", np.shape(kernel))

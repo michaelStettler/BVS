@@ -23,5 +23,7 @@
   "feat_map_filter_type": "spatial_mean",
   "feat_map_filt_norm": 1000,
   "feat_map_filt_activation": "ReLu",
-  "feat_map_position_mode": "raw"
+  "feat_map_position_mode": "raw",
+  "rbf_sigma": 1.2,
+  "rbf_firing_threshold": 0.15
 }
