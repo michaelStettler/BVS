@@ -165,11 +165,21 @@ preds_pos = calculate_position(preds, mode="weighted average", return_mode="xy f
 
 color_seq = np.arange(len(preds_pos))
 plt.figure()
-plt.subplot(1, 2, 1)
+plt.subplot(2, 2, 1)
 plt.scatter(preds_pos[:, 1, 0], preds_pos[:, 0, 0], c=color_seq)
-plt.subplot(1, 2, 2)
+plt.title("Human Avatar Eyebrow")
+plt.subplot(2, 2, 2)
+plt.scatter(test_preds[:, 1, 0], test_preds[:, 0, 0], c=color_seq)
+plt.colorbar()
+plt.title("Monkey Avatar Eyebrow")
+plt.subplot(2, 2, 3)
 plt.scatter(preds_pos[:, 1, 1], preds_pos[:, 0, 1], c=color_seq)
 plt.colorbar()
+plt.title("Human Avatar Lips")
+plt.subplot(2, 2, 4)
+plt.scatter(test_preds[:, 1, 1], test_preds[:, 0, 1], c=color_seq)
+plt.colorbar()
+plt.title("Monkey Avatar Lips")
 
 plt.savefig(os.path.join("models/saved", config["config_name"], "02_human_train_pos.png"))
 

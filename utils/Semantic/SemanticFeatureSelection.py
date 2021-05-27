@@ -3,11 +3,9 @@ import pickle
 import numpy as np
 
 from utils.Semantic.load_coco_semantic_annotations import load_coco_semantic_annotations
-from utils.Semantic.load_coco_semantic_annotations import load_coco_categories
 from utils.Semantic.load_coco_semantic_annotations import get_coco_cat_ids
 from utils.Semantic.find_semantic_units import find_semantic_units
 from utils.Semantic.find_semantic_units import get_IoU_per_category
-from utils.feat_map_filter_processing import get_feat_map_filt_preds
 
 
 class SemanticFeatureSelection:

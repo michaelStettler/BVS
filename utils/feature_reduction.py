@@ -118,7 +118,7 @@ def predict_dimensionality_reduction(model, data):
         # projection by PCA
         preds = model.pca.transform(data)
     elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
-        preds = model.feat_red.transform(data)
+        preds = model.feat_red.transform(data, activation='mean')
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
@@ -162,4 +162,4 @@ def load_feature_selection(model, load_folder):
         model.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
     if model.dim_red == 'semantic' or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
         print("[LOAD] load feature reduction")
-        model.dim_red.load(load_folder)
+        model.feat_red.load(load_folder)

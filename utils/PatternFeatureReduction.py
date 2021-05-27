@@ -49,7 +49,7 @@ class PatternFeatureSelection:
 
         return self.transform(data, feature_channel_last=feature_channel_last)
 
-    def transform(self, data, feature_channel_last=True):
+    def transform(self, data, activation=None, feature_channel_last=True):
         """
         compute activation over the data with the rbf template
 

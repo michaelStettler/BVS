@@ -32,9 +32,9 @@ class SemanticPatternFeatureSelection:
 
         return preds
 
-    def transform(self, data):
-        preds = self.semantic.transform(data)
-        preds = self.pattern.transform(preds)
+    def transform(self, data, activation=None, feature_channel_last=True):
+        preds = self.semantic.transform(data, activation=None, feature_channel_last=False)
+        preds = self.pattern.transform(preds, feature_channel_last=True)
 
         return preds
 
