@@ -2,11 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from models.RBF import RBF
 from utils.load_config import load_config
 from utils.load_data import load_data
 from utils.extraction_model import load_extraction_model
+from utils.PatternFeatureReduction import PatternFeatureSelection
 from plots_utils.plot_cnn_output import plot_cnn_output
+from utils.calculate_position import calculate_position
+import matplotlib.pyplot as plt
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
@@ -42,112 +44,208 @@ print("[LOAD] size_ft", size_ft)
 print("[LOAD] Model loaded")
 print()
 
+# -------------------------------------------------------------------------------------------------------------------
+# train
+
 # load data
 data = load_data(config)
 
 # predict
 preds = model.predict(data[0], verbose=1)
 print("[PREDS] shape prediction", np.shape(preds))
+# max_preds = np.amax(preds)
+# preds /= max_preds
 
-# normalize predictions
-preds /= np.amax(preds)
-
-# --------------------------------------------------------------------------------------------------------------------
-# analyse feature maps
+# get feature maps that mimic a semantic selection pipeline
+# keep only highest IoU semantic score
+eyebrow_preds = preds[..., best_eyebrow_IoU_ft]
+print("shape eyebrow semantic feature selection", np.shape(eyebrow_preds))
+lips_preds = preds[..., best_lips_IoU_ft]
+print("shape lips semantic feature selection", np.shape(lips_preds))
+preds = [eyebrow_preds, lips_preds]
 
 # -------------------------------------------------------------------------------------------------------------------
-# eyebrow
+# fit face template
 
-# keep only highest eyebrow IoU semantic score
-eyebrow_preds = preds[..., best_eyebrow_IoU_ft]
-print("shape semantic feature selection", np.shape(preds))
+# build template
+eyebrow_mask = [[7, 12], [8, 21]]
+lips_mask = [[15, 19], [10, 19]]
+config['pattern_mask'] = [eyebrow_mask, lips_mask]
 
-# compute average eyebrow feature maps
-ft_average = np.mean(eyebrow_preds, axis=-1)
-ft_average = np.expand_dims(ft_average, axis=3)
-print("shape ft_average", np.shape(ft_average))
-
-# concacenate feature maps for plotting
-eyebrow_preds = np.concatenate((eyebrow_preds, ft_average), axis=-1)
-print("shape concacenate eyebrow_preds", np.shape(eyebrow_preds))
-
-# build eyebrow template
-eyebrow_mask = np.array([[7, 12], [8, 21]])
-eyebrow_template = eyebrow_preds[0, eyebrow_mask[0, 0]:eyebrow_mask[0, 1], eyebrow_mask[1, 0]:eyebrow_mask[1, 1]]  # neutral
-# eyebrow_template = preds[60, eyebrow_mask[0, 0]:eyebrow_mask[0, 1], eyebrow_mask[1, 0]:eyebrow_mask[1, 1]]  # max C2
-eyebrow_template = np.expand_dims(eyebrow_template, axis=0)
-
-# test mask positions
-# eyebrow_preds[:, eyebrow_mask[0, 0]:eyebrow_mask[0, 1], eyebrow_mask[1, 0]:eyebrow_mask[1, 1]] = 1
-
-# apply rbf kernel
-eyebrow_rbf = RBF(config)
-eyebrow_rbf.fit2d(eyebrow_template)
-eyebrow_ft = eyebrow_rbf.predict2d(eyebrow_preds)
+# set reference frame
+config['pattern_idx'] = 0
+patternFS = PatternFeatureSelection(config)
+preds = patternFS.fit(preds)
+print("max preds", np.amax(preds))
+eyebrow_ft = np.expand_dims(preds[..., 0], axis=3)
+lips_ft = np.expand_dims(preds[..., 1], axis=3)
+print("shape preds", np.shape(preds))
 print("shape eyebrow_ft", np.shape(eyebrow_ft))
-
-# concacenate feature maps for plotting
-eyebrow_preds = np.concatenate((eyebrow_preds, eyebrow_ft), axis=-1)
-print("shape concacenate eyebrow_preds", np.shape(eyebrow_preds))
+print("max eyebrow_ft", np.amax(eyebrow_ft))
+print("shape lips_ft", np.shape(lips_ft))
 print()
 
 # -------------------------------------------------------------------------------------------------------------------
-# lips
+# test monkey
 
+# load data
+test_data = load_data(config, train=False)
+# predict
+test_preds = model.predict(test_data[0], verbose=1)
+# test_preds /= max_preds
+print("[PREDS] shape test_preds", np.shape(test_preds))
+
+# get feature maps that mimic a semantic selection pipeline
 # keep only highest IoU semantic score
-lips_preds = preds[..., best_lips_IoU_ft]
+test_eyebrow_preds = test_preds[..., best_eyebrow_IoU_ft]
+print("shape eyebrow semantic feature selection", np.shape(eyebrow_preds))
+test_lips_preds = test_preds[..., best_lips_IoU_ft]
+print("shape lips semantic feature selection", np.shape(lips_preds))
+test_preds = [test_eyebrow_preds, test_lips_preds]
 
+# predict pattern
+test_preds = patternFS.transform(test_preds)
+test_eyebrow_ft = np.expand_dims(test_preds[..., 0], axis=3)
+test_lips_ft = np.expand_dims(test_preds[..., 1], axis=3)
+print("shape test_preds", np.shape(test_preds))
+print("shape test_eyebrow_ft", np.shape(test_eyebrow_ft))
+print("shape test_lips_ft", np.shape(test_lips_ft))
+print()
+
+# --------------------------------------------------------------------------------------------------------------------
+# create test to compare with the average
+
+# train
+# compute average eyebrow feature maps
+eyebrow_ft_average = np.mean(eyebrow_preds, axis=-1)
+eyebrow_ft_average = np.expand_dims(eyebrow_ft_average, axis=3)
 # compute average lips feature maps
-ft_average = np.mean(lips_preds, axis=-1)
-ft_average = np.expand_dims(ft_average, axis=3)
-print("shape ft_average", np.shape(ft_average))
+lips_ft_average = np.mean(lips_preds, axis=-1)
+lips_ft_average = np.expand_dims(lips_ft_average, axis=3)
 
-# concacenate feature maps for plotting
-lips_preds = np.concatenate((lips_preds, ft_average), axis=-1)
-print("shape concacenate lips_preds", np.shape(lips_preds))
-
-# build lips template
-lips_mask = np.array([[15, 19], [10, 19]])
-lips_template = lips_preds[0, lips_mask[0, 0]:lips_mask[0, 1], lips_mask[1, 0]:lips_mask[1, 1]]  # neutral
-lips_template = np.expand_dims(lips_template, axis=0)
-
-# test mask positions
-# lips_preds[:, lips_mask[0, 0]:lips_mask[0, 1], lips_mask[1, 0]:lips_mask[1, 1]] = 1
-
-# apply rbf kernel
-lips_rbf = RBF(config)
-lips_rbf.fit2d(lips_template)
-lips_ft = lips_rbf.predict2d(lips_preds)
-print("shape lips_ft", np.shape(lips_preds))
-
-# concacenate feature maps for plotting
-lips_preds = np.concatenate((lips_preds, lips_ft), axis=-1)
-print("shape concacenate preds", np.shape(lips_preds))
-
+# test
+# compute average test eyebrow feature maps
+test_eyebrow_ft_average = np.mean(test_eyebrow_preds, axis=-1)
+test_eyebrow_ft_average = np.expand_dims(test_eyebrow_ft_average, axis=3)
+# compute average lips feature maps
+test_lips_ft_average = np.mean(test_lips_preds, axis=-1)
+test_lips_ft_average = np.expand_dims(test_lips_ft_average, axis=3)
 
 # --------------------------------------------------------------------------------------------------------------------
 # plots
 
-# eyebrow feature maps
-plot_cnn_output(eyebrow_preds, os.path.join("models/saved", config["config_name"]),
-                "eyebrow_feature_maps_output.gif", verbose=True, video=True)
+# plot feature maps for each concept
+plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
+                "01_human_train_feature_maps_output.gif", verbose=True, video=True)
+print()
 
-# plot dynamic
-eyebrow_preds_ref = eyebrow_preds[0]
-eyebrow_preds_dyn = eyebrow_preds - np.repeat(np.expand_dims(eyebrow_preds_ref, axis=0), len(eyebrow_preds), axis=0)
-eyebrow_preds_dyn[eyebrow_preds_dyn < 0] = 0
+plot_cnn_output(test_preds, os.path.join("models/saved", config["config_name"]),
+                "01_monkey_test_feature_maps_output.gif", verbose=True, video=True)
+print()
 
-plot_cnn_output(eyebrow_preds_dyn, os.path.join("models/saved", config["config_name"]),
-                "eyebrow_dyn_feature_maps_output.gif", verbose=True, video=True)
+# plot dynamic feature maps for each concept
+preds_ref = preds[0]
+preds_dyn = preds - np.repeat(np.expand_dims(preds_ref, axis=0), len(preds), axis=0)
+preds_dyn[preds_dyn < 0] = 0
 
-# lips feature maps
-plot_cnn_output(lips_preds, os.path.join("models/saved", config["config_name"]),
-                "lips_feature_maps_output.gif", verbose=True, video=True)
+plot_cnn_output(preds_dyn, os.path.join("models/saved", config["config_name"]),
+                "02_human_train_dyn_feature_maps_output.gif", verbose=True, video=True)
+print()
 
-# plot dynamic
-lips_preds_ref = lips_preds[0]
-lips_preds_dyn = lips_preds - np.repeat(np.expand_dims(lips_preds_ref, axis=0), len(lips_preds), axis=0)
-lips_preds_dyn[lips_preds_dyn < 0] = 0
+test_preds_ref = test_preds[0]
+test_dyn = test_preds - np.repeat(np.expand_dims(test_preds_ref, axis=0), len(preds), axis=0)
+test_dyn[test_dyn < 0] = 0
 
-plot_cnn_output(lips_preds_dyn, os.path.join("models/saved", config["config_name"]),
-                "lips_dyn_feature_maps_output.gif", verbose=True, video=True)
+plot_cnn_output(test_dyn, os.path.join("models/saved", config["config_name"]),
+                "02_monkey_test_dyn_feature_maps_output.gif", verbose=True, video=True)
+print()
+
+# plot xy positions
+preds_pos = calculate_position(preds, mode="weighted average", return_mode="xy float")
+
+color_seq = np.arange(len(preds_pos))
+plt.figure()
+plt.subplot(1, 2, 1)
+plt.scatter(preds_pos[:, 1, 0], preds_pos[:, 0, 0], c=color_seq)
+plt.subplot(1, 2, 2)
+plt.scatter(preds_pos[:, 1, 1], preds_pos[:, 0, 1], c=color_seq)
+plt.colorbar()
+
+plt.savefig(os.path.join("models/saved", config["config_name"], "02_human_train_pos.png"))
+
+# # concacenate feature maps for plotting
+# eyebrow_preds = np.concatenate((eyebrow_preds, eyebrow_ft_average), axis=-1)
+# eyebrow_preds = np.concatenate((eyebrow_preds, eyebrow_ft), axis=-1)
+# print("shape concacenate eyebrow_preds", np.shape(eyebrow_preds))
+#
+# # concacenate feature maps for plotting
+# lips_preds = np.concatenate((lips_preds, lips_ft_average), axis=-1)
+# lips_preds = np.concatenate((lips_preds, lips_ft), axis=-1)
+# print("shape concacenate lips_preds", np.shape(lips_preds))
+#
+# # concacenate test feature maps for plotting
+# test_eyebrow_preds = np.concatenate((test_eyebrow_preds, test_eyebrow_ft_average), axis=-1)
+# test_eyebrow_preds = np.concatenate((test_eyebrow_preds, test_eyebrow_ft), axis=-1)
+# print("shape concacenate test_eyebrow_preds", np.shape(test_eyebrow_preds))
+#
+# # concacenate feature maps for plotting
+# test_lips_preds = np.concatenate((test_lips_preds, test_lips_ft_average), axis=-1)
+# test_lips_preds = np.concatenate((test_lips_preds, test_lips_ft), axis=-1)
+# print("shape concacenate test_lips_preds", np.shape(test_lips_preds))
+#
+#
+# # eyebrow feature maps
+# plot_cnn_output(eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+#                 "human_train_eyebrow_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # test eyebrow feature maps
+# plot_cnn_output(test_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+#                 "monkey_test_eyebrow_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # plot eyebrow dynamic
+# eyebrow_preds_ref = eyebrow_preds[0]
+# eyebrow_preds_dyn = eyebrow_preds - np.repeat(np.expand_dims(eyebrow_preds_ref, axis=0), len(eyebrow_preds), axis=0)
+# eyebrow_preds_dyn[eyebrow_preds_dyn < 0] = 0
+#
+# plot_cnn_output(eyebrow_preds_dyn, os.path.join("models/saved", config["config_name"]),
+#                 "human_train_eyebrow_dyn_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # plot eyebrow test dynamic
+# test_eyebrow_preds_ref = test_eyebrow_preds[0]
+# test_eyebrow_preds_dyn = test_eyebrow_preds - np.repeat(np.expand_dims(test_eyebrow_preds_ref, axis=0), len(test_eyebrow_preds), axis=0)
+# test_eyebrow_preds_dyn[test_eyebrow_preds_dyn < 0] = 0
+#
+# plot_cnn_output(test_eyebrow_preds_dyn, os.path.join("models/saved", config["config_name"]),
+#                 "monkey_test_eyebrow_dyn_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # lips feature maps
+# plot_cnn_output(lips_preds, os.path.join("models/saved", config["config_name"]),
+#                 "human_train_lips_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # test lips feature maps
+# plot_cnn_output(test_lips_preds, os.path.join("models/saved", config["config_name"]),
+#                 "monkey_test_lips_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # plot lips dynamic
+# lips_preds_ref = lips_preds[0]
+# lips_preds_dyn = lips_preds - np.repeat(np.expand_dims(lips_preds_ref, axis=0), len(lips_preds), axis=0)
+# lips_preds_dyn[lips_preds_dyn < 0] = 0
+#
+# plot_cnn_output(lips_preds_dyn, os.path.join("models/saved", config["config_name"]),
+#                 "human_train_lips_dyn_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# # plot test lips dynamic
+# test_lips_preds_ref = test_lips_preds[0]
+# test_lips_preds_dyn = test_lips_preds - np.repeat(np.expand_dims(test_lips_preds_ref, axis=0), len(test_lips_preds), axis=0)
+# test_lips_preds_dyn[test_lips_preds_dyn < 0] = 0
+#
+# plot_cnn_output(test_lips_preds_dyn, os.path.join("models/saved", config["config_name"]),
+#                 "monkey_test_lips_dyn_feature_maps_output.gif", verbose=True, video=True)
+# print()

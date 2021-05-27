@@ -24,9 +24,6 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
         ref_pred = np.repeat(np.expand_dims(ref, axis=0), len(pred), axis=0)
         filt_pred = pred - ref_pred
 
-    # compute mean over all maps
-    filt_pred = np.mean(filt_pred, axis=3)
-
     # normalize predictions
     if norm is not None:
         filt_pred = filt_pred / norm
@@ -59,7 +56,7 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
     return filt_pred
 
 
-def get_feat_map_filt_preds(preds, ft_idx, ref_type="self0",  norm=None, activation='ReLu', filter=None, verbose=False):
+def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReLu', filter=None, verbose=False):
     """
 
     :param preds:
@@ -76,17 +73,16 @@ def get_feat_map_filt_preds(preds, ft_idx, ref_type="self0",  norm=None, activat
     filt_preds = []
 
     # loop over each feture map idx to retain only the one of interest
-    for ft_index in ft_idx:
-        print("ft_index", ft_index)
-        print("shape preds", np.shape(preds))
-        filt_pred = preds[..., ft_index]
+    for i in range(np.shape(preds)[-1]):
+        pred = np.expand_dims(preds[..., i], axis=3)
+        print("shape pred", np.shape(pred))
 
         if ref_type == "self0":
-            ref = filt_pred[0]
+            ref = pred[0]
         else:
             raise ValueError("ref_type: {} is not yet implemented!".format(ref_type))
 
-        filt_pred = feat_map_filter_processing(filt_pred,
+        filt_pred = feat_map_filter_processing(pred,
                                                ref=ref,
                                                norm=norm,
                                                activation=activation,
@@ -96,9 +92,7 @@ def get_feat_map_filt_preds(preds, ft_idx, ref_type="self0",  norm=None, activat
         filt_preds.append(filt_pred)
 
     # build prediction to match the common (n_images, size, size, n_ft) dimensions
-    print("shape filt preds raw", np.shape(filt_preds))
     filt_preds = np.array(filt_preds)
     filt_preds = np.squeeze(filt_preds)
     filt_preds = np.moveaxis(filt_preds, 0, -1)
-    print("shape filt preds", np.shape(filt_preds))
     return filt_preds

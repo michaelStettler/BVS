@@ -9,8 +9,9 @@
   "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace",
   "train_avatar": "human_orig",
-  "val_avatar": "human_orig",
+  "val_avatar": "monkey_orig",
   "train_expression": ["c2"],
+  "val_expression": ["c2"],
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "weights": "imagenet",
@@ -24,6 +25,6 @@
   "feat_map_filt_norm": 1000,
   "feat_map_filt_activation": "ReLu",
   "feat_map_position_mode": "raw",
-  "rbf_sigma": 1.2,
+  "rbf_sigma": [8000, 20000],
   "rbf_firing_threshold": 0.15
 }

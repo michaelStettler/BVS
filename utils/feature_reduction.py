@@ -5,7 +5,10 @@ from sklearn.decomposition import PCA
 
 from utils.CSV_data_generator import CSVDataGen
 from utils.Semantic.SemanticFeatureSelection import SemanticFeatureSelection
+from utils.PatternFeatureReduction import PatternFeatureSelection
+from utils.SemanticPatternFeatureSelection import SemanticPatternFeatureSelection
 from utils.calculate_position import calculate_position
+from utils.feat_map_filter_processing import get_feat_map_filt_preds
 
 
 def set_feature_selection(model, config):
@@ -34,7 +37,7 @@ def set_feature_selection(model, config):
         model.position_method = config['position_method']
         # initialize n_features as number of feature maps*2
         model.n_features = model.shape_v4[-1] * 2
-    elif model.dim_red == "semantic":
+    elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
         # set number of features depending on the way positions are computed
         if config['feat_map_position_mode'] == 'raw':
             model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
@@ -44,8 +47,14 @@ def set_feature_selection(model, config):
             model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
         else:
             raise NotImplementedError("feat_map_position_mode {} not implemented".format(config["semantic_units"]))
+
         # declare semanticFeature object
-        model.semantic_feat_red = SemanticFeatureSelection(config)
+        if model.dim_red == "semantic":
+            model.feat_red = SemanticFeatureSelection(config, model.v4)
+        elif model.dim_red == "pattern":
+            model.feat_red = PatternFeatureSelection(config)
+        elif model.dim_red == "semantic-pattern":
+            model.feat_red = SemanticPatternFeatureSelection(config, model.v4)
     else:
         raise ValueError("Dimensionality reduction {} is not implemented".format(model.dim_red))
 
@@ -68,13 +77,16 @@ def fit_dimensionality_reduction(model, data):
         print("[FIT] PCA: explained variance", model.pca.explained_variance_ratio_)
         preds = model.pca.transform(data)
 
-    elif model.dim_red == 'position':
-        print(f'[FIT] dimensionality reduction method: position with calculation method {model.position_method}')
+    elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
+        preds = model.feat_red.fit(data, activation='mean')
 
-    elif model.dim_red == "semantic":
-        print("[FIT] Finding semantic units")
-        model.semantic_feat_red.fit(model.v4)
-        preds = model.semantic_feat_red.transform(data)
+        # apply filter post_processing
+        # todo modify this, I'm not really happy with this yet
+        preds = get_feat_map_filt_preds(preds,
+                                        ref_type="self0",
+                                        norm=model.config['feat_map_filt_norm'],
+                                        activation=model.config['feat_map_filt_activation'],
+                                        filter=model.config['feat_map_filter_type'])
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
@@ -105,8 +117,8 @@ def predict_dimensionality_reduction(model, data):
     elif model.dim_red == 'PCA':
         # projection by PCA
         preds = model.pca.transform(data)
-    elif model.dim_red == "semantic":
-        preds = model.semantic_feat_red.transform(data)
+    elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
+        preds = model.feat_red.transform(data)
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
@@ -133,11 +145,9 @@ def save_feature_selection(model, save_folder):
     if model.dim_red == 'PCA':
         print("[SAVE] Save PCA")
         pickle.dump(model.pca, open(os.path.join(save_folder, "pca.pkl"), 'wb'))
-    elif model.dim_red == 'semantic':
-        print("[SAVE] Save semantic units dictionary")
-        # save only the semantic dictionary
-        pickle.dump(model.semantic_feat_red.sem_idx_list,
-                    open(os.path.join(save_folder, "semantic_dictionary.pkl"), 'wb'))
+    elif model.dim_red == 'semantic' or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
+        print("[SAVE] Save feature reduction")
+        model.feat_red.save(save_folder)
 
 
 def load_feature_selection(model, load_folder):
@@ -148,8 +158,8 @@ def load_feature_selection(model, load_folder):
     """
 
     if model.dim_red == 'PCA':
+        print("[LOAD] load PCA")
         model.pca = pickle.load(open(os.path.join(load_folder, "pca.pkl"), 'rb'))
-    if model.dim_red == 'semantic':
-        # load the semantic index dictionary
-        sem_idx_list = pickle.load(open(os.path.join(load_folder, "semantic_dictionary.pkl"), 'rb'))
-        model.semantic_feat_red.sem_idx_list = sem_idx_list
+    if model.dim_red == 'semantic' or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
+        print("[LOAD] load feature reduction")
+        model.dim_red.load(load_folder)

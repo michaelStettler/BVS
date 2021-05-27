@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class RBF:
 
-    def __init__(self, config):
+    def __init__(self, config, sigma=None):
         """
         Radial Basis Function (RFB) implementation
 
@@ -16,7 +16,10 @@ class RBF:
         # declare parameters
         self.config = config
         self.n_category = config['n_category']
-        self.sigma = config["rbf_sigma"]
+        if sigma is None:
+            self.sigma = config["rbf_sigma"]
+        else:
+            self.sigma = sigma
         self.firing_threshold = config["rbf_firing_threshold"]
         self.centers = None  # (n_feature, n)
         self.kernel = None  # (seq_length, n_category, seq_length, n_test_sequence)

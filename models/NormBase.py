@@ -407,7 +407,7 @@ class NormBase:
         print("[FIT] Compute v4")
 
         flatten = True
-        if self.dim_red == 'semantic':
+        if self.dim_red == 'semantic' or self.dim_red == "semantic-pattern" or self.dim_red == "pattern":
             flatten = False
 
         v4_preds = self.predict_v4(data[0], flatten=flatten)
@@ -426,13 +426,11 @@ class NormBase:
 
         if fit_ref:
             print("[FIT] - Fitting Reference Pattern -")
-            # self._fit_reference(v4_preds_red, batch_size)
             self._fit_reference([v4_preds_red, data[1]], batch_size)
             print("[FIT] Reference pattern learned")
 
         if fit_tun:
             print("[FIT] - Fitting Tuning Vector -")
-            # self._fit_tuning(data, batch_size)
             self._fit_tuning([v4_preds_red, data[1]], batch_size)
             print("[FIT] Tuning pattern learned")
 
