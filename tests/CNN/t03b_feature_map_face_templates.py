@@ -53,8 +53,6 @@ data = load_data(config)
 # predict
 preds = model.predict(data[0], verbose=1)
 print("[PREDS] shape prediction", np.shape(preds))
-# max_preds = np.amax(preds)
-# preds /= max_preds
 
 # get feature maps that mimic a semantic selection pipeline
 # keep only highest IoU semantic score
@@ -68,8 +66,17 @@ preds = [eyebrow_preds, lips_preds]
 # fit face template
 
 # build template
-eyebrow_mask = [[7, 12], [8, 21]]
-lips_mask = [[15, 19], [10, 19]]
+# eyebrow_mask = [[7, 12], [8, 21]]
+# eyebrow_mask = [[8, 13], [8, 21]]
+# eyebrow_mask = [[9, 11], [8, 21]]
+# eyebrow_mask = [[8, 10], [8, 21]]
+# eyebrow_mask = [[8, 11], [8, 21]]
+eyebrow_mask = [[8, 13], [7, 14]]
+# eyebrow_mask = [[8, 13], [7, 22]]
+# lips_mask = [[15, 19], [10, 19]]
+lips_mask = [[18, 22], [10, 19]]
+# config['rbf_sigma'] = [7000, 20000]
+config['rbf_sigma'] = [6000, 20000]
 config['pattern_mask'] = [eyebrow_mask, lips_mask]
 
 # set reference frame
@@ -92,7 +99,6 @@ print()
 test_data = load_data(config, train=False)
 # predict
 test_preds = model.predict(test_data[0], verbose=1)
-# test_preds /= max_preds
 print("[PREDS] shape test_preds", np.shape(test_preds))
 
 # get feature maps that mimic a semantic selection pipeline
@@ -143,41 +149,53 @@ plot_cnn_output(test_preds, os.path.join("models/saved", config["config_name"]),
                 "01_monkey_test_feature_maps_output.gif", verbose=True, video=True)
 print()
 
-# plot dynamic feature maps for each concept
-preds_ref = preds[0]
-preds_dyn = preds - np.repeat(np.expand_dims(preds_ref, axis=0), len(preds), axis=0)
-preds_dyn[preds_dyn < 0] = 0
-
-plot_cnn_output(preds_dyn, os.path.join("models/saved", config["config_name"]),
-                "02_human_train_dyn_feature_maps_output.gif", verbose=True, video=True)
-print()
-
-test_preds_ref = test_preds[0]
-test_dyn = test_preds - np.repeat(np.expand_dims(test_preds_ref, axis=0), len(preds), axis=0)
-test_dyn[test_dyn < 0] = 0
-
-plot_cnn_output(test_dyn, os.path.join("models/saved", config["config_name"]),
-                "02_monkey_test_dyn_feature_maps_output.gif", verbose=True, video=True)
-print()
+# # plot dynamic feature maps for each concept
+# preds_ref = preds[0]
+# preds_dyn = preds - np.repeat(np.expand_dims(preds_ref, axis=0), len(preds), axis=0)
+# preds_dyn[preds_dyn < 0] = 0
+#
+# plot_cnn_output(preds_dyn, os.path.join("models/saved", config["config_name"]),
+#                 "02_human_train_dyn_feature_maps_output.gif", verbose=True, video=True)
+# print()
+#
+# test_preds_ref = test_preds[0]
+# test_dyn = test_preds - np.repeat(np.expand_dims(test_preds_ref, axis=0), len(preds), axis=0)
+# test_dyn[test_dyn < 0] = 0
+#
+# plot_cnn_output(test_dyn, os.path.join("models/saved", config["config_name"]),
+#                 "02_monkey_test_dyn_feature_maps_output.gif", verbose=True, video=True)
+# print()
 
 # plot xy positions
 preds_pos = calculate_position(preds, mode="weighted average", return_mode="xy float")
+test_preds_pos = calculate_position(test_preds, mode="weighted average", return_mode="xy float")
 
 color_seq = np.arange(len(preds_pos))
 plt.figure()
 plt.subplot(2, 2, 1)
+print("shape preds_pos", np.shape(preds_pos))
+print("shape test_preds", np.shape(test_preds))
 plt.scatter(preds_pos[:, 1, 0], preds_pos[:, 0, 0], c=color_seq)
+plt.xlim(13.5, 14.0)
+plt.ylim(11.7, 12.2)
+plt.colorbar()
 plt.title("Human Avatar Eyebrow")
 plt.subplot(2, 2, 2)
-plt.scatter(test_preds[:, 1, 0], test_preds[:, 0, 0], c=color_seq)
+plt.scatter(test_preds_pos[:, 1, 0], test_preds_pos[:, 0, 0], c=color_seq)
+plt.xlim(13.5, 14.0)
+plt.ylim(11.7, 12.2)
 plt.colorbar()
 plt.title("Monkey Avatar Eyebrow")
 plt.subplot(2, 2, 3)
 plt.scatter(preds_pos[:, 1, 1], preds_pos[:, 0, 1], c=color_seq)
+plt.xlim(13.2, 13.6)
+plt.ylim(13.6, 14.6)
 plt.colorbar()
 plt.title("Human Avatar Lips")
 plt.subplot(2, 2, 4)
-plt.scatter(test_preds[:, 1, 1], test_preds[:, 0, 1], c=color_seq)
+plt.scatter(test_preds_pos[:, 1, 1], test_preds_pos[:, 0, 1], c=color_seq)
+plt.xlim(13.2, 13.6)
+plt.ylim(13.6, 14.6)
 plt.colorbar()
 plt.title("Monkey Avatar Lips")
 

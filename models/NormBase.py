@@ -575,7 +575,7 @@ class NormBase:
         """
         print("[PREDICT] Compute v4")
         flatten = True
-        if self.dim_red == 'semantic':
+        if self.dim_red == 'semantic' or self.dim_red == "semantic-pattern" or self.dim_red == "pattern":
             flatten = False
 
         v4_preds = self.predict_v4(data[0], flatten=flatten)

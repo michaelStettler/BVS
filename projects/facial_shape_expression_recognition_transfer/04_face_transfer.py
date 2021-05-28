@@ -12,10 +12,10 @@ run: python -m projects.facial_shape_expression_recognition_transfer.04_face_tra
 """
 
 # load config
-config_name = 'NB_morph_space_transfer_m0001.json'
+config_name = 'NB_morph_space_transfer_m0002.json'
 config = load_config(config_name, path='configs/norm_base_config')
 
-full_train = True
+full_train = False
 
 # --------------------------------------------------------------------------------------------------------------------
 # train model

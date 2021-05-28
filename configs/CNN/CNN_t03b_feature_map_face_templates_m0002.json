@@ -1,5 +1,5 @@
 {
-  "config_name": "CNN_t03b_feature_map_face_template_m0001",
+  "config_name": "CNN_t03b_feature_map_face_template_m0002",
   "train_data": "morphing_space",
   "use_data_generator": false,
   "x_col": "image_path",
@@ -10,8 +10,8 @@
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace",
   "train_avatar": "human_orig",
   "val_avatar": "monkey_orig",
-  "train_expression": ["c2"],
-  "val_expression": ["c2"],
+  "train_expression": ["c3"],
+  "val_expression": ["c3"],
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "weights": "imagenet",

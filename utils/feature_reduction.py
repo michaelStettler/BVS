@@ -120,6 +120,14 @@ def predict_dimensionality_reduction(model, data):
     elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
         preds = model.feat_red.transform(data, activation='mean')
 
+        # apply filter post_processing
+        # todo modify this, I'm not really happy with this yet
+        preds = get_feat_map_filt_preds(preds,
+                                        ref_type="self0",
+                                        norm=model.config['feat_map_filt_norm'],
+                                        activation=model.config['feat_map_filt_activation'],
+                                        filter=model.config['feat_map_filter_type'])
+
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
             print("[PREDS] Using position mode: {}".format(model.config['feat_map_position_mode']))
