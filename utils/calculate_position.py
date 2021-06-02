@@ -21,6 +21,7 @@ def calculate_position(response, mode="weighted average", return_mode="array"):
         "flattened" --> return flattened position
         "xy"        --> return coordinates
         "xy float"  --> return coordinates as float
+        "xy float flat" -> return coordinates as float flattened
         "array"     --> return  zero-array with 1 at coordinates
     :return:
     """
@@ -85,6 +86,10 @@ def calculate_position(response, mode="weighted average", return_mode="array"):
             return np.swapaxes(stacked, 0, 1)
         except UnboundLocalError:
             return np.unravel_index(position_flattened, original_shape[1:3])
+    elif return_mode == "xy float flat":
+        stacked = np.stack((index_mean_x_float, index_mean_y_float))
+        stacked = np.swapaxes(stacked, 0, 1)
+        return np.reshape(stacked, (len(stacked), -1))
     elif return_mode == "array":
         # init plot vector
         position_array = np.zeros(response.shape)

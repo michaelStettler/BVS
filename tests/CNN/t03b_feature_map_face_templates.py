@@ -9,6 +9,7 @@ from utils.PatternFeatureReduction import PatternFeatureSelection
 from plots_utils.plot_cnn_output import plot_cnn_output
 from utils.calculate_position import calculate_position
 import matplotlib.pyplot as plt
+from utils.feat_map_filter_processing import get_feat_map_filt_preds
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
@@ -71,18 +72,27 @@ preds = [eyebrow_preds, lips_preds]
 # eyebrow_mask = [[9, 11], [8, 21]]
 # eyebrow_mask = [[8, 10], [8, 21]]
 # eyebrow_mask = [[8, 11], [8, 21]]
-eyebrow_mask = [[8, 13], [7, 14]]
+# eyebrow_mask = [[8, 13], [7, 14]]
+# eyebrow_mask = [[8, 13], [7, 14]]  -> get well the eyebrow on the human but still catches lips of monkey
+eyebrow_mask = [[7, 15], [7, 21]]
 # eyebrow_mask = [[8, 13], [7, 22]]
 # lips_mask = [[15, 19], [10, 19]]
 lips_mask = [[18, 22], [10, 19]]
 # config['rbf_sigma'] = [7000, 20000]
-config['rbf_sigma'] = [6000, 20000]
+# config['rbf_sigma'] = [6000, 15000]
+config['rbf_sigma'] = [9000, 15000]
 config['pattern_mask'] = [eyebrow_mask, lips_mask]
+config['pattern_idx'] = 0
 
 # set reference frame
-config['pattern_idx'] = 0
 patternFS = PatternFeatureSelection(config)
 preds = patternFS.fit(preds)
+print("shape preds pattern", np.shape(preds))
+preds = get_feat_map_filt_preds(preds,
+                                ref_type=config['feat_map_filt_ref'],
+                                norm=config['feat_map_filt_norm'],
+                                activation=config['feat_map_filt_activation'],
+                                filter=config['feat_map_filter_type'])
 print("max preds", np.amax(preds))
 eyebrow_ft = np.expand_dims(preds[..., 0], axis=3)
 lips_ft = np.expand_dims(preds[..., 1], axis=3)
@@ -138,9 +148,38 @@ test_lips_ft_average = np.mean(test_lips_preds, axis=-1)
 test_lips_ft_average = np.expand_dims(test_lips_ft_average, axis=3)
 
 # --------------------------------------------------------------------------------------------------------------------
+# create test to compare with the max
+
+# train
+# compute max eyebrow feature maps
+eyebrow_ft_average = np.amax(eyebrow_preds, axis=-1)
+eyebrow_ft_average = np.expand_dims(eyebrow_ft_average, axis=3)
+# compute max lips feature maps
+lips_ft_average = np.amax(lips_preds, axis=-1)
+lips_ft_average = np.expand_dims(lips_ft_average, axis=3)
+
+# test
+# compute max test eyebrow feature maps
+test_eyebrow_ft_average = np.amax(test_eyebrow_preds, axis=-1)
+test_eyebrow_ft_average = np.expand_dims(test_eyebrow_ft_average, axis=3)
+# compute max lips feature maps
+test_lips_ft_average = np.amax(test_lips_preds, axis=-1)
+test_lips_ft_average = np.expand_dims(test_lips_ft_average, axis=3)
+
+# --------------------------------------------------------------------------------------------------------------------
 # plots
 
 # plot feature maps for each concept
+print("shape preds", np.shape(preds))
+plot_cnn_output(eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+                "00_human_train_eyebrow_feature_maps_output.gif", verbose=True, video=True)
+plot_cnn_output(test_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+                "00_monkey_test_eyebrow_feature_maps_output.gif", verbose=True, video=True)
+plot_cnn_output(lips_preds, os.path.join("models/saved", config["config_name"]),
+                "00_human_train_lips_feature_maps_output.gif", verbose=True, video=True)
+plot_cnn_output(test_lips_preds, os.path.join("models/saved", config["config_name"]),
+                "00_monkey_test_lips_feature_maps_output.gif", verbose=True, video=True)
+print()
 plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
                 "01_human_train_feature_maps_output.gif", verbose=True, video=True)
 print()
@@ -171,31 +210,34 @@ preds_pos = calculate_position(preds, mode="weighted average", return_mode="xy f
 test_preds_pos = calculate_position(test_preds, mode="weighted average", return_mode="xy float")
 
 color_seq = np.arange(len(preds_pos))
+color_seq[:40] = 0
+color_seq[40:80] = 1
+color_seq[80:] = 2
 plt.figure()
 plt.subplot(2, 2, 1)
 print("shape preds_pos", np.shape(preds_pos))
 print("shape test_preds", np.shape(test_preds))
 plt.scatter(preds_pos[:, 1, 0], preds_pos[:, 0, 0], c=color_seq)
-plt.xlim(13.5, 14.0)
-plt.ylim(11.7, 12.2)
+# plt.xlim(13.5, 14.0)
+# plt.ylim(11.7, 12.2)
 plt.colorbar()
 plt.title("Human Avatar Eyebrow")
 plt.subplot(2, 2, 2)
 plt.scatter(test_preds_pos[:, 1, 0], test_preds_pos[:, 0, 0], c=color_seq)
-plt.xlim(13.5, 14.0)
-plt.ylim(11.7, 12.2)
+# plt.xlim(13.5, 14.0)
+# plt.ylim(11.7, 12.2)
 plt.colorbar()
 plt.title("Monkey Avatar Eyebrow")
 plt.subplot(2, 2, 3)
 plt.scatter(preds_pos[:, 1, 1], preds_pos[:, 0, 1], c=color_seq)
-plt.xlim(13.2, 13.6)
-plt.ylim(13.6, 14.6)
+# plt.xlim(13.2, 13.6)
+# plt.ylim(13.6, 14.6)
 plt.colorbar()
 plt.title("Human Avatar Lips")
 plt.subplot(2, 2, 4)
 plt.scatter(test_preds_pos[:, 1, 1], test_preds_pos[:, 0, 1], c=color_seq)
-plt.xlim(13.2, 13.6)
-plt.ylim(13.6, 14.6)
+# plt.xlim(13.2, 13.6)
+# plt.ylim(13.6, 14.6)
 plt.colorbar()
 plt.title("Monkey Avatar Lips")
 

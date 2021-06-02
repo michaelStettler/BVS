@@ -51,6 +51,7 @@ class SemanticFeatureSelection:
             raise ValueError("Semantic features units are None! Please either train the Semantic Feature Selection or "
                              "load a pre-trained dictionary")
         else:
+            print("[Feat. Select] Transform Semantic")
             # get category IDs of interest (transform semantic units name to category id of COCO)
             cat_ids = get_coco_cat_ids(self.config, self.config['semantic_units'], to_numpy=True)
 

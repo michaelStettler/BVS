@@ -56,6 +56,7 @@ class PatternFeatureSelection:
         :param data: (n_pattern, n_data, n_feat, n_feat, n_dim)
         :return:
         """
+        print("[Feat. Select] Transform Pattern")
         preds = []
         for i in range(len(data)):
             pred = np.array(data[i])
@@ -63,8 +64,15 @@ class PatternFeatureSelection:
 
         # transform to (n_data, n_feature, n_feature, n_pattern)
         if feature_channel_last:
-            preds = np.squeeze(preds)
             preds = np.moveaxis(preds, 0, -1)
+
+            num_data = len(preds)
+            preds = np.squeeze(preds)
+
+            # make sure that preds remains a 4-dimensional array even when there's only one data
+            if num_data == 1:
+                preds = np.expand_dims(preds, axis=0)
+
         return preds
 
     def save(self, path):

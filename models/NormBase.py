@@ -48,6 +48,7 @@ class NormBase:
             self.nu = config['nu']
         except KeyError:
             self.nu = 2.0
+            print("nu missing from json configuration file! Set to '2.0'")
         # set tuning function
         try:
             self.tun_func = config['tun_func']
@@ -580,7 +581,7 @@ class NormBase:
 
         v4_preds = self.predict_v4(data[0], flatten=flatten)
 
-        print("[PREDICT] - Fitting dimensionality reduction -")
+        print("[PREDICT] - reduce data dimensionality -")
         v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
         print("shape v4_preds_red", np.shape(v4_preds_red))
 
@@ -770,7 +771,7 @@ class NormBase:
             lines[:,i] = np.sqrt(lines[:,i])
         return x, lines
 
-    def plot_it_neurons(self, it_neurons, title=None, save_folder=None, normalize = True):
+    def plot_it_neurons(self, it_neurons, title=None, save_folder=None, normalize=True):
         plt.figure()
 
         if normalize:

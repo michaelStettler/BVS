@@ -18,6 +18,7 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
         raise ValueError("Input array is not supported! Supported: 4D tensors, "
                          "received shape: {}".format(len(np.shape(pred))))
     # todo set for other array size?
+    filt_pred = pred
 
     # remove reference (compute dynamic)
     if ref is not None:
@@ -28,8 +29,9 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
     if norm is not None:
         filt_pred = filt_pred / norm
 
-    # get back to initial size
-    filt_pred = np.expand_dims(filt_pred, axis=3)
+    # # get back to initial size
+    # filt_pred = np.expand_dims(filt_pred, axis=3)
+    # print("shape filt_pred", np.shape(filt_pred))
 
     # apply activation
     if activation == 'ReLu':
@@ -72,12 +74,25 @@ def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReL
     # declare variables
     filt_preds = []
 
-    # loop over each feture map idx to retain only the one of interest
+    # set empty string to None
+    if ref_type == "":
+        ref_type = None
+    if norm == "":
+        norm = None
+    if activation == "":
+        activation = None
+    if filter == "":
+        filter = None
+
+    print("[ft. maps filter] ref_type:{}, norm:{}, activation:{}, filter:{}".format(ref_type, norm, activation, filter))
+
+            # loop over each feture map idx to retain only the one of interest
     for i in range(np.shape(preds)[-1]):
         pred = np.expand_dims(preds[..., i], axis=3)
-        print("shape pred", np.shape(pred))
 
-        if ref_type == "self0":
+        if ref_type is None:
+            ref = None
+        elif ref_type == "self0":
             ref = pred[0]
         else:
             raise ValueError("ref_type: {} is not yet implemented!".format(ref_type))
