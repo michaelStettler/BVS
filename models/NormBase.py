@@ -771,7 +771,7 @@ class NormBase:
             lines[:,i] = np.sqrt(lines[:,i])
         return x, lines
 
-    def plot_it_neurons(self, it_neurons, title=None, save_folder=None, normalize=True):
+    def plot_it_neurons(self, it_neurons, title=None, save_folder=None, normalize=False):
         plt.figure()
 
         if normalize:

@@ -2,7 +2,7 @@ import tensorflow as tf
 import warnings
 
 
-def load_extraction_model(config, input_shape=None):
+def load_extraction_model(config, input_shape=None, verbose=False):
     # -----------------------------------------------------------------
     # limit GPU memory as it appear windows have an issue with this, from:
     # https://forums.developer.nvidia.com/t/could-not-create-cudnn-handle-cudnn-status-alloc-failed/108261/3
@@ -41,6 +41,9 @@ def load_extraction_model(config, input_shape=None):
             raise ValueError("Include top is false but input_shape is not given!")
     else:
         raise ValueError("Model {} not found!".format(config['model']))
+
+    if verbose:
+        print(model.summary())
 
     return model
 

@@ -17,11 +17,11 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 test script to try the fit a face template over different feature maps instead of simply summing them up
 the term dynmic means here that I am trying to get the specific "moving parts" from the sequence 
 
-run: python -m tests.CNN.t03d_feature_map_dynamic_face
+run: python -m tests.NormBase.t11_dynamic_xy_pos
 """
 
 # define configuration
-config_path = 'CNN_t03d_feature_map_dynamic_face_m0001.json'
+config_path = 'NB_t11_dynamic_xy_pos_m0001.json'
 
 # declare parameters
 best_eyebrow_IoU_ft = [209, 148, 59, 208]
@@ -30,7 +30,7 @@ best_lips_IoU_ft = [77, 79, 120, 104, 141, 0, 34, 125, 15, 89, 49, 237, 174, 39,
                          182, 251, 186, 248]
 
 # load config
-config = load_config(config_path, path='configs/CNN')
+config = load_config(config_path, path='configs/norm_base_config')
 
 # create directory if non existant
 save_path = os.path.join("models/saved", config["config_name"])
@@ -66,11 +66,17 @@ print("shape lips semantic feature selection", np.shape(lips_preds))
 
 # compute dynamic directly on the feature maps
 # eyebrow
-eyebrow_preds_ref = eyebrow_preds[0]
+# eyebrow_preds_ref = eyebrow_preds[0]
+eyebrow_preds_neut0 = eyebrow_preds[:40]
+eyebrow_preds_neut1 = eyebrow_preds[80:]
+eyebrow_preds_ref = np.mean(np.concatenate([eyebrow_preds_neut0, eyebrow_preds_neut1]), axis=0)
 dyn_eyebrow_preds = eyebrow_preds - np.repeat(np.expand_dims(eyebrow_preds_ref, axis=0), len(eyebrow_preds), axis=0)
 dyn_eyebrow_preds[dyn_eyebrow_preds < 0] = 0
 # lips
-lips_preds_ref = lips_preds[0]
+# lips_preds_ref = lips_preds[0]
+lips_preds_neut0 = lips_preds[:40]
+lips_preds_neut1 = lips_preds[80:]
+lips_preds_ref = np.mean(np.concatenate([lips_preds_neut0, lips_preds_neut1]), axis=0)
 dyn_lips_preds = lips_preds - np.repeat(np.expand_dims(lips_preds_ref, axis=0), len(lips_preds), axis=0)
 dyn_lips_preds[dyn_lips_preds < 0] = 0
 print("[TRAIN] finished computing dynamic predictions")
@@ -124,13 +130,19 @@ print("shape lips semantic feature selection", np.shape(lips_preds))
 test_preds = [test_eyebrow_preds, test_lips_preds]
 
 # compute dynamic feature maps
-test_eyebrow_preds_ref = test_eyebrow_preds[0]
+# test_eyebrow_preds_ref = test_eyebrow_preds[0]
+test_eyebrow_preds_neut0 = test_eyebrow_preds[:40]
+test_eyebrow_preds_neut1 = test_eyebrow_preds[80:]
+test_eyebrow_preds_ref = np.mean(np.concatenate([test_eyebrow_preds_neut0, test_eyebrow_preds_neut1]), axis=0)
 test_dyn_eyebrow_preds = test_eyebrow_preds - np.repeat(np.expand_dims(test_eyebrow_preds_ref, axis=0), len(test_eyebrow_preds), axis=0)
 test_dyn_eyebrow_preds[test_dyn_eyebrow_preds < 0] = 0
-test_lips_preds_ref = test_lips_preds[0]
+
+# test_lips_preds_ref = test_lips_preds[0]
+test_lips_preds_neut0 = test_lips_preds[:40]
+test_lips_preds_neut1 = test_lips_preds[80:]
+test_lips_preds_ref = np.mean(np.concatenate([test_lips_preds_neut0, test_lips_preds_neut1]), axis=0)
 test_dyn_lips_preds = test_lips_preds - np.repeat(np.expand_dims(test_lips_preds_ref, axis=0), len(test_lips_preds), axis=0)
 test_dyn_lips_preds[test_dyn_lips_preds < 0] = 0
-test_dyn_preds = [test_dyn_eyebrow_preds, test_dyn_lips_preds]
 
 # compute positions
 dyn_test_eyebrow_pos = calculate_position(test_dyn_eyebrow_preds[1:], mode="weighted average", return_mode="xy float flat")

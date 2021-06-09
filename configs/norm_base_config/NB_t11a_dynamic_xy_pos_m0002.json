@@ -1,5 +1,5 @@
 {
-  "config_name": "CNN_t03d_feature_map_face_m0001",
+  "config_name": "NB_t11a_dynamic_xy_pos_m0002",
   "train_data": "morphing_space",
   "use_data_generator": false,
   "x_col": "image_path",
@@ -10,8 +10,8 @@
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace",
   "train_avatar": "human_orig",
   "val_avatar": "monkey_orig",
-  "train_expression": ["c2","c3"],
-  "val_expression": ["c2","c3"],
+  "train_expression": ["c3"],
+  "val_expression": ["c3"],
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "weights": "imagenet",
@@ -24,9 +24,11 @@
   "semantic_units": ["eyebrow"],
   "tun_func": "2-norm",
   "nu": 2.0,
+  "seq_length": 150,
   "feat_map_filt_ref": "",
   "feat_map_filter_type": "",
   "feat_map_filt_norm": "",
   "feat_map_filt_activation": "",
-  "feat_map_position_mode": ""
+  "feat_map_position_mode": "",
+  "colors": ["k", [0.773, 0.224, 0.196], [0.937, 0.522, 0.212], [0.2235, 0.4667, 0.686], [0, 0.619, 0.451]]
 }
