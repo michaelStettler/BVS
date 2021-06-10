@@ -22,7 +22,7 @@ run: python -m tests.NormBase.t11a_dynamic_weighted_xy_pos
 """
 
 # define configuration
-config_path = 'NB_t11a_dynamic_xy_pos_m0001.json'
+config_path = 'NB_t11a_dynamic_xy_pos_m0003.json'
 
 # declare parameters
 best_eyebrow_IoU_ft = [209, 148, 59, 208]
@@ -66,13 +66,23 @@ print("shape lips semantic feature selection", np.shape(lips_preds))
 
 # compute dynamic directly on the feature maps
 # eyebrow
-neutr_eyebrow_preds = get_ref_idx_frames([eyebrow_preds, data[1]], ref_index=config['ref_category'])
-eyebrow_preds_ref = np.mean(neutr_eyebrow_preds, axis=0)
+get_neutral_frames(data)
+# eyebrow_preds_ref = eyebrow_preds[0]
+eyebrow_preds_neut0 = eyebrow_preds[:40]
+# eyebrow_preds_neut1 = eyebrow_preds[80:]
+eyebrow_preds_neut1 = eyebrow_preds[80:190]
+eyebrow_preds_neut2 = eyebrow_preds[230:]
+eyebrow_preds_ref = np.mean(np.concatenate([eyebrow_preds_neut0, eyebrow_preds_neut1, eyebrow_preds_neut2]), axis=0)
+# eyebrow_preds_ref = np.mean(np.concatenate([eyebrow_preds_neut0, eyebrow_preds_neut1]), axis=0)
 dyn_eyebrow_preds = eyebrow_preds - np.repeat(np.expand_dims(eyebrow_preds_ref, axis=0), len(eyebrow_preds), axis=0)
 dyn_eyebrow_preds[dyn_eyebrow_preds < 0] = 0
 # lips
-neutr_lips_preds = get_ref_idx_frames([lips_preds, data[1]], ref_index=config['ref_category'])
-lips_preds_ref = np.mean(neutr_lips_preds, axis=0)
+# lips_preds_ref = lips_preds[0]
+lips_preds_neut0 = lips_preds[:40]
+# lips_preds_neut1 = lips_preds[80:]
+lips_preds_neut1 = lips_preds[80:190]
+lips_preds_neut2 = lips_preds[230:]
+lips_preds_ref = np.mean(np.concatenate([lips_preds_neut0, lips_preds_neut1, lips_preds_neut2]), axis=0)
 # lips_preds_ref = np.mean(np.concatenate([lips_preds_neut0, lips_preds_neut1]), axis=0)
 dyn_lips_preds = lips_preds - np.repeat(np.expand_dims(lips_preds_ref, axis=0), len(lips_preds), axis=0)
 dyn_lips_preds[dyn_lips_preds < 0] = 0
@@ -122,13 +132,23 @@ print("shape lips semantic feature selection", np.shape(lips_preds))
 test_preds = [test_eyebrow_preds, test_lips_preds]
 
 # compute dynamic feature maps
-test_neutr_eyebrow_preds = get_ref_idx_frames([test_eyebrow_preds, test_data[1]], ref_index=config['ref_category'])
-test_eyebrow_preds_ref = np.mean(test_neutr_eyebrow_preds, axis=0)
+# test_eyebrow_preds_ref = test_eyebrow_preds[0]
+test_eyebrow_preds_neut0 = test_eyebrow_preds[:40]
+# test_eyebrow_preds_neut1 = test_eyebrow_preds[80:]
+test_eyebrow_preds_neut1 = test_eyebrow_preds[80:190]
+test_eyebrow_preds_neut2 = test_eyebrow_preds[230:]
+test_eyebrow_preds_ref = np.mean(np.concatenate([test_eyebrow_preds_neut0, test_eyebrow_preds_neut1, test_eyebrow_preds_neut2]), axis=0)
+# test_eyebrow_preds_ref = np.mean(np.concatenate([test_eyebrow_preds_neut0, test_eyebrow_preds_neut1]), axis=0)
 test_dyn_eyebrow_preds = test_eyebrow_preds - np.repeat(np.expand_dims(test_eyebrow_preds_ref, axis=0), len(test_eyebrow_preds), axis=0)
 test_dyn_eyebrow_preds[test_dyn_eyebrow_preds < 0] = 0
 
-test_neutr_lips_preds = get_ref_idx_frames([test_lips_preds, test_data[1]], ref_index=config['ref_category'])
-test_lips_preds_ref = np.mean(test_neutr_lips_preds, axis=0)
+# test_lips_preds_ref = test_lips_preds[0]
+test_lips_preds_neut0 = test_lips_preds[:40]
+# test_lips_preds_neut1 = test_lips_preds[80:]
+test_lips_preds_neut1 = test_lips_preds[80:190]
+test_lips_preds_neut2 = test_lips_preds[230:]
+test_lips_preds_ref = np.mean(np.concatenate([test_lips_preds_neut0, test_lips_preds_neut1, test_lips_preds_neut2]), axis=0)
+# test_lips_preds_ref = np.mean(np.concatenate([test_lips_preds_neut0, test_lips_preds_neut1]), axis=0)
 test_dyn_lips_preds = test_lips_preds - np.repeat(np.expand_dims(test_lips_preds_ref, axis=0), len(test_lips_preds), axis=0)
 test_dyn_lips_preds[test_dyn_lips_preds < 0] = 0
 

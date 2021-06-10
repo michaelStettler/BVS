@@ -7,6 +7,7 @@ from models.NormBase import NormBase
 from utils.Semantic.load_coco_semantic_annotations import get_coco_cat_ids
 from utils.Semantic.find_semantic_units import get_IoU_per_category
 from plots_utils.plot_semantic import plot_semantic_histogram
+from plots_utils.plot_semantic import plot_semantic_stacked_bar
 
 
 """
@@ -52,7 +53,8 @@ cat_feature_map_indexes = get_IoU_per_category(model.feat_red.sem_idx_list, cat_
 categories = ["blue", "red", "green", "yellow", "braun", "beige", "black", "white", "eye lids", "face", "eyes", "hair",
               "mouth", "eyebrow", "teeth", "head", "ears", "nose", "background", "human", "lips", "clothes", "orange"]
 
-layers_of_interest = ['block3_pool', 'block4_conv1', 'block4_conv2', 'block4_conv3', 'block4_conv4']
+layers_of_interest = ['block3_conv1', 'block3_conv2', 'block3_conv3', 'block3_conv4',
+                      'block3_pool', 'block4_conv1', 'block4_conv2', 'block4_conv3', 'block4_conv4']
 counts = []
 xlabels = []
 for i, layer in enumerate(layers_of_interest):
@@ -74,7 +76,5 @@ for i, layer in enumerate(layers_of_interest):
     print()
 
 counts = np.array(counts)
-plot_semantic_histogram(counts, xlabels=xlabels, ylabels=layers_of_interest, save_folder=os.path.join('models/saved', config['config_name']))
-
-
-
+# plot_semantic_histogram(counts, xlabels=xlabels, ylabels=layers_of_interest, save_folder=os.path.join('models/saved', config['config_name']))
+plot_semantic_stacked_bar(counts, xlabels=xlabels, legend=layers_of_interest, save_folder=os.path.join('models/saved', config['config_name']))

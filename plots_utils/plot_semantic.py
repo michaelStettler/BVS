@@ -48,4 +48,39 @@ def plot_semantic_histogram(data, title=None, xlabels=None, ylabels=None, save_f
     plt.savefig(os.path.join(save_folder, title))
 
 
+def plot_semantic_stacked_bar(data, title=None, xlabels=None, legend=None, save_folder=None):
+    # create figure
+    plt.figure()
+    num_stacked = len(data)
+    x = np.arange(np.shape(data)[1])
+
+    # stack bar on top of each other for each concept
+    for i, counts in enumerate(data):
+        if i == 0:
+            plt.bar(x, counts)
+        else:
+            plt.bar(x, counts, bottom=np.sum(data[:i], axis=0))
+
+    if xlabels is not None:
+        plt.xticks(x, labels=xlabels)
+
+    if legend is not None:
+        plt.legend(legend)
+
+    #  set title
+    if title is None:
+        title = "semantic_bar.png"
+    else:
+        title = title
+
+    # set save_folder
+    if save_folder is None:
+        save_folder = ''
+    else:
+        save_folder = save_folder
+
+    # save
+    plt.savefig(os.path.join(save_folder, title))
+
+
 
