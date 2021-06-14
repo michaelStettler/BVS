@@ -12,7 +12,7 @@ def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None):
         color_seq = color_seq
 
     # retrieve parameters
-    num_subplot = np.shape(pos)[-1]
+    num_subplot = np.shape(pos)[1]
     n_column = int(np.sqrt(num_subplot))
     n_rows = np.ceil(num_subplot / n_column).astype(np.int)
 
@@ -31,7 +31,7 @@ def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None):
 
     for i in range(num_subplot):
         plt.subplot(n_rows, n_column, i + 1)
-        plt.scatter(pos[:, 1, i], pos[:, 0, i], c=color_seq)
+        plt.scatter(pos[:, i, 1], pos[:, i, 0], c=color_seq)
         # plt.xlim(13.5, 14.0)
         # plt.ylim(11.7, 12.2)
         plt.colorbar()

@@ -72,7 +72,9 @@ if __name__ == "__main__":
     # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/human_orig_c2_corrected/HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
     # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
     # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_median/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
-    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_median_filt3/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_median_filt3/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_median_filt3/MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'
+    path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig_filt3/MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0_new_ears'
 
     list_file = sorted(os.listdir(path))
     print("length list_file", len(list_file))

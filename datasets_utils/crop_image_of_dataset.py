@@ -113,5 +113,6 @@ if __name__ == "__main__":
     """
 
     path = 'D:/Dataset/MorphingSpace'
+    # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig/MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0_new_ears'
 
     crop_folder(path)

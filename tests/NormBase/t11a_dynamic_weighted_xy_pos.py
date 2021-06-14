@@ -22,7 +22,7 @@ run: python -m tests.NormBase.t11a_dynamic_weighted_xy_pos
 """
 
 # define configuration
-config_path = 'NB_t11a_dynamic_xy_pos_m0001.json'
+config_path = 'NB_t11a_dynamic_xy_pos_m0003.json'
 
 # declare parameters
 best_eyebrow_IoU_ft = [209, 148, 59, 208]
@@ -203,8 +203,8 @@ color_seq[45:70] = 2
 color_seq[70:90] = 3
 color_seq[90:] = 4
 
-plot_cnn_output(test_dyn_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
-                "00_monkey_test_dyn_eyebrow_feature_maps_output.gif", verbose=True, video=True)
+# plot_cnn_output(test_dyn_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+#                 "00_monkey_test_dyn_eyebrow_feature_maps_output.gif", verbose=True, video=True)
 plot_ft_map_pos(calculate_position(test_dyn_eyebrow_preds, mode="weighted average", return_mode="xy float"),
                 fig_name="00_monkey_test_dyn_eyebrow_pos.png",
                 path=os.path.join("models/saved", config["config_name"]),
@@ -229,7 +229,7 @@ nb_model.plot_it_neurons(it_ref_test,
                          title="01_it_ref_test",
                          save_folder=os.path.join("models/saved", config["config_name"]))
 
-# plot it responses for eyebrow model
+# plot it responses with reference
 nb_model.plot_it_neurons_per_sequence(it_train,
                          title="02_it_train",
                          save_folder=os.path.join("models/saved", config["config_name"]))

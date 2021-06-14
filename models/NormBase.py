@@ -263,7 +263,6 @@ class NormBase:
         #v = np.sqrt(np.diag(batch_diff @ batch_diff.T))
         if self.tun_func == '2-norm':
             v = np.linalg.norm(batch_diff, ord=2, axis=1)
-
             f = self.t @ batch_diff.T @ np.diag(np.power(v, -1))
             f[f < 0] = 0 #ReLu activation instead of dividing by 2 and adding 0.5
             #f = self.t @ batch_diff.T @ np.diag(np.power(v * 2, -1))
@@ -305,6 +304,36 @@ class NormBase:
             it_resp[:, self.ref_cat] = 1 - (0.5 *batch_diff_norm / np.delete(t_mean_norm, self.ref_cat).min())
             it_resp[:, self.ref_cat][it_resp[:, self.ref_cat] < 0] = 0
             return it_resp
+        elif self.tun_func == 'ft_2norm':
+            # reshape ref and tuning vector into 2d vectors
+            r = np.reshape(self.r, [-1, 2])
+            t = np.reshape(self.t, [len(self.t), -1, 2])
+            x = np.reshape(preds, [len(preds), -1, 2])
+            weight = np.zeros((5, 5))
+            weight[2] = [30, 30, 0, 0, 0]
+            weight[3] = [0, 0, 1, 1, 1]
+            it_resp = []
+            # for each images
+            for i in range(len(preds)):
+                diff = x[i] - r
+                it = []
+                # for each category
+                for j in range(len(t)):
+                    d = 0
+                    # for each feature maps
+                    for k in range(len(r)):
+                        norm = np.linalg.norm(t[j, k], ord=2)
+                        if norm != 0.0:
+                            f = np.power(np.dot(diff[k], t[j, k]) / norm, self.nu)
+                        else:
+                            f = 0
+                        f = weight[j, k] * f
+                        if f > 0:
+                            d += f
+                    it.append(d)
+                it_resp.append(it)
+            return np.array(it_resp)
+
         else:
             raise ValueError("{} is no valid choice for tun_func".format(self.tun_func))
 
