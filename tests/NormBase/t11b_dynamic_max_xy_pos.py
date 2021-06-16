@@ -9,7 +9,7 @@ from plots_utils.plot_cnn_output import plot_cnn_output
 from utils.calculate_position import calculate_position
 from plots_utils.plot_ft_map_pos import plot_ft_map_pos
 from models.NormBase import NormBase
-from utils.get_ref_idx_frames import get_ref_idx_frames
+from utils.ref_feature_map_neurons import ref_feature_map_neuron
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
@@ -64,26 +64,22 @@ lips_preds = preds[..., best_lips_IoU_ft]
 print("shape lips semantic feature selection", np.shape(lips_preds))
 
 # max activation
-max_eyebrow_preds = np.amax(eyebrow_preds, axis=-1)
-max_lips_preds = np.amax(lips_preds, axis=-1)
-print("max_eyebrow_preds", np.shape(max_eyebrow_preds))
-print("max_lips_preds", np.shape(max_lips_preds))
-max_preds = np.stack((max_eyebrow_preds, max_lips_preds), axis=3)
-print("max_preds", np.shape(max_preds))
+max_eyebrow_preds = np.expand_dims(np.amax(eyebrow_preds, axis=-1), axis=3)
+max_lips_preds = np.expand_dims(np.amax(lips_preds, axis=-1), axis=3)
+print("[TRAIN] max_eyebrow_preds", np.shape(max_eyebrow_preds))
+print("[TRAIN] max_lips_preds", np.shape(max_lips_preds))
+max_preds = np.concatenate((max_eyebrow_preds, max_lips_preds), axis=3)
+print("[TRAIN] max_preds", np.shape(max_preds))
 
 # compute dynamic directly on the feature maps
+# compute dynamic directly on the feature maps
 # eyebrow
-neutr_max_eyebrow_preds = get_ref_idx_frames([max_eyebrow_preds, data[1]], ref_index=config['ref_category'])
-max_eyebrow_preds_ref = np.mean(neutr_max_eyebrow_preds, axis=0)
-dyn_max_eyebrow_preds = max_eyebrow_preds - np.repeat(np.expand_dims(max_eyebrow_preds_ref, axis=0), len(eyebrow_preds), axis=0)
-dyn_max_eyebrow_preds[dyn_max_eyebrow_preds < 0] = 0
+dyn_eyebrow_preds = ref_feature_map_neuron(max_eyebrow_preds, data[1], config, activation='relu')
 # lips
-neutr_max_lips_preds = get_ref_idx_frames([max_lips_preds, data[1]], ref_index=config['ref_category'])
-max_lips_preds_ref = np.mean(neutr_max_lips_preds, axis=0)
-dyn_max_lips_preds = max_lips_preds - np.repeat(np.expand_dims(max_lips_preds_ref, axis=0), len(lips_preds), axis=0)
-dyn_max_lips_preds[dyn_max_lips_preds < 0] = 0
+dyn_lips_preds = ref_feature_map_neuron(max_lips_preds, data[1], config, activation='relu')
 
-dyn_preds = np.stack((dyn_max_eyebrow_preds, dyn_max_lips_preds), axis=3)
+dyn_preds = np.concatenate([dyn_eyebrow_preds, dyn_lips_preds], axis=3)  # dynamic
+# dyn_preds = max_preds  # static
 print("[TRAIN] shape dyn preds", np.shape(dyn_preds))
 print("[TRAIN] finished computing dynamic predictions")
 print()
@@ -91,9 +87,9 @@ print()
 # compute positions eyebrow
 dyn_pos = calculate_position(dyn_preds, mode="weighted average", return_mode="xy float flat")
 # add weights
-pos_weights = np.zeros(np.shape(dyn_pos)[-1])
-pos_weights[:8] = 1 / (2 * 2 * len(best_eyebrow_IoU_ft))  # num_concept * x/y * num_ft/concept
-pos_weights[8:] = 1 / (2 * 2 * len(best_lips_IoU_ft))
+pos_weights = np.ones(np.shape(dyn_pos)[-1])
+# pos_weights[:8] = 1 / (2 * 2 * len(best_eyebrow_IoU_ft))  # num_concept * x/y * num_ft/concept
+# pos_weights[8:] = 1 / (2 * 2 * len(best_lips_IoU_ft))
 dyn_pos = np.multiply(dyn_pos, pos_weights)
 
 nb_model.n_features = np.shape(dyn_pos)[-1]  # todo add this to init
@@ -121,33 +117,26 @@ print("[PREDS] shape test_preds", np.shape(test_preds))
 # get feature maps that mimic a semantic selection pipeline
 # keep only highest IoU semantic score
 test_eyebrow_preds = test_preds[..., best_eyebrow_IoU_ft]
-print("shape eyebrow semantic feature selection", np.shape(eyebrow_preds))
+print("[TEST] shape eyebrow semantic feature selection", np.shape(eyebrow_preds))
 test_lips_preds = test_preds[..., best_lips_IoU_ft]
-print("shape lips semantic feature selection", np.shape(test_lips_preds))
+print("[TEST] shape lips semantic feature selection", np.shape(test_lips_preds))
 test_preds = [test_eyebrow_preds, test_lips_preds]
 
 # max activation
-test_max_eyebrow_preds = np.amax(test_eyebrow_preds, axis=-1)
-test_max_lips_preds = np.amax(test_lips_preds, axis=-1)
-print("test_max_eyebrow_preds", np.shape(test_max_eyebrow_preds))
-print("test_max_lips_preds", np.shape(test_max_lips_preds))
-test_max_preds = np.stack((test_max_eyebrow_preds, test_max_lips_preds), axis=3)
-print("test_max_preds", np.shape(test_max_preds))
+test_max_eyebrow_preds = np.expand_dims(np.amax(test_eyebrow_preds, axis=-1), axis=3)
+test_max_lips_preds = np.expand_dims(np.amax(test_lips_preds, axis=-1), axis=3)
+print("[TEST] test_max_eyebrow_preds", np.shape(test_max_eyebrow_preds))
+print("[TEST] test_max_lips_preds", np.shape(test_max_lips_preds))
+test_max_preds = np.concatenate([test_max_eyebrow_preds, test_max_lips_preds], axis=3)
+print("[TEST] test_max_preds", np.shape(test_max_preds))
 
 # compute dynamic feature maps
-# eyebrow
-test_neutr_max_eyebrow_preds = get_ref_idx_frames([test_max_eyebrow_preds, data[1]], ref_index=config['ref_category'])
-test_max_eyebrow_preds_ref = np.mean(test_neutr_max_eyebrow_preds, axis=0)
-test_dyn_eyebrow_preds = test_max_eyebrow_preds - np.repeat(np.expand_dims(test_max_eyebrow_preds_ref, axis=0), len(test_max_eyebrow_preds), axis=0)
-test_dyn_eyebrow_preds[test_dyn_eyebrow_preds < 0] = 0
-# lips
-test_neutr_max_lips_preds = get_ref_idx_frames([test_max_lips_preds, data[1]], ref_index=config['ref_category'])
-test_max_lips_preds_ref = np.mean(test_neutr_max_eyebrow_preds, axis=0)
-test_dyn_lips_preds = test_max_lips_preds - np.repeat(np.expand_dims(test_max_lips_preds_ref, axis=0), len(test_lips_preds), axis=0)
-test_dyn_lips_preds[test_dyn_lips_preds < 0] = 0
+test_dyn_eyebrow_preds = ref_feature_map_neuron(test_max_eyebrow_preds, test_data[1], config, activation='relu')
+test_dyn_lips_preds = ref_feature_map_neuron(test_max_lips_preds, test_data[1], config, activation='relu')
 
 # concatenate concepts
-test_dyn_preds = np.stack((test_dyn_eyebrow_preds, test_dyn_lips_preds), axis=3)
+test_dyn_preds = np.concatenate([test_dyn_eyebrow_preds, test_dyn_lips_preds], axis=3)  # dynamic
+# test_dyn_preds = test_max_preds  # static
 print("[TEST] shape test_dyn_preds", np.shape(dyn_preds))
 
 # compute positions
@@ -165,81 +154,50 @@ it_ref_test = nb_model._get_it_resp(dyn_test_pos)
 # plots
 # ***********************       test 00 raw output      ******************
 
-# max activity
+# # raw max activity
 # plot_cnn_output(max_preds, os.path.join("models/saved", config["config_name"]),
 #                 "00_max_feature_maps_output.gif", verbose=True, video=True)
 # plot_cnn_output(dyn_preds, os.path.join("models/saved", config["config_name"]),
 #                 "00_dyn_max_feature_maps_output.gif", verbose=True, video=True)
 
-# # for only c2
-# color_seq = np.arange(len(dyn_eyebrow_preds))
-# color_seq[:40] = 0
-# color_seq[40:80] = 1
-# color_seq[80:] = 0
-#
-# # # for c2 and c3
-# # color_seq = np.arange(len(dyn_eyebrow_preds[1:]))
-# # color_seq[:40] = 0
-# # color_seq[40:80] = 1
-# # color_seq[80:190] = 0
-# # color_seq[190:230] = 2
-# # color_seq[230:] = 0
-# # color_seq[18:28] = 3
-#
-# #
-# # plot_cnn_output(dyn_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
-# #                 "00_human_train_dyn_eyebrow_feature_maps_output.gif", verbose=True, video=True)
-# # plot_ft_map_pos(calculate_position(dyn_eyebrow_preds, mode="weighted average", return_mode="xy float"),
-# #                 fig_name="00_human_train_dyn_eyebrow_pos.png",
-# #                 path=os.path.join("models/saved", config["config_name"]),
-# #                 color_seq=color_seq)
-# #
-# # plot_cnn_output(dyn_lips_preds, os.path.join("models/saved", config["config_name"]),
-# #                 "00_human_train_dyn_lips_feature_maps_output.gif", verbose=True, video=True)
-# # plot_ft_map_pos(calculate_position(dyn_lips_preds, mode="weighted average", return_mode="xy float"),
-# #                 fig_name="00_human_train_dyn_lips_pos.png",
-# #                 path=os.path.join("models/saved", config["config_name"]),
-# #                 color_seq=color_seq)
-#
-# # # c2
-# # color_seq = np.arange(len(test_dyn_eyebrow_preds))
-# # color_seq[:40] = 0
-# # color_seq[40:80] = 1
-# # color_seq[80:] = 0
-#
-# # for c2 and c3
-# color_seq = np.arange(len(test_dyn_eyebrow_preds))
-# color_seq[:40] = 0
-# color_seq[40:80] = 1
-# color_seq[80:190] = 0
-# color_seq[190:230] = 2
-# color_seq[230:] = 0
-# color_seq[18:28] = 3
-#
-# # c3 ears
-# color_seq = np.arange(len(test_dyn_eyebrow_preds))
-# color_seq[:30] = 0
-# color_seq[30:45] = 1
-# color_seq[45:70] = 2
-# color_seq[70:90] = 3
-# color_seq[90:] = 4
-#
-# plot_cnn_output(test_dyn_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
-#                 "00_monkey_test_dyn_eyebrow_feature_maps_output.gif", verbose=True, video=True)
-# plot_ft_map_pos(calculate_position(test_dyn_eyebrow_preds, mode="weighted average", return_mode="xy float"),
-#                 fig_name="00_monkey_test_dyn_eyebrow_pos.png",
-#                 path=os.path.join("models/saved", config["config_name"]),
-#                 color_seq=color_seq)
-#
-# # plot_cnn_output(test_dyn_lips_preds, os.path.join("models/saved", config["config_name"]),
-# #                 "00_monkey_test_dyn_lips_feature_maps_output.gif", verbose=True, video=True)
-# plot_ft_map_pos(calculate_position(test_dyn_lips_preds, mode="weighted average", return_mode="xy float"),
-#                 fig_name="00_monkey_test_dyn_lips_pos.png",
-#                 path=os.path.join("models/saved", config["config_name"]),
-#                 color_seq=color_seq)
-#
+# for c2 and c3
+color_seq = np.arange(len(dyn_preds))
+color_seq[:40] = 0
+color_seq[40:80] = 1
+color_seq[80:190] = 0
+color_seq[190:230] = 2
+color_seq[230:] = 0
+
+plot_ft_map_pos(calculate_position(max_preds, mode="weighted average", return_mode="xy float"),
+                fig_name="00a_human_train_pos.png",
+                path=os.path.join("models/saved", config["config_name"]),
+                color_seq=color_seq)
+
+plot_ft_map_pos(calculate_position(dyn_preds, mode="weighted average", return_mode="xy float"),
+                fig_name="00a_human_train_dyn_pos.png",
+                path=os.path.join("models/saved", config["config_name"]),
+                color_seq=color_seq)
+
+# for c2 and c3
+color_seq = np.arange(len(test_dyn_preds))
+color_seq[:40] = 0
+color_seq[40:80] = 1
+color_seq[80:190] = 0
+color_seq[190:230] = 2
+color_seq[230:] = 0
+
+plot_ft_map_pos(calculate_position(test_max_preds, mode="weighted average", return_mode="xy float"),
+                fig_name="00b_monkey_test_max_pos.png",
+                path=os.path.join("models/saved", config["config_name"]),
+                color_seq=color_seq)
+
+plot_ft_map_pos(calculate_position(test_dyn_preds, mode="weighted average", return_mode="xy float"),
+                fig_name="00b_monkey_test_dyn_pos.png",
+                path=os.path.join("models/saved", config["config_name"]),
+                color_seq=color_seq)
+
 # ***********************       test 01 eyebrow model     ******************
-# plot it responses for eyebrow model
+# plot it responses for model
 nb_model.plot_it_neurons(it_train,
                          title="01_it_train",
                          save_folder=os.path.join("models/saved", config["config_name"]))
@@ -250,7 +208,7 @@ nb_model.plot_it_neurons(it_ref_test,
                          title="01_it_ref_test",
                          save_folder=os.path.join("models/saved", config["config_name"]))
 
-# plot it responses for eyebrow model
+# plot it responses for model
 nb_model.plot_it_neurons_per_sequence(it_train,
                          title="02_it_train",
                          save_folder=os.path.join("models/saved", config["config_name"]))
@@ -260,4 +218,3 @@ nb_model.plot_it_neurons_per_sequence(it_test,
 nb_model.plot_it_neurons_per_sequence(it_ref_test,
                          title="02_it_ref_test",
                          save_folder=os.path.join("models/saved", config["config_name"]))
-

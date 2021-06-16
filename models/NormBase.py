@@ -310,8 +310,11 @@ class NormBase:
             t = np.reshape(self.t, [len(self.t), -1, 2])
             x = np.reshape(preds, [len(preds), -1, 2])
             weight = np.zeros((5, 5))
-            weight[2] = [30, 30, 0, 0, 0]
+            weight[1] = [6, 6, 0, 0, 0]
+            # weight[2] = [30, 30, 0, 0, 0]   -> works with np.power(np.dot(diff[k], t[j, k]) / norm, self.nu)
+            weight[2] = [6, 6, 0, 0, 0]
             weight[3] = [0, 0, 1, 1, 1]
+            weight[4] = [0, 0, 1, 1, 1]
             it_resp = []
             # for each images
             for i in range(len(preds)):
@@ -323,8 +326,10 @@ class NormBase:
                     # for each feature maps
                     for k in range(len(r)):
                         norm = np.linalg.norm(t[j, k], ord=2)
+                        norm_diff = np.linalg.norm(diff[k], ord=2)
                         if norm != 0.0:
-                            f = np.power(np.dot(diff[k], t[j, k]) / norm, self.nu)
+                            # f = np.power(np.dot(diff[k], t[j, k]) / norm, self.nu)
+                            f = norm_diff * np.power(np.dot(diff[k], t[j, k]) / (norm_diff * norm), self.nu)
                         else:
                             f = 0
                         f = weight[j, k] * f

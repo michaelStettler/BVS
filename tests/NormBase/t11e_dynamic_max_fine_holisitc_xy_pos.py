@@ -9,7 +9,6 @@ from plots_utils.plot_cnn_output import plot_cnn_output
 from utils.calculate_position import calculate_position
 from plots_utils.plot_ft_map_pos import plot_ft_map_pos
 from models.NormBase import NormBase
-from utils.get_ref_idx_frames import get_ref_idx_frames
 from utils.ref_feature_map_neurons import ref_feature_map_neuron
 
 np.random.seed(0)
@@ -24,7 +23,7 @@ run: python -m tests.NormBase.t11e_dynamic_max_fine_holisitc_xy_pos
 """
 
 # define configuration
-config_path = 'NB_t11e_dynamic_max_fine_holistic_xy_pos_m0003.json'
+config_path = 'NB_t11e_dynamic_max_fine_holistic_xy_pos_m0005.json'
 
 # declare parameters
 best_eyebrow_IoU_ft = [209, 148, 59, 208]
@@ -35,7 +34,7 @@ best_lips_IoU_ft = [77, 79, 120, 104, 141, 0, 34, 125, 15, 89, 49, 237, 174, 39,
 # load config
 config = load_config(config_path, path='configs/norm_base_config')
 config['tun_func'] = 'ft_2norm'
-# config["nu"] = 0.5
+config["nu"] = 8
 
 # create directory if non existant
 save_path = os.path.join("models/saved", config["config_name"])
@@ -179,11 +178,11 @@ test_right_eyebrow = np.zeros(np.shape(test_max_eyebrow_preds))
 test_right_eyebrow[:, 3:12, 14:22] = test_max_eyebrow_preds[:, 3:12, 14:22]
 # for lips, create three mouth zones
 test_left_lips = np.zeros(np.shape(test_max_lips_preds))
-test_left_lips[:, 16:26, 7:12] = test_max_lips_preds[:, 16:26, 7:12]
+test_left_lips[:, 14:26, 7:12] = test_max_lips_preds[:, 14:26, 7:12]
 test_middle_lips = np.zeros(np.shape(test_max_lips_preds))
-test_middle_lips[:, 16:26, 11:17] = test_max_lips_preds[:, 16:26, 11:17]
+test_middle_lips[:, 14:26, 11:17] = test_max_lips_preds[:, 14:26, 11:17]
 test_right_lips = np.zeros(np.shape(test_max_lips_preds))
-test_right_lips[:, 16:26, 16:21] = test_max_lips_preds[:, 16:26, 16:21]
+test_right_lips[:, 14:26, 16:21] = test_max_lips_preds[:, 14:26, 16:21]
 
 test_preds = np.concatenate([test_left_eyebrow, test_right_eyebrow, test_left_lips, test_middle_lips,
                                  test_right_lips], axis=3)
@@ -214,7 +213,7 @@ it_test = nb_model._get_it_resp(dyn_test_pos)
 
 # test by training new ref
 nb_model._fit_reference([dyn_test_pos, test_data[1]], config['batch_size'])
-it_ref_test = nb_model._get_it_resp(dyn_test_pos, verbose=False)
+it_ref_test = nb_model._get_it_resp(dyn_test_pos)
 
 # --------------------------------------------------------------------------------------------------------------------
 # plots
