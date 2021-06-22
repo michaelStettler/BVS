@@ -19,18 +19,17 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 test script to try an implementation of a "fine"-holistic representation of the face
 namely discarding part of the feature maps from their semantic labels but now I am splitting the
 mask to have different zones so we don't have only a 2 x 2D vector space
+I am also getting to the block 3 feature maps since the pooling effect seems that expression c4 is too sublte
 
-run: python -m tests.NormBase.t11e_dynamic_max_fine_holisitc_xy_pos
+run: python -m tests.NormBase.t11f_max_fine_holisitc_xy_pos
 """
 
 # define configuration
-config_path = 'NB_t11e_dynamic_max_fine_holistic_xy_pos_m0005.json'
+config_path = 'NB_t11f_max_fine_holistic_xy_pos_m0005.json'
 
 # declare parameters
-best_eyebrow_IoU_ft = [209, 148, 59, 208]
-best_lips_IoU_ft = [77, 79, 120, 104, 141, 0, 34, 125, 15, 89, 49, 237, 174, 39, 210, 112, 111, 201, 149, 165, 80,
-                         42, 128, 74, 131, 193, 133, 44, 154, 101, 173, 6, 148, 61, 27, 249, 209, 19, 247, 90, 1, 255,
-                         182, 251, 186, 248]
+best_eyebrow_IoU_ft = [68, 125]
+best_lips_IoU_ft = [235, 203, 68, 125, 3, 181, 197, 2, 87, 240, 6, 95, 60, 157, 227, 111]
 
 # load config
 config = load_config(config_path, path='configs/norm_base_config')

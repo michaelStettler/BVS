@@ -63,7 +63,11 @@ class SemanticFeatureSelection:
             preds = []
             for cat_id in cat_ids:
                 ft_index = cat_feature_map_indexes["category_{}".format(cat_id)][self.config['v4_layer']]["indexes"]
-                preds.append(data[..., ft_index])
+                if len(ft_index) > 0:
+                    preds.append(data[..., ft_index])
+                else:
+                    print("No indexes found for category: {}".format(cat_id))
+                    print("You should change layer".format(cat_id))
 
             # apply activation
             if activation is not None:
@@ -73,8 +77,16 @@ class SemanticFeatureSelection:
                         mean_preds.append(np.mean(pred, axis=3))
                     mean_preds = np.array(mean_preds)
                     preds = mean_preds
+
+                elif activation == 'max':
+                    max_preds = []
+                    for pred in preds:
+                        max_preds.append(np.max(pred, axis=3))
+                    max_preds = np.array(max_preds)
+                    preds = max_preds
+
                 else:
-                    raise NotImplementedError("Activation [] i snot implemented".format(activation))
+                    raise NotImplementedError("Activation [] is not implemented".format(activation))
 
             # shuffle dimensions
             if feature_channel_last:
