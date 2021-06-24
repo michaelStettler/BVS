@@ -309,12 +309,12 @@ class NormBase:
             r = np.reshape(self.r, [-1, 2])
             t = np.reshape(self.t, [len(self.t), -1, 2])
             x = np.reshape(preds, [len(preds), -1, 2])
-            weight = np.zeros((5, 5))
-            weight[1] = [6, 6, 0, 0, 0]
-            # weight[2] = [30, 30, 0, 0, 0]   -> works with np.power(np.dot(diff[k], t[j, k]) / norm, self.nu)
-            weight[2] = [6, 6, 0, 0, 0]
-            weight[3] = [0, 0, 1, 1, 1]
-            weight[4] = [0, 0, 1, 1, 1]
+            # weight = np.ones((5, 8))
+            weight = np.zeros((5, 8))
+            weight[1] = [0, 3, 3, 0, 0, 0, 1, 0]
+            weight[2] = [2, 0, 0, 2, 0, 0, 0, 0]
+            weight[3] = [0, 0, 0, 0, 0, 6, 1, 0]
+            weight[4] = [0, 0, 0, 0, 18, 0, 0, 0]
             it_resp = []
             # for each images
             for i in range(len(preds)):

@@ -65,6 +65,7 @@ def plot_ft_pos_on_sequence(pos, seq, vid_name=None, save_folder=None, ft_size=(
     # retrieve width and height
     width = np.shape(seq)[1]
     height = np.shape(seq)[2]
+    print("width, height", width, height)
 
     # reshape pos for xy-coordinates for each landmarks
     if len(np.shape(pos)) < 3:

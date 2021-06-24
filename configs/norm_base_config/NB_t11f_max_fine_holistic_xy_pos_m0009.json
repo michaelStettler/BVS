@@ -1,5 +1,5 @@
 {
-  "config_name": "NB_t11f_max_fine_holistic_xy_pos_m0006",
+  "config_name": "NB_t11f_max_fine_holistic_xy_pos_m0009",
   "train_data": "morphing_space",
   "use_data_generator": false,
   "x_col": "image_path",
@@ -10,8 +10,8 @@
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace",
   "train_avatar": "human_orig",
   "val_avatar": "monkey_orig",
-  "train_expression": ["c1","c2","c3","c4"],
-  "val_expression": ["c1","c2","c3","c4"],
+  "train_expression": ["c1", "c2"],
+  "val_expression": ["c1", "c2"],
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "weights": "imagenet",
