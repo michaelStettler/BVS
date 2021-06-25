@@ -249,7 +249,7 @@ class NormBase:
                     # update tuning vector n
                     self.t[i] = self.t_mean[i] / np.linalg.norm(self.t_mean[i])
 
-    def _get_it_resp(self, preds):
+    def _get_it_resp(self, preds, weights='morph_space'):
         """
         computes the activity of norm-based neurons
         for different tuning functions selected in config
@@ -309,12 +309,17 @@ class NormBase:
             r = np.reshape(self.r, [-1, 2])
             t = np.reshape(self.t, [len(self.t), -1, 2])
             x = np.reshape(preds, [len(preds), -1, 2])
-            # weight = np.ones((5, 8))
-            weight = np.zeros((5, 8))
-            weight[1] = [0, 3, 3, 0, 0, 0, 1, 0]
-            weight[2] = [2, 0, 0, 2, 0, 0, 0, 0]
-            weight[3] = [0, 0, 0, 0, 0, 6, 1, 0]
-            weight[4] = [0, 0, 0, 0, 18, 0, 0, 0]
+            # todo modify and allow training for it!
+            if weights == 'ones':
+                weight = np.ones((5, 8))
+            elif weights == 'morph_space':
+                weight = np.zeros((5, 8))
+                weight[1] = [0, 3, 3, 0, 0, 0, 1, 0]
+                weight[2] = [2, 0, 0, 2, 0, 0, 0, 0]
+                weight[3] = [0, 0, 0, 0, 0, 6, 1, 0]
+                weight[4] = [0, 0, 0, 0, 18, 0, 0, 0]
+            else:
+                raise NotImplementedError("Weights: {} not implemented".format(weights))
             it_resp = []
             # for each images
             for i in range(len(preds)):

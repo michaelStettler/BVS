@@ -83,7 +83,7 @@ print("max_eyebrow_preds", np.shape(max_eyebrow_preds))
 print("max_lips_preds", np.shape(max_lips_preds))
 
 # add holistic constraints
-# for eyebrow, create two eyebrow zones
+# for eyebrow, create four eyebrow zones
 left_ext_eyebrow = np.zeros(np.shape(max_eyebrow_preds))
 left_ext_eyebrow[:, 16:21, 15:20] = max_eyebrow_preds[:, 16:21, 15:20]
 left_int_eyebrow = np.zeros(np.shape(max_eyebrow_preds))
@@ -92,7 +92,7 @@ right_int_eyebrow = np.zeros(np.shape(max_eyebrow_preds))
 right_int_eyebrow[:, 16:21, 29:35] = max_eyebrow_preds[:, 16:21, 29:35]
 right_ext_eyebrow = np.zeros(np.shape(max_eyebrow_preds))
 right_ext_eyebrow[:, 16:21, 36:41] = max_eyebrow_preds[:, 16:21, 36:41]
-# for lips, create three mouth zones
+# for lips, create four mouth zones
 left_lips = np.zeros(np.shape(max_lips_preds))
 left_lips[:, 33:45, 19:26] = max_lips_preds[:, 33:45, 19:26]
 middle_up_lips = np.zeros(np.shape(max_lips_preds))
@@ -122,7 +122,9 @@ nb_model._fit_tuning([pos, data[1]], config['batch_size'])
 # get it resp for eyebrows
 it_train = nb_model._get_it_resp(pos)
 print("[TRAIN] shape it_train", np.shape(it_train))
-print("[TRAIN] finished computing positions")
+
+ds_train = nb_model._get_decisions_neurons(it_train, config['seq_length'])
+print("[TRAIN] shape ds_train", np.shape(ds_train))
 print()
 
 # -------------------------------------------------------------------------------------------------------------------
@@ -158,6 +160,7 @@ print("test_max_eyebrow_preds", np.shape(test_max_eyebrow_preds))
 print("test_max_lips_preds", np.shape(test_max_lips_preds))
 
 # add holistic
+# create four eyebrow zones
 test_left_ext_eyebrow = np.zeros(np.shape(test_max_eyebrow_preds))
 test_left_ext_eyebrow[:, 10:14, 17:20] = test_max_eyebrow_preds[:, 10:14, 17:20]
 test_left_int_eyebrow = np.zeros(np.shape(test_max_eyebrow_preds))
@@ -166,7 +169,7 @@ test_right_int_eyebrow = np.zeros(np.shape(test_max_eyebrow_preds))
 test_right_int_eyebrow[:, 10:14, 32:35] = test_max_eyebrow_preds[:, 10:14, 32:35]
 test_right_ext_eyebrow = np.zeros(np.shape(test_max_eyebrow_preds))
 test_right_ext_eyebrow[:, 10:14, 35:39] = test_max_eyebrow_preds[:, 10:14, 35:39]
-# for lips, create three mouth zones
+# for lips, create four mouth zones
 test_left_lips = np.zeros(np.shape(test_max_lips_preds))
 test_left_lips[:, 30:41, 16:24] = test_max_lips_preds[:, 30:41, 16:24]
 test_middle_up_lips = np.zeros(np.shape(test_max_lips_preds))
@@ -190,6 +193,9 @@ it_test = nb_model._get_it_resp(test_pos)
 # test by training new ref
 nb_model._fit_reference([test_pos, test_data[1]], config['batch_size'])
 it_ref_test = nb_model._get_it_resp(test_pos)
+
+ds_test = nb_model._get_decisions_neurons(it_ref_test, config['seq_length'])
+print("[TEST] shape ds_test", np.shape(ds_test))
 
 # --------------------------------------------------------------------------------------------------------------------
 # plots
@@ -282,3 +288,13 @@ max_eyebrow_preds_plot = max_eyebrow_preds / np.amax(max_eyebrow_preds) * 255
 # plot_ft_pos_on_sequence(pos, max_eyebrow_preds_plot, vid_name='eyebrow_ft.mp4',
 #                         save_folder=os.path.join("models/saved", config["config_name"]),
 #                         pre_proc='raw', ft_size=(56, 56))
+
+
+nb_model.plot_decision_neurons(ds_train,
+                               title="03_ds_train",
+                               save_folder=os.path.join("models/saved", config["config_name"]),
+                               normalize=True)
+nb_model.plot_decision_neurons(ds_test,
+                               title="03_ds_test",
+                               save_folder=os.path.join("models/saved", config["config_name"]),
+                               normalize=True)
