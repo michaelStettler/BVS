@@ -113,6 +113,10 @@ if __name__ == "__main__":
     """
 
     path = 'D:/Dataset/MorphingSpace'
+<<<<<<< HEAD
     # path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/monkey_orig/MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0_new_ears'
+=======
+    # path = 'D:/Maya projects/Mery_v3.5_for_2015/images/HumanExpressions/01_Basis_expressions'
+>>>>>>> 5cb0bc9... corrected crop dataset call
 
     crop_folder(path)
