@@ -4,7 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None):
+def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None, arrows=None, arrows_color=None):
 
     # create color sequence
     if color_seq is None:
@@ -28,14 +28,43 @@ def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None):
         path = ''
 
     # create figure
-    plt.figure(figsize=(n_rows*4, n_column*4))
+    plt.figure(figsize=(n_column*4, n_rows*4))
 
     for i in range(num_subplot):
-        plt.subplot(n_rows, n_column, i + 1)
+        plt.subplot(n_rows, n_column, i + 1, aspect='equal')
+
         plt.scatter(pos[:, i, 1], pos[:, i, 0], c=color_seq)
         # plt.xlim(13.5, 14.0)
         # plt.ylim(11.7, 12.2)
         plt.colorbar()
+
+        if arrows is not None:
+            # set axis dimension to plot in a square so the angle are correct
+            xlim = plt.xlim()
+            ylim = plt.ylim()
+            xlim_diff = xlim[1] - xlim[0]
+            ylim_diff = ylim[1] - ylim[0]
+
+            # set smaller axis to equal the bigger one
+            if ylim_diff > xlim_diff:
+                diff = ylim_diff
+                mid = xlim[0] + xlim_diff / 2
+                plt.xlim(mid - diff/2, mid + diff/2)
+            elif ylim_diff < xlim_diff:
+                diff = xlim_diff
+                mid = ylim[0] + ylim_diff / 2
+                plt.ylim(mid - diff/2, mid + diff/2)
+
+
+            arrows_tail = arrows[0]
+            arrows_head = arrows[1]
+            for j in range(len(arrows_tail)):
+                arr_t = arrows_tail[j, i]
+                arr_h = arrows_head[j, i]
+                if arrows_color is not None:
+                    plt.arrow(arr_t[1], arr_t[0], arr_h[1], arr_h[0], color=arrows_color[j], linewidth=2)
+                else:
+                    plt.arrow(arr_t[1], arr_t[0], arr_h[1], arr_h[0], linewidth=2)
 
         # add sub title if given
         if titles is not None:
@@ -46,9 +75,6 @@ def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None):
 
 def plot_ft_pos_on_sequence(pos, seq, vid_name=None, save_folder=None, ft_size=(28, 28), pre_proc='VGG',
                             lmk_size=1):
-
-    print("shape pos", np.shape(pos))
-    print("shape seq", np.shape(seq))
     # modify seq for cv2
     if 'VGG' in pre_proc:
         seq += 255/2
@@ -60,19 +86,16 @@ def plot_ft_pos_on_sequence(pos, seq, vid_name=None, save_folder=None, ft_size=(
         raise NotImplementedError
     # ensure that encoding is in uint8 for cv2
     seq = np.array(seq).astype(np.uint8)
-    print("min max seq", np.amin(seq), np.amax(seq))
 
     # retrieve width and height
     width = np.shape(seq)[1]
     height = np.shape(seq)[2]
-    print("width, height", width, height)
 
     # reshape pos for xy-coordinates for each landmarks
     if len(np.shape(pos)) < 3:
         pos = np.reshape(pos, (len(pos), -1, 2))
     x_ratio = width / ft_size[0]
     y_ratio = height / ft_size[1]
-    print("ratio (x, y): ({}, {})".format(x_ratio, y_ratio))
     num_lmk = np.shape(pos)[1]
 
     # set padding for the landmark
@@ -104,6 +127,12 @@ def plot_ft_pos_on_sequence(pos, seq, vid_name=None, save_folder=None, ft_size=(
 
         # plot each landmarks
         for k in range(num_lmk):
+            # draw initial landmarks
+            x_init = int(np.round(pos[0, k, 0] * x_ratio))  # horizontal
+            y_init = int(np.round(pos[0, k, 1] * y_ratio))  # vertical
+            img[(x_init-lmk_padding):(x_init+lmk_padding), (y_init-lmk_padding):(y_init+lmk_padding)] = [0, 255, 0]
+
+            # draw current landmarks
             x_ = int(np.round(pos[i, k, 0] * x_ratio))  # horizontal
             y_ = int(np.round(pos[i, k, 1] * y_ratio))  # vertical
             img[(x_-lmk_padding):(x_+lmk_padding), (y_-lmk_padding):(y_+lmk_padding)] = [0, 0, 255]

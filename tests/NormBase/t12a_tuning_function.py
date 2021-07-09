@@ -18,15 +18,15 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 """
 test script to control and try the computation of multiple tuning direction within feature maps
 
-run: python -m tests.NormBase.t12_tuning_function
+run: python -m tests.NormBase.t12a_tuning_function
 """
 # define configuration
-config_path = 'NB_t12_tuning_function_m0001.json'
+config_path = 'NB_t12a_tuning_function_m0001.json'
 
 # load config
 config = load_config(config_path, path='configs/norm_base_config')
-config['tun_func'] = 'ft_2norm'
-# config['tun_func'] = '2-norm'
+# config['tun_func'] = 'ft_2norm'
+config['tun_func'] = '2-norm'
 
 # create directory if non existant
 save_path = os.path.join("models/saved", config["config_name"])
@@ -50,7 +50,7 @@ preds = np.zeros((5, 5, 5, 2))
 preds[0, 2, 2, :] = 1
 preds[1, 1, 1, 0] = 1
 preds[1, 4, 2, 1] = 1
-preds[2, 0, 0, 0] = 0
+preds[2, 0, 0, 0] = 1
 preds[2, 3, 2, 1] = 1
 print("[TRAIN] preds", np.shape(preds))
 print("preds[1]")

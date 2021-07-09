@@ -11,11 +11,14 @@ class PatternFeatureSelection:
 
     the script fits a spatial template over n dimension
     """
-    def __init__(self, config):
+    def __init__(self, config, mask=None):
         self.config = config
 
         # declare one rbf template per mask
-        self.mask = np.array(config['pattern_mask'])
+        if mask is not None:
+            self.mask = np.array(mask)
+        else:
+            self.mask = np.array(config['pattern_mask'])
         self.n_mask = len(self.mask)
         self.rbf = []
 
@@ -32,7 +35,7 @@ class PatternFeatureSelection:
 
     def fit(self, data, activation=None, feature_channel_last=True):
         """
-        data is a list of len(n_pattern)
+        data is a list of length (n_pattern)
 
         :param data: list (n_pattern)(n_data, n_feature, n_feature, n_dim)
         :return:
@@ -72,6 +75,10 @@ class PatternFeatureSelection:
             # make sure that preds remains a 4-dimensional array even when there's only one data
             if num_data == 1:
                 preds = np.expand_dims(preds, axis=0)
+
+            # add the fourth dimension if there's only one
+            if len(np.shape(preds)) == 3:
+                preds = np.expand_dims(preds, axis=3)
 
         return preds
 
