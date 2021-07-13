@@ -38,24 +38,23 @@ def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None, 
         # plt.ylim(11.7, 12.2)
         plt.colorbar()
 
+        # set axis dimension to plot in a square so the angle are correct
+        xlim = plt.xlim()
+        ylim = plt.ylim()
+        xlim_diff = xlim[1] - xlim[0]
+        ylim_diff = ylim[1] - ylim[0]
+
+        # set smaller axis to equal the bigger one
+        if ylim_diff > xlim_diff:
+            diff = ylim_diff
+            mid = xlim[0] + xlim_diff / 2
+            plt.xlim(mid - diff / 2, mid + diff / 2)
+        elif ylim_diff < xlim_diff:
+            diff = xlim_diff
+            mid = ylim[0] + ylim_diff / 2
+            plt.ylim(mid - diff / 2, mid + diff / 2)
+
         if arrows is not None:
-            # set axis dimension to plot in a square so the angle are correct
-            xlim = plt.xlim()
-            ylim = plt.ylim()
-            xlim_diff = xlim[1] - xlim[0]
-            ylim_diff = ylim[1] - ylim[0]
-
-            # set smaller axis to equal the bigger one
-            if ylim_diff > xlim_diff:
-                diff = ylim_diff
-                mid = xlim[0] + xlim_diff / 2
-                plt.xlim(mid - diff/2, mid + diff/2)
-            elif ylim_diff < xlim_diff:
-                diff = xlim_diff
-                mid = ylim[0] + ylim_diff / 2
-                plt.ylim(mid - diff/2, mid + diff/2)
-
-
             arrows_tail = arrows[0]
             arrows_head = arrows[1]
             for j in range(len(arrows_tail)):

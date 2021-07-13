@@ -1,0 +1,7 @@
+{
+  "config_name": "RBF_t02_pattern_ft_selection_m0001",
+  "n_category": 1,
+  "rbf_sigma": 0.6,
+  "rbf_firing_threshold": 0.15,
+  "pattern_idx": 0
+}

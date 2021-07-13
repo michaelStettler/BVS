@@ -122,9 +122,11 @@ class RBF:
         shape_x = np.shape(data)[1]
         shape_y = np.shape(data)[2]
         n_channels = np.shape(data)[3]
+        # print("[RBF] shape x/y", shape_x, shape_y)
 
         # get shapes of centers (kernel)
         ker_size = (np.shape(self.centers)[1], np.shape(self.centers)[2])
+        # print("[RBF] ker_size", ker_size)
         padd_x = ker_size[0] // 2
         padd_y = ker_size[1] // 2
 

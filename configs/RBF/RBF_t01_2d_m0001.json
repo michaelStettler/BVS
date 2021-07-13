@@ -1,0 +1,6 @@
+{
+  "config_name": "RBF_t01_2d_m0001",
+  "n_category": 1,
+  "rbf_sigma": 1,
+  "rbf_firing_threshold": 0.15
+}
