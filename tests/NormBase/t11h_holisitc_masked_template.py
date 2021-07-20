@@ -25,14 +25,14 @@ run: python -m tests.NormBase.t11h_holistic_masked_template
 """
 
 # define configuration
-config_path = 'NB_t11h_holistic_masked_template_m0003.json'
-plot_intermediate = True
-compute_NB = False
+config_path = 'NB_t11h_holistic_masked_template_m0005.json'
+plot_intermediate = False
+compute_NB = True
 
-train = False
-human_full = False
+train = True
+human_full = True
 test = True
-plot = False
+plot = True
 
 
 # declare parameters
@@ -237,44 +237,45 @@ if test:
     # test_rbf_mask = [[[10, 13], [35, 38]]]  # left int eyebrow 3x3
     # config['rbf_sigma'] = [1800]
     # test_rbf_mask = [[[34, 37], [20, 23]]]  # left lip 3x3
-    # config['rbf_sigma'] = [2200]
+    # config['rbf_sigma'] = [1900]
     # test_rbf_mask = [[[32, 35], [27, 30]]]  # up lip 3x3
     # config['rbf_sigma'] = [1900]
-    test_rbf_mask = [[[34, 37], [33, 36]]]  # right lip 3x3
-    test_rbf_mask = [[[33, 36], [35, 38]]]  # right lip 3x3  # todo find a way to track going down on c3 and up/right on c4
-    test_rbf_mask = [[[34, 37], [35, 38]]]  # right lip 3x3  # todo find a way to track going down on c3 and up/right on c4
-    test_rbf_mask = [[[35, 38], [35, 38]]]  # right lip 3x3  # todo find a way to track going down on c3 and up/right on c4
-    config['rbf_sigma'] = [2200]
-    config['rbf_sigma'] = [2300]
-    config['rbf_sigma'] = [1500]
-    config['rbf_sigma'] = [1700]
-    config['rbf_sigma'] = [1800]
-    config['rbf_sigma'] = [2200]
+    # test_rbf_mask = [[[34, 37], [33, 36]]]  # right lip 3x3
+    # config['rbf_sigma'] = [1900]
     # test_rbf_mask = [[[36, 39], [27, 30]]]  # down lip 3x3
     # config['rbf_sigma'] = [2000]
-    # test_rbf_mask = [[[10, 13], [19, 22]], [[11, 14], [24, 27]], [[11, 14], [29, 32]], [[10, 13], [35, 38]],
-    #                  [[34, 37], [20, 23]], [[32, 35], [27, 30]], [[34, 37], [33, 36]], [[36, 39], [27, 30]]]
-
-    # config['rbf_sigma'] = [1800, 1400, 1400, 1800, 2200, 1900, 2200, 2000]
+    test_rbf_mask = [[[10, 13], [19, 22]], [[11, 14], [24, 27]], [[11, 14], [29, 32]], [[10, 13], [35, 38]],
+                     [[34, 37], [20, 23]], [[32, 35], [27, 30]], [[34, 37], [33, 36]], [[36, 39], [27, 30]]]
+    config['rbf_sigma'] = [1800, 1400, 1400, 1800, 1900, 1900, 1900, 2000]
 
     patterns = PatternFeatureSelection(config, mask=test_rbf_mask)
 
     # create masked area
     test_mask_template = np.zeros(tuple([len(test_rbf_mask)]) + np.shape(test_preds))
-    # test_mask_template[0, :, 6:17, 15:26, :] = test_preds[:, 6:17, 15:26, :]  # left ext eyebrow 4px padding
-    # test_mask_template[1, :, 7:18, 20:31, :] = test_preds[:, 7:18, 20:31, :]  # left int eyebrow 4px padding
-    # test_mask_template[2, :, 7:18, 25:36, :] = test_preds[:, 7:18, 25:36, :]  # right int eyebrow 4px padding
-    # test_mask_template[3, :, 6:17, 31:42, :] = test_preds[:, 6:17, 31:42, :]  # right ext eyebrow 4px padding
-    # test_mask_template[4, :, 32:40, 18:24, :] = test_preds[:, 32:40, 18:24, :]  # left lip 2px padding
-    # test_mask_template[5, :, 29:38, 24:33, :] = test_preds[:, 29:38, 24:33, :]  # up lip 3px padding
-    # test_mask_template[6, :, 32:39, 31:38, :] = test_preds[:, 32:39, 31:38, :]  # right lip 2px padding
-    # test_mask_template[7, :, 34:52, 25:32, :] = test_preds[:, 34:52, 25:32, :]  # left lip 2px padding
+    test_mask_template[0, :, 6:17, 15:26, :] = test_preds[:, 6:17, 15:26, :]  # left ext eyebrow 4px padding
+    test_mask_template[1, :, 7:18, 20:31, :] = test_preds[:, 7:18, 20:31, :]  # left int eyebrow 4px padding
+    test_mask_template[2, :, 7:18, 25:36, :] = test_preds[:, 7:18, 25:36, :]  # right int eyebrow 4px padding
+    test_mask_template[3, :, 6:17, 31:42, :] = test_preds[:, 6:17, 31:42, :]  # right ext eyebrow 4px padding
+    test_mask_template[4, :, 32:49, 16:27, :] = test_preds[:, 32:49, 16:27, :]  # left lip 2px padding
+    test_mask_template[4, :, 40:50, 16:21, :] = 0  # left lip 2px padding
+    test_mask_template[4, :, 29:35, 23:27, :] = 0  # left lip 2px padding
+    test_mask_template[5, :, 29:38, 24:33, :] = test_preds[:, 29:38, 24:33, :]  # up lip 3px padding
+    test_mask_template[6, :, 32:49, 29:40, :] = test_preds[:, 32:49, 29:40, :]  # right lip 2px padding
+    test_mask_template[6, :, 40:50, 34:40, :] = 0  # right lip 2px padding
+    test_mask_template[6, :, 29:35, 29:35, :] = 0  # right lip 2px padding
+    test_mask_template[7, :, 34:52, 25:32, :] = test_preds[:, 34:52, 25:32, :]  # down lip 2px padding
 
-    test_mask_template[0, :, 32:40, 32:38, :] = test_preds[:, 32:40, 32:38, :]  # right lip 2px padding
-    test_mask_template[0, :, 30:39, 32:41, :] = test_preds[:, 30:39, 32:41, :]  # right lip 2px padding
-    test_mask_template[0, :, 31:40, 32:41, :] = test_preds[:, 31:40, 32:41, :]  # right lip 2px padding
-    test_mask_template[0, :, 32:41, 32:41, :] = test_preds[:, 32:41, 32:41, :]  # right lip 2px padding
-    test_mask_template[0, :, 33:41, 33:41, :] = test_preds[:, 33:41, 33:41, :]  # right lip 2px padding
+
+    # left lip
+    # test_mask_template[0, :, 32:49, 16:27, :] = test_preds[:, 32:49, 16:27, :]  # left lip 2px padding
+    # test_mask_template[0, :, 40:50, 16:21, :] = 0  # left lip 2px padding
+    # test_mask_template[0, :, 29:35, 23:27, :] = 0  # left lip 2px padding
+
+    # right lip
+    # test_mask_template[0, :, 32:49, 29:40, :] = test_preds[:, 32:49, 29:40, :]  # right lip 2px padding
+    # test_mask_template[0, :, 40:50, 34:40, :] = 0  # right lip 2px padding
+    # test_mask_template[0, :, 29:35, 29:35, :] = 0  # right lip 2px padding
+
     # fit templates
     test_template = patterns.fit(test_mask_template)
     test_template[test_template < 0.1] = 0

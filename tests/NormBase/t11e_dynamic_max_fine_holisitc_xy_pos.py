@@ -24,7 +24,7 @@ run: python -m tests.NormBase.t11e_dynamic_max_fine_holisitc_xy_pos
 """
 
 # define configuration
-config_path = 'NB_t11e_dynamic_max_fine_holistic_xy_pos_m0005.json'
+config_path = 'NB_t11e_dynamic_max_fine_holistic_xy_pos_m0006.json'
 
 # declare parameters
 best_eyebrow_IoU_ft = [209, 148, 59, 208]

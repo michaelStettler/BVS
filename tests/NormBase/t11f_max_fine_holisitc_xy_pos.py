@@ -25,7 +25,7 @@ run: python -m tests.NormBase.t11f_max_fine_holisitc_xy_pos
 """
 
 # define configuration
-config_path = 'NB_t11f_max_fine_holistic_xy_pos_m0005.json'
+config_path = 'NB_t11f_max_fine_holistic_xy_pos_m0006.json'
 
 # declare parameters
 best_eyebrow_IoU_ft = [68, 125]
@@ -224,7 +224,8 @@ print("[PRED] preds", np.shape(preds))
 pos = calculate_position(preds, mode="weighted average", return_mode="xy float flat")
 print("[PRED] shape pos", np.shape(pos))
 # get it resp for eyebrows
-it_train = nb_model._get_it_resp(pos)
+it_train = nb_model._get_it_resp(pos, weights='morph_space')
+# it_train = nb_model._get_it_resp(pos)
 print("[PRED] shape it_train", np.shape(it_train))
 
 # ds_train = nb_model._get_decisions_neurons(it_train, config['seq_length'])
@@ -297,7 +298,8 @@ it_test = nb_model._get_it_resp(test_pos)
 # test by training new ref
 nb_model._fit_reference([test_pos, test_data[1]], config['batch_size'])
 ref_test = np.copy(nb_model.r)
-it_ref_test = nb_model._get_it_resp(test_pos)
+it_ref_test = nb_model._get_it_resp(test_pos, weights='morph_space')
+# it_ref_test = nb_model._get_it_resp(test_pos)
 
 # ds_test = nb_model._get_decisions_neurons(it_ref_test, config['seq_length'])
 # print("[TEST] shape ds_test", np.shape(ds_test))
@@ -306,20 +308,20 @@ it_ref_test = nb_model._get_it_resp(test_pos)
 # plots
 # ***********************       test 00 raw output      ******************
 
-# raw activity
-plot_cnn_output(max_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
-                "00_max_feature_maps_eyebrow_output.gif", verbose=True, video=True)
-plot_cnn_output(max_lips_preds, os.path.join("models/saved", config["config_name"]),
-                "00_max_feature_maps_lips_output.gif", verbose=True, video=True)
-plot_cnn_output(test_max_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
-                "00_test_max_feature_maps_eyebrow_output.gif", verbose=True, video=True)
-plot_cnn_output(test_max_lips_preds, os.path.join("models/saved", config["config_name"]),
-                "00_test_max_feature_maps_lips_output.gif", verbose=True, video=True)
-
-plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
-                "00a_max_feature_maps_output.gif", verbose=True, video=True)
-plot_cnn_output(test_preds, os.path.join("models/saved", config["config_name"]),
-                "00a_test_max_maps_output.gif", verbose=True, video=True)
+# # raw activity
+# plot_cnn_output(max_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+#                 "00_max_feature_maps_eyebrow_output.gif", verbose=True, video=True)
+# plot_cnn_output(max_lips_preds, os.path.join("models/saved", config["config_name"]),
+#                 "00_max_feature_maps_lips_output.gif", verbose=True, video=True)
+# plot_cnn_output(test_max_eyebrow_preds, os.path.join("models/saved", config["config_name"]),
+#                 "00_test_max_feature_maps_eyebrow_output.gif", verbose=True, video=True)
+# plot_cnn_output(test_max_lips_preds, os.path.join("models/saved", config["config_name"]),
+#                 "00_test_max_feature_maps_lips_output.gif", verbose=True, video=True)
+#
+# plot_cnn_output(preds, os.path.join("models/saved", config["config_name"]),
+#                 "00a_max_feature_maps_output.gif", verbose=True, video=True)
+# plot_cnn_output(test_preds, os.path.join("models/saved", config["config_name"]),
+#                 "00a_test_max_maps_output.gif", verbose=True, video=True)
 
 # build arrows
 arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_train, (-1, 2)), axis=0), config['n_category'], axis=0)

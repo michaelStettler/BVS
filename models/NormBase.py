@@ -323,10 +323,10 @@ class NormBase:
                 weight = np.ones((5, 8))
             elif weights == 'morph_space':
                 weight = np.zeros((5, 8))
-                weight[1] = [0, 3, 3, 0, 0, 0, 1, 0]
+                weight[1] = [0, 6, 6, 0, 0, 0, 1, 0]
                 weight[2] = [2, 0, 0, 2, 0, 0, 0, 0]
                 weight[3] = [0, 0, 0, 0, 0, 6, 1, 0]
-                weight[4] = [0, 0, 0, 0, 18, 0, 0, 0]
+                weight[4] = [0, 0, 0, 0, 20, 0, 0, 0]
             else:
                 raise NotImplementedError("Weights: {} not implemented".format(weights))
             it_resp = []
