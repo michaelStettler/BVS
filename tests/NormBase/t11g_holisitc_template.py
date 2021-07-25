@@ -82,30 +82,30 @@ if train:
 
     # add holistic templates
     # left ext eyebrow, left int eyebrow, right int eyebrow, right ext eyebrow, left lips, up lip, right lip, down lip
-    mask = [[[16, 21], [16, 21]], [[15, 20], [21, 26]], [[16, 21], [30, 35]], [[16, 21], [37, 42]],
+    rbf_template = [[[16, 21], [16, 21]], [[15, 20], [21, 26]], [[16, 21], [30, 35]], [[16, 21], [37, 42]],
             [[35, 40], [21, 26]], [[34, 39], [27, 32]], [[36, 41], [33, 38]], [[38, 43], [27, 32]]]
     config['rbf_sigma'] = [2100, 2100, 2100, 2100, 2100, 3000, 2100, 2500]
 
     # left lip
-    mask = [[[36, 41], [33, 38]]]
+    rbf_template = [[[36, 41], [33, 38]]]
     config['rbf_sigma'] = [2100]
     # up lip
-    # mask = [[[34, 39], [27, 32]]]  # good on c2 with 3000
+    # rbf_template = [[[34, 39], [27, 32]]]  # good on c2 with 3000
     # config['rbf_sigma'] = [3000]
-    mask = [[[37, 38], [29, 30]]]
-    # mask = [[[37, 38], [29, 31]]]  # a bit jittery with 600
+    template = [[[37, 38], [29, 30]]]
+    # rbf_template = [[[37, 38], [29, 31]]]  # a bit jittery with 600
     config['rbf_sigma'] = [500]
     # config['rbf_sigma'] = [600]
     # down lip
-    mask = [[[38, 40], [29, 31]]]  # [1350] start to be jittery
-    mask = [[[38, 40], [28, 32]]]
+    rbf_template = [[[38, 40], [29, 31]]]  # [1350] start to be jittery
+    rbf_template = [[[38, 40], [28, 32]]]
     config['rbf_sigma'] = [2200]  # upper bound
     config['rbf_sigma'] = [2100]
     # config['rbf_sigma'] = [2000]  # lower bound
-    patterns = PatternFeatureSelection(config, mask=mask)
-    mask_template = np.repeat(np.expand_dims(preds, axis=0), len(mask), axis=0)
-    print("[TRAIN] shape mask_template", np.shape(mask_template))
-    template = patterns.fit(mask_template)
+    patterns = PatternFeatureSelection(config, template=rbf_template)
+    rbf_template = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
+    print("[TRAIN] shape rbf_template", np.shape(rbf_template))
+    template = patterns.fit(rbf_template)
     template[template < 0.1] = 0
 
     # # using eyebrow ft map only

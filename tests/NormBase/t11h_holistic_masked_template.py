@@ -25,7 +25,7 @@ run: python -m tests.NormBase.t11h_holistic_masked_template
 """
 
 # define configuration
-config_path = 'NB_t11h_holistic_masked_template_m0005.json'
+config_path = 'NB_t11h_holistic_masked_template_m0003.json'
 plot_intermediate = False
 compute_NB = True
 
@@ -81,41 +81,31 @@ if train:
     print("[TRAIN] shape preds", np.shape(preds))
 
     # add holistic templates
-    # rbf_mask = [[[17, 20], [19, 22]]]  # left ext eyebrow 3x3
-    # config['rbf_sigma'] = [1800]
-    # rbf_mask = [[[17, 20], [24, 27]]]  # left int eyebrow 3x3
-    # config['rbf_sigma'] = [1800]
-    # rbf_mask = [[[17, 20], [32, 35]]]  # left int eyebrow 3x3
-    # config['rbf_sigma'] = [1800]
-    # rbf_mask = [[[17, 20], [38, 41]]]  # left int eyebrow 3x3
-    # config['rbf_sigma'] = [1800]
-    # rbf_mask = [[[36, 39], [22, 25]]]  # left lip 3x3
-    # config['rbf_sigma'] = [1800]
-    # rbf_mask = [[[35, 38], [28, 32]]]  # up lip 3x4
-    # config['rbf_sigma'] = [3300]
-    # rbf_mask = [[[36, 39], [33, 36]]]  # right lip 3x3
-    # config['rbf_sigma'] = [2200]
-    # rbf_mask = [[[38, 40], [28, 32]]]  # down lip 2x4
-    # config['rbf_sigma'] = [2200]
-    rbf_mask = [[[17, 20], [19, 22]], [[17, 20], [24, 27]], [[17, 20], [32, 35]], [[17, 20], [37, 40]],
+    rbf_template = [[[17, 20], [19, 22]], [[17, 20], [24, 27]], [[17, 20], [32, 35]], [[17, 20], [37, 40]],
                 [[36, 39], [22, 25]], [[35, 38], [28, 32]], [[36, 39], [33, 36]], [[38, 40], [28, 32]]]
-    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 1800, 3300, 2200, 2200]
-    patterns = PatternFeatureSelection(config, mask=rbf_mask)
 
-    # create masked area
-    mask_template = np.zeros(tuple([len(rbf_mask)]) + np.shape(preds))
-    mask_template[0, :, 13:24, 15:26, :] = preds[:, 13:24, 15:26, :]  # left ext eyebrow 4px padding
-    mask_template[1, :, 13:24, 20:31, :] = preds[:, 13:24, 20:31, :]  # left int eyebrow 4px padding
-    mask_template[2, :, 13:24, 28:39, :] = preds[:, 13:24, 28:39, :]  # left int eyebrow 4px padding
-    mask_template[3, :, 13:24, 33:44, :] = preds[:, 13:24, 33:44, :]  # left ext eyebrow 4px padding
-    mask_template[4, :, 34:41, 20:27, :] = preds[:, 35:42, 20:27, :]  # left lip 2px padding
-    mask_template[5, :, 32:41, 25:35, :] = preds[:, 32:41, 25:35, :]  # up lip 3px padding
-    mask_template[6, :, 34:41, 31:38, :] = preds[:, 34:41, 31:38, :]  # right lip 2px padding
-    mask_template[7, :, 36:50, 24:36, :] = preds[:, 36:50, 24:36, :]  # down lip
-    print("[TRAIN] shape mask_template", np.shape(mask_template))
+    rbf_mask = [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]],
+                [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[34, 41], [31, 38]], [[36, 50], [24, 36]]]
+
+    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 1800, 3300, 2200, 2200]
+    patterns = PatternFeatureSelection(config, template=rbf_template, mask=rbf_mask)
+
+    # # create masked area
+    # mask_template = np.zeros(tuple([len(rbf_template)]) + np.shape(preds))
+    # mask_template[0, :, 13:24, 15:26, :] = preds[:, 13:24, 15:26, :]  # left ext eyebrow 4px padding
+    # mask_template[1, :, 13:24, 20:31, :] = preds[:, 13:24, 20:31, :]  # left int eyebrow 4px padding
+    # mask_template[2, :, 13:24, 28:39, :] = preds[:, 13:24, 28:39, :]  # left int eyebrow 4px padding
+    # mask_template[3, :, 13:24, 33:44, :] = preds[:, 13:24, 33:44, :]  # left ext eyebrow 4px padding
+    # mask_template[4, :, 35:42, 20:27, :] = preds[:, 35:42, 20:27, :]  # left lip 2px padding
+    # mask_template[5, :, 32:41, 25:35, :] = preds[:, 32:41, 25:35, :]  # up lip 3px padding
+    # mask_template[6, :, 34:41, 31:38, :] = preds[:, 34:41, 31:38, :]  # right lip 2px padding
+    # mask_template[7, :, 36:50, 24:36, :] = preds[:, 36:50, 24:36, :]  # down lip
+    # print("[TRAIN] shape mask_template", np.shape(mask_template))
 
     # fit templates
-    template = patterns.fit(mask_template)
+    # template = patterns.fit(mask_template)
+    template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
+    template = patterns.fit(template_preds)
     template[template < 0.1] = 0
 
     # compute positions
@@ -180,21 +170,24 @@ if human_full:
     preds = np.concatenate((eyebrow_preds, lips_preds), axis=3)
     print("[PRED] shape preds", np.shape(preds))
 
-    # create masked area
-    mask_template = np.zeros(tuple([len(rbf_mask)]) + np.shape(preds))
-    mask_template[0, :, 13:24, 15:26, :] = preds[:, 13:24, 15:26, :]  # left ext eyebrow 4px padding
-    mask_template[1, :, 13:24, 20:31, :] = preds[:, 13:24, 20:31, :]  # left int eyebrow 4px padding
-    mask_template[2, :, 13:24, 28:39, :] = preds[:, 13:24, 28:39, :]  # left int eyebrow 4px padding
-    mask_template[3, :, 13:24, 33:44, :] = preds[:, 13:24, 33:44, :]  # left ext eyebrow 4px padding
-    mask_template[4, :, 34:41, 20:27, :] = preds[:, 35:42, 20:27, :]  # left lip 2px padding
-    mask_template[5, :, 32:41, 25:35, :] = preds[:, 32:41, 25:35, :]  # up lip 3px padding
-    mask_template[6, :, 34:41, 32:39, :] = preds[:, 34:41, 32:39, :]  # right lip 2px padding
-    mask_template[7, :, 36:50, 24:36, :] = preds[:, 36:50, 24:36, :]  # down lip
-    print("[PRED] shape mask_template", np.shape(mask_template))
+    # # create masked area
+    # mask_template = np.zeros(tuple([len(rbf_template)]) + np.shape(preds))
+    # mask_template[0, :, 13:24, 15:26, :] = preds[:, 13:24, 15:26, :]  # left ext eyebrow 4px padding
+    # mask_template[1, :, 13:24, 20:31, :] = preds[:, 13:24, 20:31, :]  # left int eyebrow 4px padding
+    # mask_template[2, :, 13:24, 28:39, :] = preds[:, 13:24, 28:39, :]  # left int eyebrow 4px padding
+    # mask_template[3, :, 13:24, 33:44, :] = preds[:, 13:24, 33:44, :]  # left ext eyebrow 4px padding
+    # mask_template[4, :, 34:41, 20:27, :] = preds[:, 35:42, 20:27, :]  # left lip 2px padding
+    # mask_template[5, :, 32:41, 25:35, :] = preds[:, 32:41, 25:35, :]  # up lip 3px padding
+    # mask_template[6, :, 34:41, 31:38, :] = preds[:, 34:41, 31:38, :]  # right lip 2px padding
+    # mask_template[7, :, 36:50, 24:36, :] = preds[:, 36:50, 24:36, :]  # down lip
+    # print("[PRED] shape mask_template", np.shape(mask_template))  # (8, 150, 56, 56, 18)
 
     # compute templates
-    template = patterns.transform(mask_template)
-    print("[PRED] shape template", np.shape(template))
+    # template = patterns.transform(mask_template)  # (150, 56, 56, 8)
+    template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
+    template = patterns.transform(template_preds)
+    print("!!!!!!!!!!!!!!!!!!!!!!!")
+    print("shape template", np.shape(template))
     template[template < 0.1] = 0
 
     # compute positions
@@ -244,26 +237,36 @@ if test:
     # config['rbf_sigma'] = [1900]
     # test_rbf_mask = [[[36, 39], [27, 30]]]  # down lip 3x3
     # config['rbf_sigma'] = [2000]
-    test_rbf_mask = [[[10, 13], [19, 22]], [[11, 14], [24, 27]], [[11, 14], [29, 32]], [[10, 13], [35, 38]],
-                     [[34, 37], [20, 23]], [[32, 35], [27, 30]], [[34, 37], [33, 36]], [[36, 39], [27, 30]]]
+    test_rbf_template = [[[10, 13], [19, 22]], [[11, 14], [24, 27]], [[11, 14], [29, 32]], [[10, 13], [35, 38]],
+                         [[34, 37], [20, 23]], [[32, 35], [27, 30]], [[34, 37], [33, 36]], [[36, 39], [27, 30]]]
+
+    test_rbf_mask = [[[6, 17], [15, 26]], [[7, 18], [20, 31]], [[7, 18], [25, 36]], [[6, 17], [31, 42]],
+                     [[32, 49], [16, 27]], [[29, 38], [24, 33]], [[32, 49], [29, 40]], [[34, 52], [25, 32]]]
+
+    test_rbf_zeros = {'0': {'idx': 4, 'pos': [[40, 50], [16, 21]]},
+                      '1': {'idx': 4, 'pos': [[29, 35], [23, 27]]},
+                      '2': {'idx': 6, 'pos': [[40, 50], [34, 40]]},
+                      '3': {'idx': 6, 'pos': [[29, 35], [29, 35]]}}
+
     config['rbf_sigma'] = [1800, 1400, 1400, 1800, 1900, 1900, 1900, 2000]
 
-    patterns = PatternFeatureSelection(config, mask=test_rbf_mask)
+    # test_patterns = PatternFeatureSelection(config, template=test_rbf_template)
+    patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
-    # create masked area
-    test_mask_template = np.zeros(tuple([len(test_rbf_mask)]) + np.shape(test_preds))
-    test_mask_template[0, :, 6:17, 15:26, :] = test_preds[:, 6:17, 15:26, :]  # left ext eyebrow 4px padding
-    test_mask_template[1, :, 7:18, 20:31, :] = test_preds[:, 7:18, 20:31, :]  # left int eyebrow 4px padding
-    test_mask_template[2, :, 7:18, 25:36, :] = test_preds[:, 7:18, 25:36, :]  # right int eyebrow 4px padding
-    test_mask_template[3, :, 6:17, 31:42, :] = test_preds[:, 6:17, 31:42, :]  # right ext eyebrow 4px padding
-    test_mask_template[4, :, 32:49, 16:27, :] = test_preds[:, 32:49, 16:27, :]  # left lip 2px padding
-    test_mask_template[4, :, 40:50, 16:21, :] = 0  # left lip 2px padding
-    test_mask_template[4, :, 29:35, 23:27, :] = 0  # left lip 2px padding
-    test_mask_template[5, :, 29:38, 24:33, :] = test_preds[:, 29:38, 24:33, :]  # up lip 3px padding
-    test_mask_template[6, :, 32:49, 29:40, :] = test_preds[:, 32:49, 29:40, :]  # right lip 2px padding
-    test_mask_template[6, :, 40:50, 34:40, :] = 0  # right lip 2px padding
-    test_mask_template[6, :, 29:35, 29:35, :] = 0  # right lip 2px padding
-    test_mask_template[7, :, 34:52, 25:32, :] = test_preds[:, 34:52, 25:32, :]  # down lip 2px padding
+    # # create masked area
+    # test_mask_template = np.zeros(tuple([len(test_rbf_mask)]) + np.shape(test_preds))
+    # test_mask_template[0, :, 6:17, 15:26, :] = test_preds[:, 6:17, 15:26, :]  # left ext eyebrow 4px padding
+    # test_mask_template[1, :, 7:18, 20:31, :] = test_preds[:, 7:18, 20:31, :]  # left int eyebrow 4px padding
+    # test_mask_template[2, :, 7:18, 25:36, :] = test_preds[:, 7:18, 25:36, :]  # right int eyebrow 4px padding
+    # test_mask_template[3, :, 6:17, 31:42, :] = test_preds[:, 6:17, 31:42, :]  # right ext eyebrow 4px padding
+    # test_mask_template[4, :, 32:49, 16:27, :] = test_preds[:, 32:49, 16:27, :]  # left lip 2px padding
+    # test_mask_template[4, :, 40:50, 16:21, :] = 0  # left lip 2px padding
+    # test_mask_template[4, :, 29:35, 23:27, :] = 0  # left lip 2px padding
+    # test_mask_template[5, :, 29:38, 24:33, :] = test_preds[:, 29:38, 24:33, :]  # up lip 3px padding
+    # test_mask_template[6, :, 32:49, 29:40, :] = test_preds[:, 32:49, 29:40, :]  # right lip 2px padding
+    # test_mask_template[6, :, 40:50, 34:40, :] = 0  # right lip 2px padding
+    # test_mask_template[6, :, 29:35, 29:35, :] = 0  # right lip 2px padding
+    # test_mask_template[7, :, 34:52, 25:32, :] = test_preds[:, 34:52, 25:32, :]  # down lip 2px padding
 
 
     # left lip
@@ -276,8 +279,23 @@ if test:
     # test_mask_template[0, :, 40:50, 34:40, :] = 0  # right lip 2px padding
     # test_mask_template[0, :, 29:35, 29:35, :] = 0  # right lip 2px padding
 
+    # test_rbf_mask = np.array(test_rbf_mask)
+    # # apply mask
+    # for i in range(len(test_rbf_template)):
+    #     test_mask_template[i, :, test_rbf_mask[i, 0, 0]:test_rbf_mask[i, 0, 1], test_rbf_mask[i, 1, 0]:test_rbf_mask[i, 1, 1]] = \
+    #         test_preds[:, test_rbf_mask[i, 0, 0]:test_rbf_mask[i, 0, 1], test_rbf_mask[i, 1, 0]:test_rbf_mask[i, 1, 1]]
+    #
+    # # apply zeros
+    # for i in range(len(test_rbf_zeros)):
+    #     dict = test_rbf_zeros[str(i)]
+    #     idx = dict['idx']
+    #     pos_ = np.array(dict['pos'])
+    #     test_mask_template[idx, :, pos_[0, 0]:pos_[0, 1], pos_[1, 0]:pos_[1, 1]] = 0
+
     # fit templates
-    test_template = patterns.fit(test_mask_template)
+    # test_template = test_patterns.fit(test_mask_template)
+    test_template_preds = np.repeat(np.expand_dims(test_preds, axis=0), len(test_rbf_template), axis=0)
+    test_template = patterns.fit(test_template_preds)
     test_template[test_template < 0.1] = 0
 
     # compute positions
@@ -317,6 +335,9 @@ if test:
 if plot:
     # --------------------------------------------------------------------------------------------------------------------
     # plots
+    print("[PLOT] shape preds", np.shape(preds))
+    print("[PLOT] shape test_preds", np.shape(test_preds))
+
     # build arrows
     arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_train, (-1, 2)), axis=0), config['n_category'], axis=0)
     arrow_head = np.reshape(ref_tuning, (len(ref_tuning), -1, 2))
@@ -325,13 +346,12 @@ if plot:
 
     # put one color per label
     labels = data[1]
-    color_seq = np.zeros(len(preds))
+    color_seq = np.zeros(len(labels))
     color_seq[labels == 1] = 1
     color_seq[labels == 2] = 2
     color_seq[labels == 3] = 3
     color_seq[labels == 4] = 4
 
-    print("[PLOT] shape preds", np.shape(preds))
     pos_2d = np.reshape(pos, (len(pos), -1, 2))
     print("[PLOT] shape pos_flat", np.shape(pos_2d))
     plot_ft_map_pos(pos_2d,

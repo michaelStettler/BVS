@@ -26,7 +26,7 @@
   "nu": 1.0,
   "rbf_sigma": [2100],
   "rbf_firing_threshold": 0.15,
-  "pattern_idx": 0,
+  "template_idx": 0,
   "seq_length": 150,
   "feat_map_filt_ref": "",
   "feat_map_filter_type": "",

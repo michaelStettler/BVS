@@ -4,6 +4,14 @@ import numpy as np
 
 from models.RBF import RBF
 
+"""
+template: position where the RBF kernel is learn
+mask: position (size) of the receptive field
+zeros: fine tuning to allow deleting some corners as to create more specific receptive fields (rotation etc) 
+"""
+
+# todo create better receptive field
+
 
 class PatternFeatureSelection:
     """
@@ -11,25 +19,36 @@ class PatternFeatureSelection:
 
     the script fits a spatial template over n dimension
     """
-    def __init__(self, config, mask=None):
+    def __init__(self, config, template=None, mask=None, zeros=None):
         self.config = config
 
         # declare one rbf template per mask
-        if mask is not None:
-            self.mask = np.array(mask)
+        if template is not None:
+            self.template = np.array(template)
         else:
-            self.mask = np.array(config['pattern_mask'])
-        self.n_mask = len(self.mask)
+            self.template = np.array(config['template_idx'])
+        self.n_template = len(self.template)
         self.rbf = []
 
         sigmas = config['rbf_sigma']
+
+        self.use_mask = False
+        if mask is not None:
+            self.mask = np.array(mask)
+            self.use_mask = True
+
+        self.use_zeros = False
+        if zeros is not None:
+            self.zeros = zeros
+            self.use_zeros = True
+
         # if only one sigma is provided just repeat it and set the same sigma for all RBF
         if np.isscalar(sigmas):
-            sigmas = np.repeat(sigmas, self.n_mask)
+            sigmas = np.repeat(sigmas, self.n_template)
         elif len(sigmas) == 1:
-            sigmas = np.repeat(sigmas[0], self.n_mask)
+            sigmas = np.repeat(sigmas[0], self.n_template)
 
-        for i in range(self.n_mask):
+        for i in range(self.n_template):
             sigma = sigmas[i]
             self.rbf.append(RBF(config, sigma=sigma))
 
@@ -40,19 +59,42 @@ class PatternFeatureSelection:
         :param data: list (n_pattern)(n_data, n_feature, n_feature, n_dim)
         :return:
         """
+
+        preds = np.zeros(np.shape(data))
+        # apply mask
+        if self.use_mask:
+
+            for i in range(self.n_template):
+                preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
+                    data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
+        #
+        # # apply zeros
+        # if self.use_zeros:
+        #     for i in range(len(self.zeros)):
+        #         dict = self.zeros[str(i)]
+        #         idx = dict['idx']
+        #         pos = np.array(dict['pos'])
+        #         preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
+        #
+        #
+        # print("[Feat. Select] shape preds", np.shape(preds))
+        data = preds
+
+        # compute template
         for i in range(len(data)):
             pred = np.array(data[i])
-            # apply mask
-            template = pred[self.config['pattern_idx'], self.mask[i, 0, 0]:self.mask[i, 0, 1],
-                               self.mask[i, 1, 0]:self.mask[i, 1, 1]]
+
+            # compute template
+            template = pred[self.config['template_idx'], self.template[i, 0, 0]:self.template[i, 0, 1],
+                               self.template[i, 1, 0]:self.template[i, 1, 1]]
             template = np.expand_dims(template, axis=0)
 
             # fit rbf template
             self.rbf[i].fit2d(template)
 
-        return self.transform(data, feature_channel_last=feature_channel_last)
+        return self.transform(data, feature_channel_last=feature_channel_last, from_fit=True)
 
-    def transform(self, data, activation=None, feature_channel_last=True):
+    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False):
         """
         compute activation over the data with the rbf template
 
@@ -60,6 +102,38 @@ class PatternFeatureSelection:
         :return:
         """
         print("[Feat. Select] Transform Pattern")
+        print("[Feat. Select] shape data", np.shape(data))
+
+        if not from_fit:
+            preds = np.zeros(np.shape(data))
+            # apply mask
+            if self.use_mask:
+
+                for i in range(self.n_template):
+                    preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
+                        data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
+            #
+            # # apply zeros
+            # if self.use_zeros:
+            #     print("length self.zeros", len(self.zeros))
+            #     for i in range(len(self.zeros)):
+            #         dict = self.zeros[str(i)]
+            #         print("dict", dict)
+            #         idx = dict['idx']
+            #         print("idx", idx)
+            #         pos = np.array(dict['pos'])
+            #         print("pos", pos)
+            #         print("shape", np.shape(preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]]))
+            #         print(preds[idx, 0, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1], 0])
+            #         preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
+            #         print(preds[idx, 0, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1], 0])
+            #         print()
+            #
+            #
+            # print("[Feat. Select] shape preds", np.shape(preds))
+            data = preds
+
+
         preds = []
         for i in range(len(data)):
             pred = np.array(data[i])
@@ -80,6 +154,7 @@ class PatternFeatureSelection:
             if len(np.shape(preds)) == 3:
                 preds = np.expand_dims(preds, axis=3)
 
+        print("[Feat. Select] Pattern transformed!")
         return preds
 
     def save(self, path):
