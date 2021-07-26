@@ -59,26 +59,16 @@ class PatternFeatureSelection:
         :param data: list (n_pattern)(n_data, n_feature, n_feature, n_dim)
         :return:
         """
-
-        preds = np.zeros(np.shape(data))
+        print("[Feat. Select] Fit")
         # apply mask
         if self.use_mask:
+            print("[Feat. Select] fit: use mask")
+            data = self._apply_mask(data)
 
-            for i in range(self.n_template):
-                preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
-                    data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
-        #
-        # # apply zeros
-        # if self.use_zeros:
-        #     for i in range(len(self.zeros)):
-        #         dict = self.zeros[str(i)]
-        #         idx = dict['idx']
-        #         pos = np.array(dict['pos'])
-        #         preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
-        #
-        #
-        # print("[Feat. Select] shape preds", np.shape(preds))
-        data = preds
+        # apply zeros
+        if self.use_zeros:
+            print("[Feat. Select] fit: use zeros")
+            data = self._apply_zeros(data)
 
         # compute template
         for i in range(len(data)):
@@ -105,35 +95,17 @@ class PatternFeatureSelection:
         print("[Feat. Select] shape data", np.shape(data))
 
         if not from_fit:
-            preds = np.zeros(np.shape(data))
             # apply mask
             if self.use_mask:
+                print("[Feat. Select] Transform: use mask")
+                data = self._apply_mask(data)
 
-                for i in range(self.n_template):
-                    preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
-                        data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
-            #
-            # # apply zeros
-            # if self.use_zeros:
-            #     print("length self.zeros", len(self.zeros))
-            #     for i in range(len(self.zeros)):
-            #         dict = self.zeros[str(i)]
-            #         print("dict", dict)
-            #         idx = dict['idx']
-            #         print("idx", idx)
-            #         pos = np.array(dict['pos'])
-            #         print("pos", pos)
-            #         print("shape", np.shape(preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]]))
-            #         print(preds[idx, 0, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1], 0])
-            #         preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
-            #         print(preds[idx, 0, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1], 0])
-            #         print()
-            #
-            #
-            # print("[Feat. Select] shape preds", np.shape(preds))
-            data = preds
+            # apply zeros
+            if self.use_zeros:
+                print("[Feat. Select] Transoform: use zeros")
+                data = self._apply_zeros(data)
 
-
+        # transform data
         preds = []
         for i in range(len(data)):
             pred = np.array(data[i])
@@ -155,6 +127,26 @@ class PatternFeatureSelection:
                 preds = np.expand_dims(preds, axis=3)
 
         print("[Feat. Select] Pattern transformed!")
+        return preds
+
+    def _apply_mask(self, data):
+        preds = np.zeros(np.shape(data))
+        for i in range(self.n_template):
+            preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
+                data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
+
+        print("[Feat. Select] shape preds", np.shape(preds))
+        return preds
+
+    def _apply_zeros(self, data):
+        preds = data
+        for i in range(len(self.zeros)):
+            dict = self.zeros[str(i)]
+            idx = dict['idx']
+            pos = np.array(dict['pos'])
+            preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
+
+        print("[Feat. Select] shape preds", np.shape(preds))
         return preds
 
     def save(self, path):

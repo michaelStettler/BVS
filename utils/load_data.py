@@ -32,23 +32,17 @@ def load_data(config, train=True, sort_by=None, get_raw=False):
     elif config['train_data'] == 'FEI_SA':
         data = _load_FEI_SA(config)
 
-    elif config['train_data'] == 'FEI_semantic':
-        print("[WARNING] 'FEI_semantic' dataset should be removed in the future. Refer to 'load_coco_semantic_anotations'")
-        # todo remove _load_FEI_semantic()
-        data = _load_FEI_semantic(config)
-
     elif config['train_data'] == 'affectnet':
         data = _load_affectnet(config, train)
 
-    elif config['train_data'] == 'ExpressionMorphing':
-        print("[WARNING] 'ExpressionMorphing' dataset should be removed in the future by 'morphing_space'")
-        # todo remove _load_expression_morphing()
-        data = _load_expression_morphing(config, train, sort_by)
     elif config['train_data'] == 'morphing_space':
         data = _load_morphing_space(config, train, sort_by, get_raw=get_raw)
 
     elif config['train_data'] == 'basic_shapes':
         data = _load_basic_shapes(config, train)
+
+    elif config['train_data'] == 'bfs_space':  # bfs = basic face shape
+        data = _load_bfs(config, train, get_raw=get_raw)
 
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
@@ -112,89 +106,6 @@ def _load_monkey(config, train, sort_by):
 
         idx += 1
     return [x, y]
-
-
-def _load_expression_morphing(config, train, sort_by):
-    if not isinstance(train, bool):         # if train is an integer
-        df = pd.read_csv(config['csv{}'.format(train)])
-        try:
-            directory = config['directory{}'.format(train)]
-        except KeyError:
-            directory = None
-        try:
-            avatar = config['avatar{}'.format(train)]
-        except KeyError:
-            avatar = 'all'
-        try:
-            human_expression_config = config['human_expression{}'.format(train)]
-        except KeyError:
-            human_expression_config = 'all'
-        try:
-            anger_config = config['anger{}'.format(train)]
-        except KeyError:
-            anger_config = 'all'
-    else:
-        if train:
-            df = pd.read_csv(config['csv_train'])
-            try:
-                avatar = config['train_avatar']
-            except KeyError:
-                avatar ='all'
-            try:
-                human_expression_config = config['train_human_expression']
-            except KeyError:
-                human_expression_config = 'all'
-            try:
-                anger_config = config['train_anger']
-            except KeyError:
-                anger_config = 'all'
-        else:
-            df = pd.read_csv(config['csv_val'])
-            try:
-                avatar = config['val_avatar']
-            except KeyError:
-                avatar ='all'
-            try:
-                human_expression_config = config['val_human_expression']
-            except KeyError:
-                human_expression_config = 'all'
-            try:
-                anger_config = config['val_anger']
-            except KeyError:
-                anger_config = 'all'
-
-    if sort_by is not None:
-        df = df.sort_values(by=sort_by)
-
-    # select avatar
-    if avatar == 'all':
-        monkey_avatar = [False, True]
-    elif avatar == 'human':
-        monkey_avatar = [False]
-    else:
-        monkey_avatar = [True]
-    df = df[df['monkey_avatar'].isin(monkey_avatar)]
-    # select human/monkey expression
-    if human_expression_config == 'all':
-        human_expression = [0.0, 0.25, 0.5, 0.75, 1.0]
-    else:
-        human_expression = human_expression_config
-    df = df[df['human_expression'].isin(human_expression)]
-    # select anger/fear blending
-    if anger_config == 'all':
-        anger = [0.0, 0.25, 0.5, 0.75, 1.0]
-    else:
-        anger = anger_config
-    df = df[df['anger'].isin(anger)]
-
-    num_data = len(df.index)
-    print("[DATA] Found {} images".format(num_data))
-
-
-    # load each image from the csv file
-    data = load_from_csv(new_df, config)
-
-    return data
 
 
 def _load_morphing_space(config, train, sort_by, get_raw=False):
@@ -384,37 +295,6 @@ def _load_FEI_SA(config):
     return [x, y]
 
 
-def _load_FEI_semantic(config):
-    # get csv
-    df = pd.read_csv(config['csv'])
-    num_data = len(df.index)
-    print("[DATA] Found {} images".format(num_data))
-
-    #  declare x and y
-    x = np.zeros((num_data, 224, 224, 3))
-    y = np.zeros((num_data, 224, 224, config['num_cat']))
-
-    for idx, row in df.iterrows():
-        # load image
-        im = cv2.imread(os.path.join(config['img_path'], row['img']))
-        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        # resize and pad image
-        img = resize_image(im)
-        img = pad_image(img)
-        # add image to data
-        x[idx] = img
-
-        # load label
-        label = np.load(os.path.join(config['label_path'], row['label']))
-        # resize and pad label
-        label = resize_image(label)
-        label = pad_image(label, dim=(224, 224, config['num_cat']))
-        # add label to data
-        y[idx] = label
-
-    return [x, y]
-
-
 def _load_affectnet(config, train):
     # get csv
     if train:
@@ -458,3 +338,79 @@ def _load_basic_shapes(config, train):
             f"basic shape with train: '{train}' does not exists! Please change norm_base_config file or add the training data")
     #images = np.array(images)
     return images
+
+
+def _load_bfs(config, train, get_raw=False):
+    """
+    helper function to load the basic face shape dataset
+    """
+    # load csv
+    df = pd.read_csv(config['csv'], index_col=0)
+
+    # select avatar
+    if train:
+        config_avatar = config['train_avatar']
+        expressions = config['train_expression']
+    else:
+        config_avatar = config['val_avatar']
+        expressions = config['val_expression']
+
+    # build filter depending on avatar
+    if config_avatar == 'Louise':
+        avatar = ['Louise']
+    elif config_avatar == 'Monkey':
+        avatar = ['Monkey']
+    elif config_avatar == 'Mery':
+        avatar = ['Mery']
+    elif config_avatar == 'all_test':
+        avatar = ['Monkey', 'Mery']
+    else:
+        raise ValueError('Avatar {} does not exists in morphing_space dataset!'.format(config_avatar))
+
+    # apply filter
+    df = df[df['avatar'].isin(avatar)]
+
+    # read out the expressions for training
+    new_df = pd.DataFrame()
+    for expression in expressions:
+        sub_df = df.copy()
+
+        if 'Neutral' in expression:
+            exp = [0]
+        elif 'Happy' in expression:
+            exp = [1]
+        elif 'Angry' in expression:
+            exp = [2]
+        elif 'Sad' in expression:
+            exp = [3]
+        elif 'Surprise' in expression:
+            exp = [4]
+        elif 'Fear' in expression:
+            exp = [5]
+        elif 'Disgust' in expression:
+            exp = [6]
+        elif 'full' in expression:  # full set
+            exp = [0, 1, 2, 3, 4, 5, 6]
+        elif 'all_expressions' in expression:  # all expressions (no Neutral)
+            exp = [1, 2, 3, 4, 5, 6]
+        else:
+            raise NotImplementedError('Expression "{}" is not yet implemented'.format(expression))
+
+        # select anger expression
+        sub_df = sub_df[sub_df['category'].isin(exp)]
+
+        # append to new df
+        new_df = new_df.append(sub_df, ignore_index=True)
+
+    # load each image from the csv file
+    data = load_from_csv(new_df, config)
+
+    if get_raw:
+        data[0] = data[0]
+    elif config["extraction_model"] == "VGG19":
+        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+    else:
+        print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+
+    return data
+

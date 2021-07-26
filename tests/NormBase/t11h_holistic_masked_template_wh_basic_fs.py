@@ -18,21 +18,18 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
 """
-test script to try an implementation of a holistic representation model by a RBF function of the face
-it uses mask and "zeros" to create receptive field around the templates
+test script to try the implementation of the holistic representation model on the BasicFaceShape dataset
 
-
-run: python -m tests.NormBase.t11h_holistic_masked_template
+run: python -m tests.NormBase.t11h_holistic_masked_template_wh_basic_fs
 """
 
 # define configuration
-config_path = 'NB_t11h_holistic_masked_template_m0005.json'
+config_path = 'NB_t11h_holistic_masked_template_wh_basic_fs_m0001.json'
 plot_intermediate = False
 compute_NB = True
 
 train = True
-human_full = True
-test = True
+test = False
 plot = True
 
 
@@ -140,42 +137,6 @@ if train:
         # get it resp
         it_train = nb_model._get_it_resp(pos)
         print("[TRAIN] shape it_train", np.shape(it_train))
-
-if human_full:
-    # -------------------------------------------------------------------------------------------------------------------
-    # test Full human
-    # load data
-    data = load_data(config)
-    # predict
-    preds = v4_model.predict(data[0], verbose=1)
-    print("[PRED] shape prediction", np.shape(preds))
-
-    # get feature maps that mimic a semantic selection pipeline
-    # keep only highest IoU semantic score
-    eyebrow_preds = preds[..., best_eyebrow_IoU_ft]
-    print("[PRED] shape eyebrow semantic feature selection", np.shape(eyebrow_preds))
-    lips_preds = preds[..., best_lips_IoU_ft]
-    print("[PRED] shape lips semantic feature selection", np.shape(lips_preds))
-    preds = np.concatenate((eyebrow_preds, lips_preds), axis=3)
-    print("[PRED] shape preds", np.shape(preds))
-
-    # compute templates
-    # template = patterns.transform(mask_template)  # (150, 56, 56, 8)
-    template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
-    template = patterns.transform(template_preds)
-    print("!!!!!!!!!!!!!!!!!!!!!!!")
-    print("shape template", np.shape(template))
-    template[template < 0.1] = 0
-
-    # compute positions
-    pos = calculate_position(template, mode="weighted average", return_mode="xy float flat")
-    print("[PRED] shape pos", np.shape(pos))
-
-    if compute_NB:
-        # get it resp for eyebrows
-        it_train = nb_model._get_it_resp(pos)
-        print("[PRED] shape it_train", np.shape(it_train))
-
 
 if test:
     # -------------------------------------------------------------------------------------------------------------------
