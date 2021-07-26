@@ -62,9 +62,6 @@ if train:
     # load data
     data = load_data(config)
 
-    # remove transition frames
-    data = remove_transition_frames(data)
-
     # predict
     preds = v4_model.predict(data[0], verbose=1)
     print("[TRAIN] shape prediction", np.shape(preds))
@@ -98,27 +95,6 @@ if train:
     pos = calculate_position(template, mode="weighted average", return_mode="xy float flat")
     print("[TRAIN] shape pos", np.shape(pos))
 
-    if plot_intermediate:
-        plot_cnn_output(template, os.path.join("models/saved", config["config_name"]),
-                        "00_template.gif", verbose=True, video=True)
-
-        test_pos_2d = np.reshape(pos, (len(pos), -1, 2))
-        plot_ft_map_pos(test_pos_2d,
-                        fig_name="00b_human_pos.png",
-                        path=os.path.join("models/saved", config["config_name"]))
-
-        test_max_preds = np.expand_dims(np.amax(preds, axis=3), axis=3)
-        preds_plot = test_max_preds / np.amax(test_max_preds) * 255
-        print("[TRAIN] shape preds_plot", np.shape(preds_plot))
-        plot_ft_pos_on_sequence(pos, preds_plot, vid_name='00_ft_pos.mp4',
-                                save_folder=os.path.join("models/saved", config["config_name"]),
-                                pre_proc='raw', ft_size=(56, 56))
-
-        plot_ft_pos_on_sequence(pos, data[0],
-                                vid_name='00_ft_pos_human.mp4',
-                                save_folder=os.path.join("models/saved", config["config_name"]),
-                                lmk_size=1, ft_size=(56, 56))
-
     if compute_NB:
         nb_model.n_features = np.shape(pos)[-1]  # todo add this to init
         # train manually ref vector
@@ -137,7 +113,17 @@ if train:
         # get it resp
         it_train = nb_model._get_it_resp(pos)
         print("[TRAIN] shape it_train", np.shape(it_train))
+        print(it_train)
 
+        # print true labels versus the predicted label
+        for i, label in enumerate(data[1]):
+            t_label = int(label)
+            p_label = np.argmax(it_train[i])
+
+            if t_label == p_label:
+                print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
+            else:
+                print(i, "true label:", t_label, "vs. pred:", p_label, " - wrong!")
 if test:
     # -------------------------------------------------------------------------------------------------------------------
     # test monkey
@@ -216,13 +202,13 @@ if plot:
     # --------------------------------------------------------------------------------------------------------------------
     # plots
     print("[PLOT] shape preds", np.shape(preds))
-    print("[PLOT] shape test_preds", np.shape(test_preds))
+    # print("[PLOT] shape test_preds", np.shape(test_preds))
 
     # build arrows
     arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_train, (-1, 2)), axis=0), config['n_category'], axis=0)
     arrow_head = np.reshape(ref_tuning, (len(ref_tuning), -1, 2))
     arrows = [arrow_tail, arrow_head]
-    arrows_color = ['#0e3957', '#3b528b', '#21918c', '#5ec962', '#fde725']
+    # arrows_color = ['#0e3957', '#3b528b', '#21918c', '#5ec962', '#fde725']
 
     # put one color per label
     labels = data[1]
@@ -231,6 +217,8 @@ if plot:
     color_seq[labels == 2] = 2
     color_seq[labels == 3] = 3
     color_seq[labels == 4] = 4
+    color_seq[labels == 5] = 5
+    color_seq[labels == 6] = 6
 
     pos_2d = np.reshape(pos, (len(pos), -1, 2))
     print("[PLOT] shape pos_flat", np.shape(pos_2d))
@@ -238,80 +226,49 @@ if plot:
                     fig_name="00b_human_train_pos.png",
                     path=os.path.join("models/saved", config["config_name"]),
                     color_seq=color_seq,
-                    arrows=arrows,
-                    arrows_color=arrows_color)
+                    arrows=arrows)
+                    # arrows_color=arrows_color)
 
-    # build arrows
-    arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_test, (-1, 2)), axis=0), config['n_category'], axis=0)
-    arrow_head = np.reshape(ref_tuning, (len(ref_tuning), -1, 2))
-    arrows = [arrow_tail, arrow_head]
-    arrows_color = ['#0e3957', '#3b528b', '#21918c', '#5ec962', '#fde725']
-
-    # put one color per label
-    test_labels = test_data[1]
-    color_seq = np.zeros(len(test_labels))
-    color_seq[test_labels == 1] = 1
-    color_seq[test_labels == 2] = 2
-    color_seq[test_labels == 3] = 3
-    color_seq[test_labels == 4] = 4
-
-    test_pos_2d = np.reshape(test_pos, (len(test_pos), -1, 2))
-    plot_ft_map_pos(test_pos_2d,
-                    fig_name="00b_monkey_test_pos.png",
-                    path=os.path.join("models/saved", config["config_name"]),
-                    color_seq=color_seq,
-                    arrows=arrows,
-                    arrows_color=arrows_color)
+    # # build arrows
+    # arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_test, (-1, 2)), axis=0), config['n_category'], axis=0)
+    # arrow_head = np.reshape(ref_tuning, (len(ref_tuning), -1, 2))
+    # arrows = [arrow_tail, arrow_head]
+    # arrows_color = ['#0e3957', '#3b528b', '#21918c', '#5ec962', '#fde725']
+    #
+    # # put one color per label
+    # test_labels = test_data[1]
+    # color_seq = np.zeros(len(test_labels))
+    # color_seq[test_labels == 1] = 1
+    # color_seq[test_labels == 2] = 2
+    # color_seq[test_labels == 3] = 3
+    # color_seq[test_labels == 4] = 4
+    #
+    # test_pos_2d = np.reshape(test_pos, (len(test_pos), -1, 2))
+    # plot_ft_map_pos(test_pos_2d,
+    #                 fig_name="00b_monkey_test_pos.png",
+    #                 path=os.path.join("models/saved", config["config_name"]),
+    #                 color_seq=color_seq,
+    #                 arrows=arrows,
+    #                 arrows_color=arrows_color)
 
     # ***********************       test 01 model     ******************
     # plot it responses for eyebrow model
     nb_model.plot_it_neurons(it_train,
                              title="01_it_train",
                              save_folder=os.path.join("models/saved", config["config_name"]))
-    nb_model.plot_it_neurons(it_ref_test,
-                             title="01_it_ref_test",
-                             save_folder=os.path.join("models/saved", config["config_name"]))
+    # nb_model.plot_it_neurons(it_ref_test,
+    #                          title="01_it_ref_test",
+    #                          save_folder=os.path.join("models/saved", config["config_name"]))
 
     # ***********************       test 02 model     ******************
     # plot it responses for eyebrow model
     nb_model.plot_it_neurons_per_sequence(it_train,
                              title="02_it_train",
                              save_folder=os.path.join("models/saved", config["config_name"]))
-    nb_model.plot_it_neurons_per_sequence(it_ref_test,
-                             title="02_it_ref_test",
-                             save_folder=os.path.join("models/saved", config["config_name"]))
+    # nb_model.plot_it_neurons_per_sequence(it_ref_test,
+    #                          title="02_it_ref_test",
+    #                          save_folder=os.path.join("models/saved", config["config_name"]))
 
 
     print("finished plotting test2")
-    print()
-    # ***********************       test 03 feature map visualisation     ******************
-    # plot tracked vector on sequence
-    plot_ft_pos_on_sequence(pos, data[0],
-                            vid_name='03_pos_human.mp4',
-                            save_folder=os.path.join("models/saved", config["config_name"]),
-                            lmk_size=1, ft_size=(56, 56))
-
-    # plot tracked vector on sequence
-    plot_ft_pos_on_sequence(test_pos, test_data[0],
-                            vid_name='03_pos_monkey.mp4',
-                            save_folder=os.path.join("models/saved", config["config_name"]),
-                            lmk_size=1, ft_size=(56, 56))
-    print("finished plotting on sequence")
-
-    # plot tracked vector on feature maps
-    max_preds = np.expand_dims(np.amax(preds, axis=-1), axis=3)
-    max_test_preds = np.expand_dims(np.amax(test_preds, axis=-1), axis=3)
-    print("[PRED] max_preds", np.shape(max_preds))
-    print("[PRED] max_test_preds", np.shape(max_test_preds))
-
-    # plot tracked vector on feature maps
-    max_preds_plot = max_preds / np.amax(max_preds) * 255
-    plot_ft_pos_on_sequence(pos, max_preds_plot, vid_name='03_ft_pos_human.mp4',
-                            save_folder=os.path.join("models/saved", config["config_name"]),
-                            pre_proc='raw', ft_size=(56, 56))
-    # monkey
-    test_max_preds_plot = max_test_preds / np.amax(max_test_preds) * 255
-    plot_ft_pos_on_sequence(test_pos, test_max_preds_plot, vid_name='03_ft_pos_monkey.mp4',
-                            save_folder=os.path.join("models/saved", config["config_name"]),
-                            pre_proc='raw', ft_size=(56, 56))
     print()

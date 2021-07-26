@@ -320,7 +320,7 @@ class NormBase:
             x = np.reshape(preds, [len(preds), -1, 2])
             # todo modify and allow training for it!
             if weights == 'ones':
-                weight = np.ones((5, 8))
+                weight = np.ones((self.config['n_category'], 8))
             elif weights == 'morph_space':
                 weight = np.zeros((5, 8))
                 weight[1] = [0, 6, 6, 0, 0, 0, 1, 0]
