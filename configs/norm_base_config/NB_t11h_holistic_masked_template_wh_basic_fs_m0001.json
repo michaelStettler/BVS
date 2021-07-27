@@ -10,7 +10,7 @@
   "train_avatar": "Louise",
   "val_avatar": "Mery",
   "train_expression": ["full"],
-  "val_expression": ["all_expressions"],
+  "val_expression": ["full"],
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "weights": "imagenet",

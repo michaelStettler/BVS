@@ -5,13 +5,12 @@ import tensorflow as tf
 from utils.load_config import load_config
 from utils.load_data import load_data
 from utils.extraction_model import load_extraction_model
-from utils.remove_transition_morph_space import remove_transition_frames
 from utils.PatternFeatureReduction import PatternFeatureSelection
 from utils.ref_feature_map_neurons import ref_feature_map_neuron
 from utils.calculate_position import calculate_position
 from plots_utils.plot_cnn_output import plot_cnn_output
 from plots_utils.plot_ft_map_pos import plot_ft_map_pos
-from plots_utils.plot_ft_map_pos import plot_ft_pos_on_sequence
+from plots_utils.plot_ft_map_pos import plot_pos_on_images
 from models.NormBase import NormBase
 
 np.random.seed(0)
@@ -25,11 +24,10 @@ run: python -m tests.NormBase.t11h_holistic_masked_template_wh_basic_fs
 
 # define configuration
 config_path = 'NB_t11h_holistic_masked_template_wh_basic_fs_m0001.json'
-plot_intermediate = False
 compute_NB = True
 
 train = True
-test = False
+test = True
 plot = True
 
 
@@ -82,7 +80,8 @@ if train:
     rbf_mask = [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]],
                 [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[34, 41], [31, 38]], [[36, 50], [24, 36]]]
 
-    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 1800, 3300, 2200, 2200]
+    # config['rbf_sigma'] = [1800, 1800, 1800, 1800, 1800, 3300, 2200, 2200]  # loose left lips on angry (2) and right lip on fear (5)
+    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 2000, 3300, 2300, 2200]
     patterns = PatternFeatureSelection(config, template=rbf_template, mask=rbf_mask)
 
     # fit templates
@@ -115,6 +114,7 @@ if train:
         print("[TRAIN] shape it_train", np.shape(it_train))
         print(it_train)
 
+        print()
         # print true labels versus the predicted label
         for i, label in enumerate(data[1]):
             t_label = int(label)
@@ -124,6 +124,8 @@ if train:
                 print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
             else:
                 print(i, "true label:", t_label, "vs. pred:", p_label, " - wrong!")
+        print()
+
 if test:
     # -------------------------------------------------------------------------------------------------------------------
     # test monkey
@@ -145,18 +147,15 @@ if test:
     print("[TEST] shape test_preds", np.shape(test_preds))
 
     # add holistic templates
-    test_rbf_template = [[[10, 13], [19, 22]], [[11, 14], [24, 27]], [[11, 14], [29, 32]], [[10, 13], [35, 38]],
-                         [[34, 37], [20, 23]], [[32, 35], [27, 30]], [[34, 37], [33, 36]], [[36, 39], [27, 30]]]
+    test_rbf_template = [[[17, 20], [14, 17]], [[17, 20], [20, 23]], [[17, 20], [30, 33]], [[17, 20], [37, 40]],
+                         [[40, 43], [19, 22]], [[39, 42], [26, 29]], [[40, 43], [33, 37]], [[42, 45], [25, 28]]]
 
-    test_rbf_mask = [[[6, 17], [15, 26]], [[7, 18], [20, 31]], [[7, 18], [25, 36]], [[6, 17], [31, 42]],
-                     [[32, 49], [16, 27]], [[29, 38], [24, 33]], [[32, 49], [29, 40]], [[34, 52], [25, 32]]]
+    test_rbf_mask = [[[13, 24], [10, 21]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [33, 44]],
+                         [[36, 47], [15, 26]], [[35, 46], [22, 33]], [[36, 47], [29, 41]], [[41, 49], [21, 32]]]
 
-    test_rbf_zeros = {'0': {'idx': 4, 'pos': [[40, 50], [16, 21]]},
-                      '1': {'idx': 4, 'pos': [[29, 35], [23, 27]]},
-                      '2': {'idx': 6, 'pos': [[40, 50], [34, 40]]},
-                      '3': {'idx': 6, 'pos': [[29, 35], [29, 35]]}}
+    test_rbf_zeros = {}
 
-    config['rbf_sigma'] = [1800, 1400, 1400, 1800, 1900, 1900, 1900, 2000]
+    config['rbf_sigma'] = [2500, 2800, 3000, 2900, 2200, 2200, 200, 2000]
     test_patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
     # fit templates
@@ -168,27 +167,6 @@ if test:
     test_pos = calculate_position(test_template, mode="weighted average", return_mode="xy float flat")
     print("[TEST] shape test_pos", np.shape(test_pos))
 
-    if plot_intermediate:
-        plot_cnn_output(test_template, os.path.join("models/saved", config["config_name"]),
-                        "00_test_template.gif", verbose=True, video=True)
-
-        test_pos_2d = np.reshape(test_pos, (len(test_pos), -1, 2))
-        plot_ft_map_pos(test_pos_2d,
-                        fig_name="00b_monkey_pos.png",
-                        path=os.path.join("models/saved", config["config_name"]))
-
-        test_max_preds = np.expand_dims(np.amax(test_preds, axis=3), axis=3)
-        test_preds_plot = test_max_preds / np.amax(test_max_preds) * 255
-        print("[TEST] shape test_preds_plot", np.shape(test_preds_plot))
-        plot_ft_pos_on_sequence(test_pos, test_preds_plot, vid_name='00_ft_test_pos.mp4',
-                                save_folder=os.path.join("models/saved", config["config_name"]),
-                                pre_proc='raw', ft_size=(56, 56))
-
-        plot_ft_pos_on_sequence(test_pos, test_data[0],
-                                vid_name='00_ft_pos_monkey.mp4',
-                                save_folder=os.path.join("models/saved", config["config_name"]),
-                                lmk_size=1, ft_size=(56, 56))
-
     if compute_NB:
         # get IT responses of the model
         test_it = nb_model._get_it_resp(test_pos)
@@ -197,6 +175,18 @@ if test:
         nb_model._fit_reference([test_pos, test_data[1]], config['batch_size'])
         ref_test = np.copy(nb_model.r)
         it_ref_test = nb_model._get_it_resp(test_pos)
+
+        print()
+        # print true labels versus the predicted label
+        for i, label in enumerate(test_data[1]):
+            t_label = int(label)
+            p_label = np.argmax(it_ref_test[i])
+
+            if t_label == p_label:
+                print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
+            else:
+                print(i, "true label:", t_label, "vs. pred:", p_label, " - wrong!")
+        print()
 
 if plot:
     # --------------------------------------------------------------------------------------------------------------------
@@ -229,27 +219,41 @@ if plot:
                     arrows=arrows)
                     # arrows_color=arrows_color)
 
-    # # build arrows
-    # arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_test, (-1, 2)), axis=0), config['n_category'], axis=0)
-    # arrow_head = np.reshape(ref_tuning, (len(ref_tuning), -1, 2))
-    # arrows = [arrow_tail, arrow_head]
+    ref_pos = np.repeat(np.expand_dims(pos_2d[0], axis=0), len(pos_2d), axis=0)
+    plot_pos_on_images(pos_2d, data[0],
+                       fig_name="00c_human_train.png",
+                       save_folder=os.path.join("models/saved", config["config_name"]),
+                       ref_pos=ref_pos,
+                       ft_size=(56, 56))
+
+    # build arrows
+    arrow_tail = np.repeat(np.expand_dims(np.reshape(ref_test, (-1, 2)), axis=0), config['n_category'], axis=0)
+    arrow_head = np.reshape(ref_tuning, (len(ref_tuning), -1, 2))
+    arrows = [arrow_tail, arrow_head]
     # arrows_color = ['#0e3957', '#3b528b', '#21918c', '#5ec962', '#fde725']
-    #
-    # # put one color per label
-    # test_labels = test_data[1]
-    # color_seq = np.zeros(len(test_labels))
-    # color_seq[test_labels == 1] = 1
-    # color_seq[test_labels == 2] = 2
-    # color_seq[test_labels == 3] = 3
-    # color_seq[test_labels == 4] = 4
-    #
-    # test_pos_2d = np.reshape(test_pos, (len(test_pos), -1, 2))
-    # plot_ft_map_pos(test_pos_2d,
-    #                 fig_name="00b_monkey_test_pos.png",
-    #                 path=os.path.join("models/saved", config["config_name"]),
-    #                 color_seq=color_seq,
-    #                 arrows=arrows,
-    #                 arrows_color=arrows_color)
+
+    # put one color per label
+    test_labels = test_data[1]
+    color_seq = np.zeros(len(test_labels))
+    color_seq[test_labels == 1] = 1
+    color_seq[test_labels == 2] = 2
+    color_seq[test_labels == 3] = 3
+    color_seq[test_labels == 4] = 4
+
+    test_pos_2d = np.reshape(test_pos, (len(test_pos), -1, 2))
+    plot_ft_map_pos(test_pos_2d,
+                    fig_name="00b_monkey_test_pos.png",
+                    path=os.path.join("models/saved", config["config_name"]),
+                    color_seq=color_seq,
+                    arrows=arrows)
+                    # arrows_color=arrows_color)
+
+    ref_test_pos = np.repeat(np.expand_dims(test_pos_2d[0], axis=0), len(test_pos_2d), axis=0)
+    plot_pos_on_images(test_pos_2d, test_data[0],
+                       fig_name="00c_test.png",
+                       save_folder=os.path.join("models/saved", config["config_name"]),
+                       ref_pos=ref_test_pos,
+                       ft_size=(56, 56))
 
     # ***********************       test 01 model     ******************
     # plot it responses for eyebrow model
