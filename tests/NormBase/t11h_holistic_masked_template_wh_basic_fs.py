@@ -25,6 +25,7 @@ run: python -m tests.NormBase.t11h_holistic_masked_template_wh_basic_fs
 # define configuration
 config_path = 'NB_t11h_holistic_masked_template_wh_basic_fs_m0001.json'
 compute_NB = True
+plot_intermediate = False
 
 train = True
 test = True
@@ -100,19 +101,15 @@ if train:
         nb_model.r = np.zeros(nb_model.n_features)
         nb_model._fit_reference([pos, data[1]], config['batch_size'])
         print("[TRAIN] model.r", np.shape(nb_model.r))
-        print(nb_model.r)
         ref_train = np.copy(nb_model.r)
         # train manually tuning vector
         nb_model.t = np.zeros((nb_model.n_category, nb_model.n_features))
         nb_model.t_mean = np.zeros((nb_model.n_category, nb_model.n_features))
         nb_model._fit_tuning([pos, data[1]], config['batch_size'])
         ref_tuning = np.copy(nb_model.t)
-        print("[TRAIN] ref_tuning[1]")
-        print(ref_tuning[1])
         # get it resp
         it_train = nb_model._get_it_resp(pos)
         print("[TRAIN] shape it_train", np.shape(it_train))
-        print(it_train)
 
         print()
         # print true labels versus the predicted label
@@ -148,14 +145,14 @@ if test:
 
     # add holistic templates
     test_rbf_template = [[[17, 20], [14, 17]], [[17, 20], [20, 23]], [[17, 20], [30, 33]], [[17, 20], [37, 40]],
-                         [[40, 43], [19, 22]], [[39, 42], [26, 29]], [[40, 43], [33, 37]], [[42, 45], [25, 28]]]
+                         [[40, 43], [19, 22]], [[39, 42], [26, 29]], [[40, 43], [32, 36]], [[41, 44], [25, 30]]]
 
-    test_rbf_mask = [[[13, 24], [10, 21]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [33, 44]],
-                         [[36, 47], [15, 26]], [[35, 46], [22, 33]], [[36, 47], [29, 41]], [[41, 49], [21, 32]]]
+    test_rbf_mask = [[[13, 24], [10, 21]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [34, 44]],
+                         [[36, 47], [15, 26]], [[35, 46], [22, 33]], [[37, 46], [28, 39]], [[40, 56], [21, 34]]]
 
-    test_rbf_zeros = {}
+    test_rbf_zeros = {'0': {'idx': 6, 'pos': [[40, 47], [36, 41]]}}
 
-    config['rbf_sigma'] = [2500, 2800, 3000, 2900, 2200, 2200, 200, 2000]
+    config['rbf_sigma'] = [2500, 2800, 3000, 2900, 2200, 3600, 2600, 3700]
     test_patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
     # fit templates
@@ -166,6 +163,10 @@ if test:
     # compute positions
     test_pos = calculate_position(test_template, mode="weighted average", return_mode="xy float flat")
     print("[TEST] shape test_pos", np.shape(test_pos))
+
+    if plot_intermediate:
+        plot_cnn_output(test_template, os.path.join("models/saved", config["config_name"]),
+                        "00_test_template.gif", verbose=True, video=True)
 
     if compute_NB:
         # get IT responses of the model
@@ -260,18 +261,9 @@ if plot:
     nb_model.plot_it_neurons(it_train,
                              title="01_it_train",
                              save_folder=os.path.join("models/saved", config["config_name"]))
-    # nb_model.plot_it_neurons(it_ref_test,
-    #                          title="01_it_ref_test",
-    #                          save_folder=os.path.join("models/saved", config["config_name"]))
-
-    # ***********************       test 02 model     ******************
-    # plot it responses for eyebrow model
-    nb_model.plot_it_neurons_per_sequence(it_train,
-                             title="02_it_train",
+    nb_model.plot_it_neurons(it_ref_test,
+                             title="01_it_ref_test",
                              save_folder=os.path.join("models/saved", config["config_name"]))
-    # nb_model.plot_it_neurons_per_sequence(it_ref_test,
-    #                          title="02_it_ref_test",
-    #                          save_folder=os.path.join("models/saved", config["config_name"]))
 
 
     print("finished plotting test2")
