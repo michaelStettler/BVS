@@ -9,7 +9,13 @@ from models.NormBase import NormBase
 test a face transfer using norm base mechanism
 
 run: python -m projects.facial_shape_expression_recognition_transfer.04_basic_face_shape_transfer
+
 """
+
+# todo take care of the zeros mask
+# todo take care of train/test template
+# todo train only semantic
+# todo train only the new template
 
 # load config
 config_name = 'NB_basic_face_space_transfer_Louise2Mery.json'

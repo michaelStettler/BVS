@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', filter=None, verbose=False):
+def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', filter=None, threshold=None, verbose=False):
     """
     Post processing of the feature maps
 
@@ -37,6 +37,10 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
     if activation == 'ReLu':
         filt_pred[filt_pred < 0] = 0
 
+    # apply threshold
+    if threshold is not None:
+        filt_pred[filt_pred < threshold] = 0
+
     if verbose:
         print("[FM_Filt_Proc] Shape filt_pred", np.shape(filt_pred))
         print("[FM_Filt_Proc] Pre-filter: min max filt_pred", np.amin(filt_pred), np.amax(filt_pred))
@@ -58,7 +62,7 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
     return filt_pred
 
 
-def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReLu', filter=None, verbose=False):
+def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReLu', filter=None, threshold=None, verbose=False):
     """
 
     :param preds:
@@ -73,16 +77,6 @@ def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReL
 
     # declare variables
     filt_preds = []
-
-    # set empty string to None
-    if ref_type == "":
-        ref_type = None
-    if norm == "":
-        norm = None
-    if activation == "":
-        activation = None
-    if filter == "":
-        filter = None
 
     print("[ft. maps filter] ref_type:{}, norm:{}, activation:{}, filter:{}".format(ref_type, norm, activation, filter))
 
@@ -102,7 +96,8 @@ def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReL
                                                norm=norm,
                                                activation=activation,
                                                filter=filter,
-                                               verbose=verbose)
+                                               verbose=verbose,
+                                               threshold=threshold)
 
         filt_preds.append(filt_pred)
 

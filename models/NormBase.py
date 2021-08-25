@@ -205,6 +205,8 @@ class NormBase:
         """
         # control if there's some reference features' input
         n_ref = np.shape(ref)[0]
+        print("ref update shape self.r", np.shape(self.r))
+        print("ref update shape ref", np.shape(ref))
         if n_ref > 0:
             # update ref_vector m
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(ref, axis=0)) / (self.ref_cumul + n_ref)

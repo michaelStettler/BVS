@@ -99,6 +99,7 @@ class SemanticFeatureSelection:
             if feature_channel_last:
                 preds = np.moveaxis(preds, 0, -1)
 
+        print("[Semantic Transf.] Shape preds:", np.shape(preds))
         return preds
 
     def save(self, path):

@@ -39,14 +39,16 @@ def set_feature_selection(model, config):
         model.n_features = model.shape_v4[-1] * 2
     elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
         # set number of features depending on the way positions are computed
-        if config['feat_map_position_mode'] == 'raw':
+        if config['feat_map_position_return_mode'] == 'raw':
             model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
-        elif config['feat_map_position_mode'] == 'xy_float':
+        elif config['feat_map_position_return_mode'] == 'xy_float':
             model.n_features = len(config["semantic_units"]) * 2
-        elif config['feat_map_position_mode'] == 'weighted_array':
+        elif config['feat_map_position_return_mode'] == 'weighted_array':
             model.n_features = len(config["semantic_units"]) * model.shape_v4[1] * model.shape_v4[2]
+        elif config['feat_map_position_return_mode'] == 'xy float flat':
+            model.n_features = 2 * len(config["rbf_template"])
         else:
-            raise NotImplementedError("feat_map_position_mode {} not implemented".format(config["semantic_units"]))
+            raise NotImplementedError("feat_map_position_mode {} not implemented".format(config["feat_map_position_mode"]))
 
         # declare semanticFeature object
         if model.dim_red == "semantic":
@@ -82,21 +84,38 @@ def fit_dimensionality_reduction(model, data):
 
         # apply filter post_processing
         # todo modify this, I'm not really happy with this yet
+        feat_map_ref_type = None
+        if model.config.get('feat_map_ref_type') is not None:
+            feat_map_ref_type = model.config['feat_map_ref_type']
+        feat_map_filt_norm = None
+        if model.config.get('feat_map_filt_norm') is not None:
+            feat_map_filt_norm = model.config['feat_map_filt_norm']
+        feat_map_filt_activation = None
+        if model.config.get('feat_map_filt_activation') is not None:
+            feat_map_filt_activation = model.config['feat_map_filt_activation']
+        feat_map_filter_type = None
+        if model.config.get('feat_map_filter_type') is not None:
+            feat_map_filter_type = model.config['feat_map_filter_type']
+        feat_map_threshold = None
+        if model.config.get('feat_map_threshold') is not None:
+            feat_map_threshold = model.config['feat_map_threshold']
+
         preds = get_feat_map_filt_preds(preds,
-                                        ref_type="self0",
-                                        norm=model.config['feat_map_filt_norm'],
-                                        activation=model.config['feat_map_filt_activation'],
-                                        filter=model.config['feat_map_filter_type'])
+                                        ref_type=feat_map_ref_type,
+                                        norm=feat_map_filt_norm,
+                                        activation=feat_map_filt_activation,
+                                        filter=feat_map_filter_type,
+                                        threshold=feat_map_threshold)
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
             print("[FIT] Using position mode: {}".format(model.config['feat_map_position_mode']))
             preds = calculate_position(preds,
                                        mode=model.config['feat_map_position_mode'],
-                                       return_mode='xy float')
+                                       return_mode=model.config['feat_map_position_return_mode'])
 
         preds = np.reshape(preds, (len(preds), -1))
-        print("[FIT] Finished to find the semantic units")
+        print("[FIT] Finished to find the semantic units", np.shape(preds))
     else:
         raise KeyError(f'model.dim_red={model.dim_red} is not a valid value')
 

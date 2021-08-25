@@ -26,8 +26,12 @@ class PatternFeatureSelection:
         if template is not None:
             self.template = np.array(template)
         else:
-            self.template = np.array(config['rbf_template'])
-        print("shape self.template", np.shape(self.template))
+            if config.get('rbf_template') is not None:
+                self.template = np.array(config['rbf_template'])
+            else:
+                print("[Pattern] No template found!")
+
+        print("[Pattern] shape self.template", np.shape(self.template))
         self.n_template = len(self.template)
         self.rbf = []
 
@@ -76,13 +80,11 @@ class PatternFeatureSelection:
             data = self._apply_zeros(data)
 
         # compute template
-        print("pattern len data", len(data))
-        print("pattern shape rbf", np.shape(self.rbf))
         for i in range(len(data)):
             pred = np.array(data[i])
 
             # compute template
-            template = pred[self.config['template_idx'], self.template[i, 0, 0]:self.template[i, 0, 1],
+            template = pred[self.config['rbf_template_ref_frame_idx'], self.template[i, 0, 0]:self.template[i, 0, 1],
                                self.template[i, 1, 0]:self.template[i, 1, 1]]
             template = np.expand_dims(template, axis=0)
 

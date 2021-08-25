@@ -1,5 +1,5 @@
 {
-  "config_name": "NB_t11h_holistic_masked_template_wh_baisc_fs_m0001",
+  "config_name": "NB_basic_face_shape_transfer_Louise2Mery",
   "train_data": "bfs_space",
   "x_col": "image_path",
   "y_col": "category",
@@ -18,16 +18,18 @@
   "v4_layer": "block1_conv1",
   "batch_size": 32,
   "dim_red": "semantic-pattern",
-  "feat_map_position_mode": "raw",
   "annotation_format": "coco",
   "coco_annot_json": "FacePart.json",
   "semantic_img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/Face_semantic",
   "semantic_units": ["red", "braun"],
   "tun_func": "ft_2norm",
   "nu": 1.0,
+  "rbf_template_ref_frame_idx": 0,
   "rbf_template": [[[17, 20], [19, 22]], [[17, 20], [24, 27]], [[17, 20], [32, 35]], [[17, 20], [37, 40]], [[36, 39], [22, 25]], [[35, 38], [28, 32]], [[36, 39], [33, 36]], [[38, 40], [28, 32]]],
   "rbf_mask": [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]], [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[34, 41], [31, 38]], [[36, 50], [24, 36]]],
-  "rbf_sigma": [2100],
+  "rbf_sigma": [1800, 1800, 1800, 1800, 2000, 3300, 2300, 2200],
   "rbf_firing_threshold": 0.15,
+  "feat_map_position_mode": "weighted average",
+  "feat_map_position_return_mode": "xy float flat",
   "use_dynamic":  0
 }
