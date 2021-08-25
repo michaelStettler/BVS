@@ -61,7 +61,7 @@ def set_feature_selection(model, config):
         raise ValueError("Dimensionality reduction {} is not implemented".format(model.dim_red))
 
 
-def fit_dimensionality_reduction(model, data):
+def fit_dimensionality_reduction(model, data, fit_semantic=True):
     """
     Helper function to fit the model dimensionality reduction set in the config
 
@@ -80,32 +80,18 @@ def fit_dimensionality_reduction(model, data):
         preds = model.pca.transform(data)
 
     elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
-        preds = model.feat_red.fit(data, activation='mean')
+        if not fit_semantic:
+            # take care of the special case of semantic-pattern as it can still needs to fit the pattern
+            if model.dim_red == "semantic-pattern":
+                preds = model.feat_red.fit(data, activation='mean', fit_semantic=False)
+            else:
+                preds = model.feat_red.transform(data, activation='mean')
+        else:
+            preds = model.feat_red.fit(data, activation='mean')
 
         # apply filter post_processing
-        # todo modify this, I'm not really happy with this yet
-        feat_map_ref_type = None
-        if model.config.get('feat_map_ref_type') is not None:
-            feat_map_ref_type = model.config['feat_map_ref_type']
-        feat_map_filt_norm = None
-        if model.config.get('feat_map_filt_norm') is not None:
-            feat_map_filt_norm = model.config['feat_map_filt_norm']
-        feat_map_filt_activation = None
-        if model.config.get('feat_map_filt_activation') is not None:
-            feat_map_filt_activation = model.config['feat_map_filt_activation']
-        feat_map_filter_type = None
-        if model.config.get('feat_map_filter_type') is not None:
-            feat_map_filter_type = model.config['feat_map_filter_type']
-        feat_map_threshold = None
-        if model.config.get('feat_map_threshold') is not None:
-            feat_map_threshold = model.config['feat_map_threshold']
-
-        preds = get_feat_map_filt_preds(preds,
-                                        ref_type=feat_map_ref_type,
-                                        norm=feat_map_filt_norm,
-                                        activation=feat_map_filt_activation,
-                                        filter=feat_map_filter_type,
-                                        threshold=feat_map_threshold)
+        # todo modify this, I'm not really happy with this post-processing yet
+        preds = get_feat_map_filt_preds(preds, model.config)
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
@@ -140,12 +126,7 @@ def predict_dimensionality_reduction(model, data):
         preds = model.feat_red.transform(data, activation='mean')
 
         # apply filter post_processing
-        # todo modify this, I'm not really happy with this yet
-        preds = get_feat_map_filt_preds(preds,
-                                        ref_type="self0",
-                                        norm=model.config['feat_map_filt_norm'],
-                                        activation=model.config['feat_map_filt_activation'],
-                                        filter=model.config['feat_map_filter_type'])
+        preds = get_feat_map_filt_preds(preds, model.config)
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':

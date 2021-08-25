@@ -457,7 +457,7 @@ class NormBase:
     # ## FIT FUNCTIONS ###
     # -----------------------------------------------------------------------------------------------------------------
     # -----------------------------------------------------------------------------------------------------------------
-    def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True, get_it_resp=False, get_differentiator=False):
+    def fit(self, data, batch_size=32, fit_dim_red=True, fit_ref=True, fit_tun=True, fit_semantic=True, get_it_resp=False, get_differentiator=False):
         """
         fit model on data
 
@@ -487,7 +487,7 @@ class NormBase:
 
         if fit_dim_red:
             print("[FIT] - Fitting dimensionality reduction -")
-            v4_preds_red = fit_dimensionality_reduction(self, v4_preds)
+            v4_preds_red = fit_dimensionality_reduction(self, v4_preds, fit_semantic=fit_semantic)
         else:
             v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
         print("[FIT] Data reduced")

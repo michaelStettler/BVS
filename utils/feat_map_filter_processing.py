@@ -62,7 +62,7 @@ def feat_map_filter_processing(pred, ref=None, norm=None, activation='ReLu', fil
     return filt_pred
 
 
-def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReLu', filter=None, threshold=None, verbose=False):
+def get_feat_map_filt_preds(preds, config, verbose=False):
     """
 
     :param preds:
@@ -75,10 +75,31 @@ def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReL
     :return:
     """
 
+    # retrive config parameters
+    ref_type = None
+    if config.get('feat_map_ref_type') is not None:
+        ref_type = config['feat_map_ref_type']
+    filt_norm = None
+    if config.get('feat_map_filt_norm') is not None:
+        filt_norm = config['feat_map_filt_norm']
+    filt_activation = None
+    if config.get('feat_map_filt_activation') is not None:
+        filt_activation = config['feat_map_filt_activation']
+    filter_type = None
+    if config.get('feat_map_filter_type') is not None:
+        filter_type = config['feat_map_filter_type']
+    threshold = None
+    if config.get('feat_map_threshold') is not None:
+        threshold = config['feat_map_threshold']
+
     # declare variables
     filt_preds = []
 
-    print("[ft. maps filter] ref_type:{}, norm:{}, activation:{}, filter:{}".format(ref_type, norm, activation, filter))
+    print("[ft. maps filter] ref_type:{}, norm:{}, activation:{}, filter:{}, threshold:{}".format(ref_type,
+                                                                                                  filt_norm,
+                                                                                                  filt_activation,
+                                                                                                  filter_type,
+                                                                                                  threshold))
 
             # loop over each feture map idx to retain only the one of interest
     for i in range(np.shape(preds)[-1]):
@@ -93,9 +114,9 @@ def get_feat_map_filt_preds(preds, ref_type="self0",  norm=None, activation='ReL
 
         filt_pred = feat_map_filter_processing(pred,
                                                ref=ref,
-                                               norm=norm,
-                                               activation=activation,
-                                               filter=filter,
+                                               norm=filt_norm,
+                                               activation=filt_activation,
+                                               filter=filter_type,
                                                verbose=verbose,
                                                threshold=threshold)
 
