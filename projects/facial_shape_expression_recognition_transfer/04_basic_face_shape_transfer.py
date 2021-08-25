@@ -32,7 +32,7 @@ if full_train:
     data = load_data(config)
 
     # fit model
-    face_neurons = model.fit(data)
+    face_neurons = model.fit(data, fit_semantic=False)
 
     # save model
     model.save()

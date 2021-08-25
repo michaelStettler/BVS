@@ -22,38 +22,44 @@ class SemanticPatternFeatureSelection:
     def fit(self, data, activation=None, feature_channel_last=True, fit_semantic=True, fit_pattern=True):
         # fit semantic feature map selection
         if fit_semantic:
-            print("[FIT] Start Fitting Semantic Features")
+            print("[SEM-PAT] Start Fitting Semantic Features")
             preds = self.semantic.fit(data, activation=None, feature_channel_last=False)  # activation needs to be set to None to get the raw output
-            print("[FIT] Semantic fitted")
+            print("[SEM-PAT] Semantic fitted")
         else:
-            print("[FIT] Start Transforming Semantic Features")
+            print("[SEM-PAT] Start Transforming Semantic Features")
+            print()
+            print("[SEM-PAT] !!!!! LOADING SEMANTIC MODEL !!!!!!")
+            print("[SEM-PAT] BE SURE THAT THIS IS THE BEHAVIOUR YOU WANT")
+            print()
+            self.semantic.load(os.path.join("models/saved", self.config['config_name'], "NormBase"))
             preds = self.semantic.transform(data, activation=None, feature_channel_last=False)
-            print("[FIT] Semantic Transformed")
+            print("[SEM-PAT] Semantic Transformed")
+        print()
 
         # extend dimension to fit the number of template
         preds = np.repeat(np.expand_dims(preds, axis=0), len(self.config['rbf_template']), axis=0)
 
         # fit patterns
         if fit_pattern:
-            print("[FIT] Start Fitting Pattern Features")
+            print("[SEM-PAT] Start Fitting Pattern Features")
             preds = self.pattern.fit(preds, feature_channel_last=feature_channel_last)
-            print("[FIT] Pattern fitted")
+            print("[SEM-PAT] Pattern fitted")
         else:
-            print("[FIT] Start Transforming Pattern Features")
+            print("[SEM-PAT] Start Transforming Pattern Features")
             preds = self.pattern.transform(preds, feature_channel_last=feature_channel_last)
-            print("[FIT] Pattern transformed")
+            print("[SEM-PAT] Pattern transformed")
 
         return preds
 
     def transform(self, data, activation=None, feature_channel_last=True):
-        print("[Feat. Select] Transform")
+        print("[SEM-PAT] Transform")
         preds = self.semantic.transform(data, activation=None, feature_channel_last=False)
 
         # extend dimension to fit the number of template
         preds = np.repeat(np.expand_dims(preds, axis=0), len(self.config['rbf_template']), axis=0)
 
         preds = self.pattern.transform(preds, feature_channel_last=feature_channel_last)
-        print("[Feat. Select] Semantic Pattern Transformed")
+        print("[SEM-PAT] Semantic Pattern Transformed")
 
         return preds
 

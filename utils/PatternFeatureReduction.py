@@ -29,9 +29,8 @@ class PatternFeatureSelection:
             if config.get('rbf_template') is not None:
                 self.template = np.array(config['rbf_template'])
             else:
-                print("[Pattern] No template found!")
+                print("[PATTERN] No template found!")
 
-        print("[Pattern] shape self.template", np.shape(self.template))
         self.n_template = len(self.template)
         self.rbf = []
 
@@ -68,15 +67,15 @@ class PatternFeatureSelection:
         :param data: list (n_pattern)(n_data, n_feature, n_feature, n_dim)
         :return:
         """
-        print("[Feat. Select] Fit")
+        print("[PATTERN] Fit pattern")
         # apply mask
         if self.use_mask:
-            print("[Feat. Select] fit: use mask")
+            print("[PATTERN] fit pattern: use mask ON")
             data = self._apply_mask(data)
 
         # apply zeros
         if self.use_zeros:
-            print("[Feat. Select] fit: use zeros")
+            print("[PATTERN] fit pattern: use zeros ON")
             data = self._apply_zeros(data)
 
         # compute template
@@ -100,18 +99,16 @@ class PatternFeatureSelection:
         :param data: (n_pattern, n_data, n_feat, n_feat, n_dim)
         :return:
         """
-        print("[Feat. Select] Transform Pattern")
-        print("[Feat. Select] shape data", np.shape(data))
-
+        print("[PATTERN] Transform Pattern")
         if not from_fit:
             # apply mask
             if self.use_mask:
-                print("[Feat. Select] Transform: use mask")
+                print("[PATTERN] Transform: use mask")
                 data = self._apply_mask(data)
 
             # apply zeros
             if self.use_zeros:
-                print("[Feat. Select] Transoform: use zeros")
+                print("[PATTERN] Transform: use zeros")
                 data = self._apply_zeros(data)
 
         # transform data
@@ -135,7 +132,7 @@ class PatternFeatureSelection:
             if len(np.shape(preds)) == 3:
                 preds = np.expand_dims(preds, axis=3)
 
-        print("[Feat. Select] Pattern transformed!")
+        print("[PATTERN] prediction transformed!")
         return preds
 
     def _apply_mask(self, data):
@@ -144,7 +141,7 @@ class PatternFeatureSelection:
             preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
                 data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
 
-        print("[Feat. Select] shape preds", np.shape(preds))
+        print("[PATTERN] apply mask - shape preds", np.shape(preds))
         return preds
 
     def _apply_zeros(self, data):
@@ -155,15 +152,15 @@ class PatternFeatureSelection:
             pos = np.array(dict['pos'])
             preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
 
-        print("[Feat. Select] shape preds", np.shape(preds))
+        print("[PATTERN] apply zeros - shape preds", np.shape(preds))
         return preds
 
     def save(self, path):
         # save only the rbf patterns
         pickle.dump(self.rbf,
                     open(os.path.join(path, "pattern_rbf.pkl"), 'wb'))
-        print("[SAVE] Pattern RBF saved")
+        print("[PATTERN] RBF templates saved")
 
     def load(self, path):
         self.rbf = pickle.load(open(os.path.join(path, "pattern_rbf.pkl"), 'rb'))
-        print("[LOAD] Pattern RBF loaded")
+        print("[PATTERN] RBF templates loaded")

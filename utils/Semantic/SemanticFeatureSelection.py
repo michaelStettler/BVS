@@ -22,18 +22,18 @@ class SemanticFeatureSelection:
 
     def load_semantic_data(self):
         # load semantic data
-        print("[FIT] Load Semantic data")
+        print("[SEMANTIC] Load Semantic data")
         if self.config["annotation_format"] == "coco":
             semantic_data = load_coco_semantic_annotations(self.config)
         else:
             raise ValueError("Format {} is not yet supported".format(format))
-        print("[FIT] Semantic data loaded")
+        print("[SEMANTIC] Semantic data loaded")
         return semantic_data
 
     def fit(self, data, activation=None, feature_channel_last=True):
         semantic_data = self.load_semantic_data()
         # find semantic units
-        print("[FIT] Start computing semantic units")
+        print("[SEMANTIC] Start finding units")
         self.sem_idx_list = find_semantic_units(self.model, semantic_data, self.config)
 
         return self.transform(data, activation=activation, feature_channel_last=feature_channel_last)
@@ -51,7 +51,7 @@ class SemanticFeatureSelection:
             raise ValueError("Semantic features units are None! Please either train the Semantic Feature Selection or "
                              "load a pre-trained dictionary")
         else:
-            print("[Feat. Select] Transform Semantic")
+            print("[SEMANTIC] Transform Semantic")
             # get category IDs of interest (transform semantic units name to category id of COCO)
             cat_ids = get_coco_cat_ids(self.config, self.config['semantic_units'], to_numpy=True)
 
@@ -61,10 +61,11 @@ class SemanticFeatureSelection:
             # build feature map index for the category and layer of interest
             # todo if we want multiple layers ?
             preds = []
-            for cat_id in cat_ids:
+            for i, cat_id in enumerate(cat_ids):
                 ft_index = cat_feature_map_indexes["category_{}".format(cat_id)][self.config['v4_layer']]["indexes"]
                 if len(ft_index) > 0:
-                    print("shape transform semantic", np.shape(data[..., ft_index]))
+                    print("[SEMANTIC] num semantic units for cat_ids ({}) {}: {}".format(
+                        cat_id, self.config['semantic_units'][i], len(ft_index)))
                     preds.append(data[..., ft_index])
                 else:
                     print("No indexes found for category: {}".format(cat_id))
@@ -99,15 +100,15 @@ class SemanticFeatureSelection:
             if feature_channel_last:
                 preds = np.moveaxis(preds, 0, -1)
 
-        print("[Semantic Transf.] Shape preds:", np.shape(preds))
+        print("[SEMANTIC] Shape preds:", np.shape(preds))
         return preds
 
     def save(self, path):
         # save only the semantic dictionary
         pickle.dump(self.sem_idx_list,
                     open(os.path.join(path, "semantic_dictionary.pkl"), 'wb'))
-        print("[SAVE] Semantic dictionary saved")
+        print("[SEMANTIC] Semantic dictionary saved")
 
     def load(self, path):
         self.sem_idx_list = pickle.load(open(os.path.join(path, "semantic_dictionary.pkl"), 'rb'))
-        print("[LOAD] Semantic dictionary loaded")
+        print("[SEMANTIC] Semantic dictionary loaded")

@@ -70,16 +70,17 @@ def fit_dimensionality_reduction(model, data, fit_semantic=True):
     """
     # in the case of dimensionality reduction set up the pipeline
     if model.dim_red is None:
-        print("[FIT] no dimensionality reduction")
+        print("[Feat. Reduction] no dimensionality reduction")
         preds = data
     elif model.dim_red == 'PCA':
         # perform PCA on this output
-        print("[FIT] Fitting PCA")
+        print("[Feat. Reduction] Fitting PCA")
         model.pca.fit(data)
-        print("[FIT] PCA: explained variance", model.pca.explained_variance_ratio_)
+        print("[Feat. Reduction] PCA: explained variance", model.pca.explained_variance_ratio_)
         preds = model.pca.transform(data)
 
     elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
+        print("[Feat. Reduction] Start fitting {}", model.dim_red)
         if not fit_semantic:
             # take care of the special case of semantic-pattern as it can still needs to fit the pattern
             if model.dim_red == "semantic-pattern":
@@ -88,20 +89,25 @@ def fit_dimensionality_reduction(model, data, fit_semantic=True):
                 preds = model.feat_red.transform(data, activation='mean')
         else:
             preds = model.feat_red.fit(data, activation='mean')
+        print()
 
         # apply filter post_processing
+        print("[Feat. Reduction] Apply post-processing")
         # todo modify this, I'm not really happy with this post-processing yet
         preds = get_feat_map_filt_preds(preds, model.config)
+        print()
 
         # allow to further reduce dimensionality by getting a 2 dim vector for each feature maps
         if model.config['feat_map_position_mode'] != 'raw':
-            print("[FIT] Using position mode: {}".format(model.config['feat_map_position_mode']))
+            print("[Feat. Reduction] Compute positions")
+            print("[Feat. Reduction] Using position mode: {}".format(model.config['feat_map_position_mode']))
             preds = calculate_position(preds,
                                        mode=model.config['feat_map_position_mode'],
                                        return_mode=model.config['feat_map_position_return_mode'])
+            print()
 
         preds = np.reshape(preds, (len(preds), -1))
-        print("[FIT] Finished to find the semantic units", np.shape(preds))
+        print("[Feat. Reduction] Finished feature reduction", np.shape(preds))
     else:
         raise KeyError(f'model.dim_red={model.dim_red} is not a valid value')
 

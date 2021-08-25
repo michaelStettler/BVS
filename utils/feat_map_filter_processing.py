@@ -66,11 +66,7 @@ def get_feat_map_filt_preds(preds, config, verbose=False):
     """
 
     :param preds:
-    :param ft_idx:
-    :param ref:
-    :param norm:
-    :param activation:
-    :param filter:
+    :param config:
     :param verbose:
     :return:
     """
@@ -95,11 +91,8 @@ def get_feat_map_filt_preds(preds, config, verbose=False):
     # declare variables
     filt_preds = []
 
-    print("[ft. maps filter] ref_type:{}, norm:{}, activation:{}, filter:{}, threshold:{}".format(ref_type,
-                                                                                                  filt_norm,
-                                                                                                  filt_activation,
-                                                                                                  filter_type,
-                                                                                                  threshold))
+    print("[Feat. Filtering] Post Processing parametersa - ref_type:{}, norm:{}, activation:{}, filter:{}, threshold:{}".
+          format(ref_type, filt_norm, filt_activation, filter_type, threshold))
 
             # loop over each feture map idx to retain only the one of interest
     for i in range(np.shape(preds)[-1]):

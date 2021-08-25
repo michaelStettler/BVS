@@ -480,6 +480,7 @@ class NormBase:
 
         v4_preds = self.predict_v4(data[0], flatten=flatten)
         print("[FIT] Shape v4_preds", np.shape(v4_preds))
+        print()
 
         # set preds_saved to true so the predictions are saved only once
         if self.save_preds and self.dim_red is not None:
@@ -491,6 +492,7 @@ class NormBase:
         else:
             v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
         print("[FIT] Data reduced")
+        print()
 
         if fit_ref:
             print("[FIT] - Fitting Reference Pattern -")
