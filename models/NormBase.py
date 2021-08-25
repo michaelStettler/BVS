@@ -178,7 +178,7 @@ class NormBase:
         load_folder = os.path.join("models/saved", self.config['config_name'], "NormBase")
 
         if not os.path.exists(load_folder):
-            raise ValueError("Loading path does not exists! Please control your path")
+            raise ValueError("Loading Norma Base model failes! Path does not exists, please control your path or train the model first")
 
         self.r = np.load(os.path.join(load_folder, "ref_vector.npy"))
         self.t = np.load(os.path.join(load_folder, "tuning_vector.npy"))

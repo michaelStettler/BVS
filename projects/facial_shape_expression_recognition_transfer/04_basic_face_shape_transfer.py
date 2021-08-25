@@ -8,15 +8,14 @@ from models.NormBase import NormBase
 """
 test a face transfer using norm base mechanism
 
-run: python -m projects.facial_shape_expression_recognition_transfer.04_face_transfer
+run: python -m projects.facial_shape_expression_recognition_transfer.04_basic_face_shape_transfer
 """
 
 # load config
-config_name = 'NB_morph_space_transfer_m0002.json'
+config_name = 'NB_basic_face_space_transfer_Louise2Mery.json'
 config = load_config(config_name, path='configs/norm_base_config')
 
-full_train = False
-
+full_train = True
 # --------------------------------------------------------------------------------------------------------------------
 # train model
 if full_train:
@@ -57,10 +56,6 @@ data = load_data(config, train=False)
 # --------------------------------------------------------------------------------------------------------------------
 # predict model
 face_neurons = model.predict(data)
-
-model.plot_it_neurons_per_sequence(face_neurons,
-                                   title="test",
-                                   save_folder=os.path.join("models/saved", config['config_name']))
 
 # --------------------------------------------------------------------------------------------------------------------
 # fit reference frames and predict model

@@ -64,6 +64,7 @@ class SemanticFeatureSelection:
             for cat_id in cat_ids:
                 ft_index = cat_feature_map_indexes["category_{}".format(cat_id)][self.config['v4_layer']]["indexes"]
                 if len(ft_index) > 0:
+                    print("shape transform semantic", np.shape(data[..., ft_index]))
                     preds.append(data[..., ft_index])
                 else:
                     print("No indexes found for category: {}".format(cat_id))
@@ -87,8 +88,14 @@ class SemanticFeatureSelection:
 
                 else:
                     raise NotImplementedError("Activation [] is not implemented".format(activation))
+            else:
+                # concatenate all features to last dimension
+                concat = np.array(preds[0])
+                for i in range(1, len(cat_ids)):
+                    concat = np.concatenate((concat, preds[i]), axis=-1)
+                preds = concat
 
-            # shuffle dimensions
+            # move first axis to last
             if feature_channel_last:
                 preds = np.moveaxis(preds, 0, -1)
 

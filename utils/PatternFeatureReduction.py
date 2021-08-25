@@ -26,15 +26,20 @@ class PatternFeatureSelection:
         if template is not None:
             self.template = np.array(template)
         else:
-            self.template = np.array(config['template_idx'])
+            self.template = np.array(config['rbf_template'])
+        print("shape self.template", np.shape(self.template))
         self.n_template = len(self.template)
         self.rbf = []
 
         sigmas = config['rbf_sigma']
 
+        # st the "receptieve field" of the pattern
         self.use_mask = False
         if mask is not None:
             self.mask = np.array(mask)
+            self.use_mask = True
+        elif config.get('rbf_mask') is not None:
+            self.mask = np.array(config['rbf_mask'])
             self.use_mask = True
 
         self.use_zeros = False
@@ -71,6 +76,8 @@ class PatternFeatureSelection:
             data = self._apply_zeros(data)
 
         # compute template
+        print("pattern len data", len(data))
+        print("pattern shape rbf", np.shape(self.rbf))
         for i in range(len(data)):
             pred = np.array(data[i])
 

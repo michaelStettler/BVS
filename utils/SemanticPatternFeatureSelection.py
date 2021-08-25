@@ -27,6 +27,8 @@ class SemanticPatternFeatureSelection:
 
         # fit patterns
         print("[FIT] Start Fitting Pattern Features")
+        # extend dimension to fit the number of template
+        preds = np.repeat(np.expand_dims(preds, axis=0), len(self.config['rbf_template']), axis=0)
         preds = self.pattern.fit(preds, feature_channel_last=feature_channel_last)
         print("[FIT] Pattern fitted")
 

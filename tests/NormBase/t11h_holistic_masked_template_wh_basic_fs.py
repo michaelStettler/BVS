@@ -88,6 +88,7 @@ if train:
     # fit templates
     # template = patterns.fit(mask_template)
     template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
+    print("shape template preds", np.shape(template_preds))
     template = patterns.fit(template_preds)
     template[template < 0.1] = 0
 
