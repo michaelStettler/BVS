@@ -329,18 +329,13 @@ class NormBase:
             # reshape ref and tuning vector into 2d vectors
             r = np.reshape(self.r, [-1, 2])
             t = np.reshape(self.t, [len(self.t), -1, 2])
-            print("shape t", np.shape(t))
             norm_t = np.linalg.norm(t, axis=2)
-            print("shape norm_t", np.shape(norm_t))
-            print(norm_t)
             max_norm_t = np.amax(norm_t, axis=0)
-            print("shape max_norm_t", np.shape(max_norm_t))
-            print(max_norm_t)
             x = np.reshape(preds, [len(preds), -1, 2])
-            # todo modify and allow training for it!
+
             if weights == 'ones':
                 weight = np.ones((self.config['n_category'], 8))
-            elif weights == 'morph_space':
+            elif weights == 'morph_space':  # todo deprecated and should be removed! -> but could be discussion for training
                 weight = np.zeros((5, 8))
                 weight[1] = [0, 6, 6, 0, 0, 0, 1, 0]
                 weight[2] = [2, 0, 0, 2, 0, 0, 0, 0]
@@ -348,6 +343,8 @@ class NormBase:
                 weight[4] = [0, 0, 0, 0, 20, 0, 0, 0]
             else:
                 raise NotImplementedError("Weights: {} not implemented".format(weights))
+
+            # compute IT responses
             it_resp = []
             # for each images
             for i in range(len(preds)):
@@ -358,15 +355,6 @@ class NormBase:
                     d = 0
                     # for each feature maps
                     for k in range(len(r)):
-                        # print("preds {}, cat {}, ft {}".format(i, j, k))
-
-                        # norm = np.linalg.norm(t[j, k], ord=2)
-                        # norm = 1.0
-                        # norm_diff = np.linalg.norm(diff[k], ord=2)
-
-                        # print("d:", diff[k], "t:", t[j, k])
-                        # print("norm d", norm_diff, "norm tuning", norm)
-
                         # if norm * norm_diff != 0.0:
                         if max_norm_t[k] != 0.0:
                             # f = np.power(np.dot(diff[k], t[j, k]) / norm, self.nu)
@@ -376,17 +364,13 @@ class NormBase:
                         else:
                             f = 0
 
-                        # print("f", f)
-                        # print()
-
                         f = weight[j, k] * f
                         d += f
-                    # ReLu activ ation
+                    # ReLu activation
                     if d < 0:
                         d = 0
                     it.append(d)
                 it_resp.append(it)
-                # print("--------------------------------------------------")
             return np.array(it_resp)
 
         else:
@@ -987,3 +971,19 @@ class NormBase:
             plt.savefig(os.path.join(save_folder, fig_title))
         else:
             plt.savefig(fig_title)
+
+    def print_decision(self, data, preds):
+        """
+        some helper function to compare true vs. predicted labels
+        :return:
+        """
+        # print true labels versus the predicted label
+        for i, label in enumerate(data[1]):
+            t_label = int(label)
+            p_label = np.argmax(preds[i])
+
+            if t_label == p_label:
+                print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
+            else:
+                print(i, "true label:", t_label, "vs. pred:", p_label, " - wrong!")
+        print()

@@ -1,5 +1,5 @@
 {
-  "config_name": "NB_basic_face_shape_transfer_Louise2Mery",
+  "config_name": "NB_basic_face_shape_transfer_Louise2Merry",
   "train_data": "bfs_space",
   "x_col": "image_path",
   "y_col": "category",
