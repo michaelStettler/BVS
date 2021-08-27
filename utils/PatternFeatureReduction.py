@@ -34,9 +34,7 @@ class PatternFeatureSelection:
         self.n_template = len(self.template)
         self.rbf = []
 
-        sigmas = config['rbf_sigma']
-
-        # st the "receptieve field" of the pattern
+        # set the "receptieve field" of the pattern
         self.use_mask = False
         if mask is not None:
             self.mask = np.array(mask)
@@ -44,21 +42,26 @@ class PatternFeatureSelection:
         elif config.get('rbf_mask') is not None:
             self.mask = np.array(config['rbf_mask'])
             self.use_mask = True
-
         self.use_zeros = False
         if zeros is not None:
             self.zeros = zeros
             self.use_zeros = True
 
+        # set sigmas
+        sigmas = config['rbf_sigma']
+        sigmas = self._set_sigmas(sigmas)
+
+        for i in range(self.n_template):
+            self.rbf.append(RBF(config, sigma=sigmas[i]))
+
+    def _set_sigmas(self, sigmas):
         # if only one sigma is provided just repeat it and set the same sigma for all RBF
         if np.isscalar(sigmas):
             sigmas = np.repeat(sigmas, self.n_template)
         elif len(sigmas) == 1:
             sigmas = np.repeat(sigmas[0], self.n_template)
 
-        for i in range(self.n_template):
-            sigma = sigmas[i]
-            self.rbf.append(RBF(config, sigma=sigma))
+        return sigmas
 
     def fit(self, data, activation=None, feature_channel_last=True):
         """
@@ -154,6 +157,33 @@ class PatternFeatureSelection:
 
         print("[PATTERN] apply zeros - shape preds", np.shape(preds))
         return preds
+
+    def update_patterns(self, template, sigmas, mask=None, zeros=None):
+        # update template positions
+        self.template = np.array(template)
+
+        # clear rbf
+        self.rbf = []
+
+        # set mask and zeros if provided
+        if mask is not None:
+            self.mask = np.array(mask)
+            self.use_mask = True
+        else:
+            self.use_mask = False
+
+        if zeros is not None:
+            self.zeros = zeros
+            self.use_zeros = True
+        else:
+            self.use_zeros = False
+
+        # set sigmas
+        sigmas = self._set_sigmas(sigmas)
+
+        # create new RBF
+        for i in range(self.n_template):
+            self.rbf.append(RBF(self.config, sigma=sigmas[i]))
 
     def save(self, path):
         # save only the rbf patterns

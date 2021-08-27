@@ -13,9 +13,6 @@ run: python -m projects.facial_shape_expression_recognition_transfer.04_basic_fa
 """
 
 # todo take care of the zeros mask
-# todo take care of train/test template
-# todo train only semantic
-# todo train only the new template
 
 # load config
 config_name = 'NB_basic_face_space_transfer_Louise2Mery.json'
@@ -48,10 +45,16 @@ else:
     # save model
     model.save()
 
-# plot training
-model.plot_it_neurons_per_sequence(face_neurons,
-                                   title="train",
-                                   save_folder=os.path.join("models/saved", config['config_name']))
+# print true labels versus the predicted label
+for i, label in enumerate(data[1]):
+    t_label = int(label)
+    p_label = np.argmax(face_neurons[i])
+
+    if t_label == p_label:
+        print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
+    else:
+        print(i, "true label:", t_label, "vs. pred:", p_label, " - wrong!")
+print()
 
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -65,10 +68,22 @@ face_neurons = model.predict(data)
 
 # --------------------------------------------------------------------------------------------------------------------
 # fit reference frames and predict model
-face_neurons = model.fit(data, fit_dim_red=False,
-          fit_ref=True,
-          fit_tun=False)
+model.update_RF(config['rbf_template_merry'], config['rbf_sigma_merry'],
+                mask=config['rbf_mask_merry'],
+                zeros=config['rbf_zeros_merry'])
+face_neurons = model.fit(data,
+                         fit_dim_red=True,  # learn the patterns with new receptieve field
+                         fit_semantic=False,  # no need to redo this
+                         fit_ref=True,
+                         fit_tun=False)
 
-model.plot_it_neurons_per_sequence(face_neurons,
-                                   title="test_wh_ref",
-                                   save_folder=os.path.join("models/saved", config['config_name']))
+# print true labels versus the predicted label
+for i, label in enumerate(data[1]):
+    t_label = int(label)
+    p_label = np.argmax(face_neurons[i])
+
+    if t_label == p_label:
+        print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
+    else:
+        print(i, "true label:", t_label, "vs. pred:", p_label, " - wrong!")
+print()

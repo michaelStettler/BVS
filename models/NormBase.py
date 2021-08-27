@@ -197,6 +197,23 @@ class NormBase:
     def set_tuning_vector(self, t):
         self.t = t
 
+    def update_RF(self, template, sigmas, mask=None, zeros=None):
+        """
+        update the receptieve field positions
+
+        :param template:
+        :param sigmas:
+        :param mask:
+        :param zeros:
+        :return:
+        """
+        # control that we can call the update pattern
+        if self.dim_red == "semantic-pattern" or self.dim_red == "pattern":
+            self.feat_red.update_patterns(template, sigmas, mask=mask, zeros=zeros)
+
+        else:
+            print("[NB] Model feature dimension does not allow to update the patterns")
+
     def _update_ref_vector(self, ref):
         """
         updates reference vector wrt to new data

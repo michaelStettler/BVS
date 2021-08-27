@@ -63,6 +63,9 @@ class SemanticPatternFeatureSelection:
 
         return preds
 
+    def update_patterns(self, template, sigmas, mask=None, zeros=None):
+        self.pattern.update_patterns(template, sigmas, mask=mask, zeros=zeros)
+
     def save(self, path):
         self.semantic.save(path)
         self.pattern.save(path)

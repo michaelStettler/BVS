@@ -110,9 +110,8 @@ def get_feat_map_filt_preds(preds, config, verbose=False):
                                                norm=filt_norm,
                                                activation=filt_activation,
                                                filter=filter_type,
-                                               verbose=verbose,
-                                               threshold=threshold)
-
+                                               threshold=threshold,
+                                               verbose=verbose)
         filt_preds.append(filt_pred)
 
     # build prediction to match the common (n_images, size, size, n_ft) dimensions
