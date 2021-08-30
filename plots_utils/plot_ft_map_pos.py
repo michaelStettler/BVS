@@ -70,6 +70,7 @@ def plot_ft_map_pos(pos, fig_name=None, path=None, titles=None, color_seq=None, 
 
 def plot_ft_pos_on_sequence(pos, seq, vid_name=None, save_folder=None, ft_size=(28, 28), pre_proc='VGG',
                             lmk_size=1):
+    print("PLOT IT ON SEQ shape pos", np.shape(pos))
     # apply pre_processing
     seq = _pre_proc(seq, pre_proc)
 

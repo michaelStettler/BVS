@@ -272,7 +272,7 @@ if plot:
     color_seq[labels == 4] = 4
 
     pos_2d = np.reshape(pos, (len(pos), -1, 2))
-    print("[PLOT] shape pos_flat", np.shape(pos_2d))
+    print("[PLOT] shape pos_2d", np.shape(pos_2d))
     plot_ft_map_pos(pos_2d,
                     fig_name="00b_human_train_pos.png",
                     path=os.path.join("models/saved", config["config_name"]),
@@ -325,13 +325,13 @@ if plot:
     print()
     # ***********************       test 03 feature map visualisation     ******************
     # plot tracked vector on sequence
-    plot_ft_pos_on_sequence(pos, data[0],
+    plot_ft_pos_on_sequence(pos_2d, data[0],
                             vid_name='03_pos_human.mp4',
                             save_folder=os.path.join("models/saved", config["config_name"]),
                             lmk_size=1, ft_size=(56, 56))
 
     # plot tracked vector on sequence
-    plot_ft_pos_on_sequence(test_pos, test_data[0],
+    plot_ft_pos_on_sequence(test_pos_2d, test_data[0],
                             vid_name='03_pos_monkey.mp4',
                             save_folder=os.path.join("models/saved", config["config_name"]),
                             lmk_size=1, ft_size=(56, 56))
@@ -345,12 +345,12 @@ if plot:
 
     # plot tracked vector on feature maps
     max_preds_plot = max_preds / np.amax(max_preds) * 255
-    plot_ft_pos_on_sequence(pos, max_preds_plot, vid_name='03_ft_pos_human.mp4',
+    plot_ft_pos_on_sequence(pos_2d, max_preds_plot, vid_name='03_ft_pos_human.mp4',
                             save_folder=os.path.join("models/saved", config["config_name"]),
                             pre_proc='raw', ft_size=(56, 56))
     # monkey
     test_max_preds_plot = max_test_preds / np.amax(max_test_preds) * 255
-    plot_ft_pos_on_sequence(test_pos, test_max_preds_plot, vid_name='03_ft_pos_monkey.mp4',
+    plot_ft_pos_on_sequence(test_pos_2d, test_max_preds_plot, vid_name='03_ft_pos_monkey.mp4',
                             save_folder=os.path.join("models/saved", config["config_name"]),
                             pre_proc='raw', ft_size=(56, 56))
     print()

@@ -222,8 +222,6 @@ class NormBase:
         """
         # control if there's some reference features' input
         n_ref = np.shape(ref)[0]
-        print("ref update shape self.r", np.shape(self.r))
-        print("ref update shape ref", np.shape(ref))
         if n_ref > 0:
             # update ref_vector m
             self.r = (self.ref_cumul * self.r + n_ref * np.mean(ref, axis=0)) / (self.ref_cumul + n_ref)
@@ -522,14 +520,19 @@ class NormBase:
         print()
         if self.is_dynamic:
             if get_it_resp and get_differentiator:
+                print("[NB] return: ds_neuron, it_resp, differentiators")
                 return ds_neurons, it_resp, differentiators
             elif get_it_resp:
+                print("[NB] return: ds_neuron, it_resp")
                 return ds_neurons, it_resp
             elif get_differentiator:
+                print("[NB] return: ds_neuron, differentiators")
                 return ds_neurons, differentiators
             else:
+                print("[NB] return: ds_neuron")
                 return ds_neurons
         else:
+            print("[NB] return: it_resp")
             return it_resp
 
     def _fit_reference(self, data, batch_size):
@@ -669,14 +672,19 @@ class NormBase:
 
         if self.is_dynamic:
             if get_it_resp and get_differentiator:
+                print("[NB] return: ds_neuron, it_resp, differentiators")
                 return ds_neurons, it_resp, differentiators
             elif get_it_resp:
+                print("[NB] return: ds_neuron, it_resp")
                 return ds_neurons, it_resp
             elif get_differentiator:
+                print("[NB] return: ds_neuron, differentiators")
                 return ds_neurons, differentiators
             else:
+                print("[NB] return: ds_neuron")
                 return ds_neurons
         else:
+            print("[NB] return: it_resp")
             return it_resp
 
     def evaluate(self, data, batch_size=32):
@@ -979,8 +987,13 @@ class NormBase:
         """
         # print true labels versus the predicted label
         for i, label in enumerate(data[1]):
-            t_label = int(label)
-            p_label = np.argmax(preds[i])
+            t_label = int(np.amax(label))  # add a maximum here because in morph space we have some neutral frame padding at the begenning of the sequence
+            if len(np.shape(preds[i])) == 1:
+                p_label = np.argmax(preds[i])
+            elif len(np.shape(preds[i])) == 2:
+                p_label = np.argmax(np.amax(preds[i], axis=0))
+            else:
+                raise NotImplementedError("Argmax retrieval (predicted label) for dimension higher than 2 is not yet implemented")
 
             if t_label == p_label:
                 print(i, "true label:", t_label, "vs. pred:", p_label, " - OK")
