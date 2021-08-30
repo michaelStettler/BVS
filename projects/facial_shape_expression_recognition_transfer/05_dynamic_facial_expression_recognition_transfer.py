@@ -5,6 +5,7 @@ from utils.load_config import load_config
 from utils.load_data import load_data
 from models.NormBase import NormBase
 from utils.remove_transition_morph_space import remove_transition_frames
+from plots_utils.plot_morphing_space import plot_morphing_space
 
 """
 test a face transfer using norm base mechanism
@@ -25,20 +26,29 @@ model = NormBase(config, input_shape=tuple(config['input_shape']))
 
 # load data
 data = load_data(config)
-data = remove_transition_frames(data)
+data_no_transition = remove_transition_frames(data)
 
 # fit model
-ds_neurons, face_neurons = model.fit(data, get_it_resp=True, fit_semantic=False)
+ds_neurons, face_neurons = model.fit(data_no_transition, get_it_resp=True, fit_semantic=False)
 
 # save model
 model.save()
 
 # predict full sequence using the transition frames
-data = load_data(config)
 ds_neurons, face_neurons = model.predict(data, get_it_resp=True)
+print("--- Finished predicting Human protypes -----")
+print()
 
 # --------------------------------------------------------------------------------------------------------------------
-# apply face transfer using the monkey avatar
+# predict entire morphing space
+config['train_expression'] = ['full']
+morph_space_hum_data = load_data(config)
+ds_morphspace_neurons, face_morphspace_neurons = model.predict(morph_space_hum_data, get_it_resp=True)
+print("--- Finished predicting Human morph space -----")
+print()
+
+# --------------------------------------------------------------------------------------------------------------------
+# apply face transfer using the monkey avatar for the 4 prototypes
 # load data
 test_data = load_data(config, train=False)
 
@@ -52,6 +62,16 @@ test_ds_neurons, test_face_neurons = model.fit(test_data,
                                               fit_ref=True,        # learn new reference
                                               fit_tun=False,       # set to false as we want to transfer this!
                                               get_it_resp=True)
+print("--- Finished predicting Monkey protypes -----")
+print()
+
+# --------------------------------------------------------------------------------------------------------------------
+# predict entire morphing space
+config['test_expression'] = ['full']
+morph_space_monk_data = load_data(config, train=False)
+test_ds_morphspace_neurons, test_face_morphspace_neurons = model.predict(morph_space_monk_data, get_it_resp=True)
+print("--- Finished predicting Human morph space -----")
+print()
 
 # --------------------------------------------------------------------------------------------------------------------
 # print decision
@@ -79,3 +99,14 @@ model.plot_decision_neurons(ds_neurons,
 model.plot_decision_neurons(test_ds_neurons,
                             title="02_it_test",
                             save_folder=os.path.join("models/saved", config["config_name"]))
+
+# plot morphing space
+# plot face neurons
+print("shape face_morphspace_neurons", np.shape(face_morphspace_neurons))
+face_morphspace_neurons = np.reshape(face_morphspace_neurons, (25, -1, np.shape(face_morphspace_neurons)[-1]))
+print("shape face_morphspace_neurons", np.shape(face_morphspace_neurons))
+plot_morphing_space(face_morphspace_neurons, title="03_human", save_folder=os.path.join("models/saved", config["config_name"]))
+
+test_face_morphspace_neurons = np.reshape(test_face_morphspace_neurons, (25, -1, np.shape(face_morphspace_neurons)[-1]))
+plot_morphing_space(test_face_morphspace_neurons, title="03_monkey", save_folder=os.path.join("models/saved", config["config_name"]))
+
