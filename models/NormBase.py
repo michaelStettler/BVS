@@ -871,6 +871,7 @@ class NormBase:
             plt.savefig(fig_title)
 
     def plot_it_neurons_per_sequence(self, it_neurons, title=None, save_folder=None, normalize=False):
+        print("shape it_neurons", np.shape(it_neurons))
         # compute the number of sequence depending on the number of frames and seuence length
         seq_length = self.config['seq_length']
         n_sequence = np.shape(it_neurons)[0] // seq_length
