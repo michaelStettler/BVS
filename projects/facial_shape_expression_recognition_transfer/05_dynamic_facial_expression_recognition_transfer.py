@@ -130,3 +130,5 @@ plot_morphing_space_categorization(test_face_morphspace_neurons,
                                    title="04_monkey",
                                    save_folder=os.path.join("models/saved", config["config_name"]))
 
+# todo count how many patterns are classified the same after transfer
+
