@@ -66,6 +66,11 @@ merry_face_neurons = model.fit(merry_data,
                                fit_ref=True,        # learn new reference
                                fit_tun=False)       # set to false as we want to transfer this!
 
+# apply transfer to different "identity" of Merry
+# load data
+# config['val_avatar'] = 'Merry_all_identities'
+# merry_all_ids_data = load_data(config, train=False)
+# print("Shape merry_all_ids_data[0]", np.shape(merry_all_ids_data[0]))
 
 # --------------------------------------------------------------------------------------------------------------------
 # print decision

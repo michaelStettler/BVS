@@ -355,13 +355,19 @@ def _load_bfs(config, train, get_raw=False):
         config_avatar = config['val_avatar']
         expressions = config['val_expression']
 
+    x_scale = [1.0]
+    y_scale = [1.0]
     # build filter depending on avatar
     if config_avatar == 'Louise':
         avatar = ['Louise']
     elif config_avatar == 'Monkey':
         avatar = ['Monkey']
-    elif config_avatar == 'Mery':
+    elif config_avatar == 'Merry':
         avatar = ['Mery']
+    elif config_avatar == 'Merry_all_identities':
+        avatar = ['Mery']
+        x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
+        y_scale = [1.0]
     elif config_avatar == 'all_test':
         avatar = ['Monkey', 'Mery']
     else:
@@ -369,6 +375,8 @@ def _load_bfs(config, train, get_raw=False):
 
     # apply filter
     df = df[df['avatar'].isin(avatar)]
+    df = df[df['x_scale'].isin(x_scale)]
+    df = df[df['y_scale'].isin(y_scale)]
 
     # read out the expressions for training
     new_df = pd.DataFrame()

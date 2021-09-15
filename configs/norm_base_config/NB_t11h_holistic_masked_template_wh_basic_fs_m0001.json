@@ -8,7 +8,7 @@
   "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/BasicFaceShape/BasicFaceShape.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/BasicFaceShape",
   "train_avatar": "Louise",
-  "val_avatar": "Mery",
+  "val_avatar": "Merry",
   "train_expression": ["full"],
   "val_expression": ["full"],
   "input_shape": [224, 224, 3],

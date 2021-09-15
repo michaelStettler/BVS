@@ -126,7 +126,7 @@ if train:
 
 if test:
     # -------------------------------------------------------------------------------------------------------------------
-    # test monkey
+    # test
 
     # load data
     test_data = load_data(config, train=False)
