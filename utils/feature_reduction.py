@@ -114,9 +114,11 @@ def fit_dimensionality_reduction(model, data, fit_semantic=True):
     return preds
 
 
-def predict_dimensionality_reduction(model, data):
+def predict_dimensionality_reduction(model, data, use_scales=False):
     """
     Helper function to apply the dimensionality reduction as set in the configuation before the model
+
+    use_scales allows to modify on the fly the masks to fit the scalling parameters form the dataset
 
     :param model: model instance
     :param data:
@@ -129,7 +131,7 @@ def predict_dimensionality_reduction(model, data):
         # projection by PCA
         preds = model.pca.transform(data)
     elif model.dim_red == "semantic" or model.dim_red == "semantic-pattern" or model.dim_red == "pattern":
-        preds = model.feat_red.transform(data, activation='mean')
+        preds = model.feat_red.transform(data, activation='mean', use_scales=use_scales)
 
         # apply filter post_processing
         preds = get_feat_map_filt_preds(preds, model.config)

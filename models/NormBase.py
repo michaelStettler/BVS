@@ -640,10 +640,13 @@ class NormBase:
 
         return preds
 
-    def predict(self, data, get_it_resp=False, get_differentiator=False):
+    def predict(self, data, get_it_resp=False, get_differentiator=False, use_scales=False):
         """
         predict expression neurons of Norm base Mechanism
         pipeline consists of preprocessing, cnn, and dimensionality reduction
+
+        use_scales allows to modify on the fly the masks to fit the scalling parameters form the dataset
+
         :param data: batch of data
         :return: prediction
         """
@@ -655,7 +658,7 @@ class NormBase:
         v4_preds = self.predict_v4(data[0], flatten=flatten)
 
         print("[PREDICT] - reduce data dimensionality -")
-        v4_preds_red = predict_dimensionality_reduction(self, v4_preds)
+        v4_preds_red = predict_dimensionality_reduction(self, v4_preds, use_scales=use_scales)
         print("shape v4_preds_red", np.shape(v4_preds_red))
 
         print("[PREDICT] compute IT responses")
@@ -990,6 +993,7 @@ class NormBase:
         for i, label in enumerate(data[1]):
             t_label = int(np.amax(label))  # add a maximum here because in morph space we have some neutral frame padding at the begenning of the sequence
             if len(np.shape(preds[i])) == 1:
+
                 p_label = np.argmax(preds[i])
             elif len(np.shape(preds[i])) == 2:
                 p_label = np.argmax(np.amax(preds[i], axis=0))

@@ -68,9 +68,11 @@ merry_face_neurons = model.fit(merry_data,
 
 # apply transfer to different "identity" of Merry
 # load data
-# config['val_avatar'] = 'Merry_all_identities'
-# merry_all_ids_data = load_data(config, train=False)
-# print("Shape merry_all_ids_data[0]", np.shape(merry_all_ids_data[0]))
+config['val_avatar'] = 'Merry_all_identities'
+merry_all_ids_data = load_data(config, train=False)
+print("Shape merry_all_ids_data[0]", np.shape(merry_all_ids_data[0]))
+
+merry_all_ids_face_neurons = model.predict(merry_all_ids_data, use_scales=True)
 
 # --------------------------------------------------------------------------------------------------------------------
 # print decision
@@ -78,3 +80,6 @@ model.print_decision(data, face_neurons)
 
 # print decision
 model.print_decision(merry_data, merry_face_neurons)
+
+# print decision
+model.print_decision(merry_all_ids_data, merry_all_ids_face_neurons)

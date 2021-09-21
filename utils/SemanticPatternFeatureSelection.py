@@ -51,14 +51,14 @@ class SemanticPatternFeatureSelection:
 
         return preds
 
-    def transform(self, data, activation=None, feature_channel_last=True):
+    def transform(self, data, activation=None, feature_channel_last=True, use_scales=False):
         print("[SEM-PAT] Transform")
         preds = self.semantic.transform(data, activation=None, feature_channel_last=False)
 
         # extend dimension to fit the number of template
         preds = np.repeat(np.expand_dims(preds, axis=0), len(self.config['rbf_template']), axis=0)
 
-        preds = self.pattern.transform(preds, feature_channel_last=feature_channel_last)
+        preds = self.pattern.transform(preds, feature_channel_last=feature_channel_last, use_scales=use_scales)
         print("[SEM-PAT] Semantic Pattern Transformed")
 
         return preds

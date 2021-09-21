@@ -23,7 +23,7 @@ def load_from_csv(df, config, x_col="image_path"):
     # load images from dataframe
     directory = config['directory']
     index = 0
-    for _ , row in tqdm(df.iterrows(), total=num_data):
+    for _, row in tqdm(df.iterrows(), total=num_data):
         # load img
         im_path = row[x_col]
         if directory is not None:

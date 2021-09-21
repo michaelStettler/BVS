@@ -95,7 +95,7 @@ class PatternFeatureSelection:
 
         return self.transform(data, feature_channel_last=feature_channel_last, from_fit=True)
 
-    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False):
+    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False, use_scales=False):
         """
         compute activation over the data with the rbf template
 
@@ -103,11 +103,16 @@ class PatternFeatureSelection:
         :return:
         """
         print("[PATTERN] Transform Pattern")
+        if use_scales:
+            print("[PATTERN] rescale masks to scaled version")
+            x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 1.1,
+                        1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2]
+
         if not from_fit:
             # apply mask
             if self.use_mask:
                 print("[PATTERN] Transform: use mask")
-                data = self._apply_mask(data)
+                data = self._apply_mask(data, x_scales)
 
             # apply zeros
             if self.use_zeros:
@@ -138,11 +143,28 @@ class PatternFeatureSelection:
         print("[PATTERN] prediction transformed!")
         return preds
 
-    def _apply_mask(self, data):
+    def _apply_mask(self, data, x_scales=None):
+        """
+        x_scales allows to define a single mask and then just use the provided scales to apply it on images
+
+        :param data:
+        :param x_scales:
+        :return:
+        """
         preds = np.zeros(np.shape(data))
-        for i in range(self.n_template):
-            preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
-                data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
+        if x_scales is None:
+            for i in range(self.n_template):
+                preds[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]] = \
+                    data[i, :, self.mask[i, 0, 0]:self.mask[i, 0, 1], self.mask[i, 1, 0]:self.mask[i, 1, 1]]
+        else:
+            for j in range(np.shape(data)[1]):
+                for i in range(self.n_template):
+                    mid_x = np.shape(data)[3] / 2
+                    x_start = int(mid_x + (self.mask[i, 1, 0] - mid_x) * x_scales[j])
+                    x_end = int(mid_x + (self.mask[i, 1, 1] - mid_x) * x_scales[j])
+
+                    preds[i, j, self.mask[i, 0, 0]:self.mask[i, 0, 1], x_start:x_end] = \
+                        data[i, j, self.mask[i, 0, 0]:self.mask[i, 0, 1], x_start:x_end]
 
         print("[PATTERN] apply mask - shape preds", np.shape(preds))
         return preds
