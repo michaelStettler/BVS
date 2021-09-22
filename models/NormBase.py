@@ -332,7 +332,7 @@ class NormBase:
             x = np.reshape(preds, [len(preds), -1, 2])
 
             if weights == 'ones':
-                weight = np.ones((self.config['n_category'], 8))
+                weight = np.ones((self.config['n_category'], int(np.shape(preds)[-1]/2)))
             elif weights == 'morph_space':  # todo deprecated and should be removed! -> but could be discussion for training
                 weight = np.zeros((5, 8))
                 weight[1] = [0, 6, 6, 0, 0, 0, 1, 0]
