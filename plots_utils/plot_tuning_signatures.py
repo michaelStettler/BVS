@@ -10,7 +10,6 @@ from plots_utils.plot_ft_map_pos import _set_save_folder
 
 
 def plot_tuning_signatures(data, ref_tuning=None, fig_name=None, save_folder=None):
-    print("prout")
     print("shape data", np.shape(data))
 
     # set images name
