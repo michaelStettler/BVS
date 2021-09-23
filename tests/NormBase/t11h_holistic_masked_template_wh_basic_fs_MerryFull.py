@@ -77,26 +77,16 @@ if train:
 
     # add holistic templates
     # [[x_start, x_end], [y_start, y_end]] x: vertical, y: horizontal
-    rbf_template = [[[17, 20], [19, 22]], [[17, 20], [24, 27]], [[17, 20], [32, 35]], [[17, 20], [37, 40]],
-                [[36, 39], [22, 25]], [[35, 38], [28, 32]], [[36, 39], [33, 36]], [[38, 40], [28, 32]],
-                    [[24, 26], [19, 22]], [[24, 26], [36, 39]]]
-    rbf_template = [[[17, 20], [19, 22]], [[17, 20], [24, 27]], [[17, 20], [32, 35]], [[17, 20], [37, 40]],
-                [[36, 39], [22, 25]], [[35, 38], [28, 32]], [[36, 39], [33, 36]], [[38, 41], [28, 32]],  # try to make down lip diff between 2 and 6
-                    [[24, 26], [19, 22]], [[24, 26], [36, 39]]]
-
-    rbf_mask = [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]],  # initial
-                [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[34, 41], [31, 38]], [[36, 50], [24, 36]],
-                [[19, 29], [17, 24]], [[19, 29], [33, 41]]]
-    rbf_mask = [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]],
+    rbf_template = [[[17, 20], [19, 22]], [[17, 20], [24, 27]], [[17, 20], [32, 35]], [[17, 20], [37, 40]],  # 97.14
+                    [[36, 39], [22, 25]], [[35, 38], [28, 32]], [[36, 39], [33, 36]], [[38, 41], [28, 32]],
+                    [[24, 26], [19, 22]], [[23, 26], [36, 39]]]
+    rbf_mask = [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]],  # 97.14
                 [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[33, 41], [31, 38]], [[36, 50], [24, 36]],
                 [[19, 29], [17, 24]], [[19, 29], [33, 41]]]
+    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 2000, 3300, 2500, 2600, 2800, 2800]  # 97.14
 
-    # config['rbf_sigma'] = [1800, 1800, 1800, 1800, 1800, 3300, 2200, 2200]  # loose left lips on angry (2) and right lip on fear (5)
-    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 2000, 3300, 2300, 2200, 2800, 2800]
-    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 2000, 3300, 2500, 2200, 2800, 2800]  # try to improve left side lips
-    config['rbf_sigma'] = [1800, 1800, 1800, 1800, 2000, 3300, 2500, 2600, 2800, 2800]  # try to improve left side lips
-
-    rbf_zeros = {'0': {'idx': 6, 'pos': [[40, 47], [38, 41]]}}
+    rbf_zeros = {'0': {'idx': 4, 'pos': [[40, 47], [15, 22]]},  # 97.14
+                 '1': {'idx': 6, 'pos': [[40, 47], [38, 41]]}}
     patterns = PatternFeatureSelection(config, template=rbf_template, mask=rbf_mask, zeros=rbf_zeros)
 
     # fit templates
@@ -159,36 +149,16 @@ if test:
     print("[TEST] shape test_preds", np.shape(test_preds))
 
     # add holistic templates
-    test_rbf_template = [[[17, 20], [14, 17]], [[17, 20], [20, 23]], [[17, 20], [30, 33]], [[17, 20], [37, 40]],
+    test_rbf_template = [[[17, 20], [12, 15]], [[17, 20], [20, 23]], [[17, 20], [30, 33]], [[17, 20], [37, 40]],  # 97.14
                          [[40, 43], [19, 22]], [[39, 42], [26, 29]], [[40, 43], [32, 36]], [[41, 44], [25, 30]],
                          [[27, 31], [15, 18]], [[27, 31], [37, 40]]]
-    test_rbf_template = [[[17, 20], [12, 15]], [[17, 20], [20, 23]], [[17, 20], [30, 33]], [[17, 20], [37, 40]],  # try to improve left lips to go up with exp 2
-                         [[40, 43], [19, 22]], [[39, 42], [26, 29]], [[40, 43], [32, 36]], [[41, 44], [25, 30]],
-                         [[27, 31], [15, 18]], [[27, 31], [37, 40]]]
-
-    test_rbf_mask = [[[13, 24], [10, 21]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [34, 44]],
-                     [[36, 47], [15, 26]], [[35, 46], [22, 33]], [[37, 46], [28, 39]], [[40, 56], [21, 34]],
-                     [[22, 33], [13, 20]], [[22, 33], [35, 42]]]
-    test_rbf_mask = [[[13, 24], [9, 18]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [34, 44]],
+    test_rbf_mask = [[[13, 24], [9, 18]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [34, 44]],  # 97.14
                      [[36, 47], [15, 26]], [[35, 46], [22, 33]], [[36, 46], [28, 39]], [[40, 56], [21, 34]],
                      [[22, 33], [13, 20]], [[22, 33], [35, 42]]]
 
-    # test_rbf_zeros = {'0': {'idx': 6, 'pos': [[40, 47], [36, 41]]}}
-    test_rbf_zeros = {'0': {'idx': 6, 'pos': [[43, 47], [36, 41]]}}
+    test_rbf_zeros = {'0': {'idx': 6, 'pos': [[43, 47], [36, 41]]}}  # 97.14
 
-    # config['rbf_sigma'] = [2500, 2800, 3000, 2900, 2200, 3600, 2600, 3700]  # initial that works on normal
-    config['rbf_sigma'] = [2500, 2800, 3000, 3100, 2200, 3600, 2600, 3700]  # 71.43%
-    config['rbf_sigma'] = [2500, 2800, 3000, 3300, 2200, 3600, 2600, 3700]  # 74.29%
-    config['rbf_sigma'] = [2700, 2800, 3000, 3300, 2200, 3600, 2600, 3700]  # 77.14%
-    config['rbf_sigma'] = [2700, 2900, 3000, 3300, 2200, 3600, 2600, 3700]  # 82.86%
-    config['rbf_sigma'] = [2950, 2900, 3000, 3300, 2200, 3600, 2600, 3700]  # frame 11 saved left ext eyebrow
-    config['rbf_sigma'] = [2950, 2900, 3000, 3300, 2200, 3600, 2600, 3900]  # 85.71% frame 11 down lips
-    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2200, 3600, 2600, 3900]  # frame 12 save left int eyebrow
-    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2250, 3600, 2600, 3900]  # 82.86% but no markers a lost with this
-    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2250, 3600, 2600, 3900, 3200, 3200]  # adding lower lid
-    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2250, 3600, 3200, 3900, 3200, 3200]  # better only one 6 is wrong
-    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2250, 3600, 3200, 3900, 3250, 3250]  # improved lower lids as ther's a slight angle for remaining 6 -> all 2 are predicted as 6
-    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2250, 3600, 2450, 3900, 3250, 3250]  # improve left lips
+    config['rbf_sigma'] = [2950, 3080, 3000, 3300, 2250, 3600, 2450, 3900, 3250, 3250]  # 97.14
     test_patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
     # fit templates
@@ -333,13 +303,21 @@ if plot:
     print()
 
     # ***********************       test 02 tuning signatures     ******************
-    test_exp = 2
-    versus_exp = 6
+    test_exp = 5
+    versus_exp = 2
     plot_tuning_signatures(test_pos_2d[test_exp] - test_pos_2d[0], ref_tuning=pos_2d[test_exp] - pos_2d[0],
-                           fig_name="Merry_2_vs_2",
+                           fig_name="Merry_{}_vs_{}".format(test_exp, test_exp),
                            save_folder=os.path.join("models/saved", config["config_name"]))
     plot_tuning_signatures(test_pos_2d[test_exp] - test_pos_2d[0], ref_tuning=pos_2d[versus_exp] - pos_2d[0],
-                           fig_name="Merry_2_vs_6",
+                           fig_name="Merry_{}_vs_{}".format(test_exp, versus_exp),
                            save_folder=os.path.join("models/saved", config["config_name"]))
     print("finished plotting test2")
     print()
+
+    # ***********************       test 03 feature map activity     ******************
+    print("shape template", np.shape(template))
+    for i in range(7):
+        idx = i
+        plot_cnn_output(template[idx],
+                        name="template_{}".format(idx),
+                        path=os.path.join("models/saved", config["config_name"]))
