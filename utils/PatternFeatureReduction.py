@@ -82,7 +82,8 @@ class PatternFeatureSelection:
             data = self._apply_zeros(data)
 
         # compute template
-        for i in range(len(data)):
+        n_template = len(data)
+        for i in range(n_template):
             pred = np.array(data[i])
 
             # compute template

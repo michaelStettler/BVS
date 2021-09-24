@@ -160,7 +160,7 @@ if test:
 
     # fit templates
     test_template_preds = np.repeat(np.expand_dims(test_preds, axis=0), len(test_rbf_template), axis=0)
-    test_template = test_patterns.fit(test_template_preds)
+    test_template = test_patterns.fit(test_template_preds)  # fits only the ref pattern for scale x = 1.0 as it takes the config arg: 'rbf_template_ref_frame_idx'
     test_template = test_patterns.transform(test_template_preds, use_scales=True)
     test_template[test_template < 0.1] = 0
 
