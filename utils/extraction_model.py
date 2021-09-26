@@ -61,6 +61,8 @@ def load_v4(model, config, input_shape):
         model.model = load_extraction_model(config, input_shape)
         model.v4 = tf.keras.Model(inputs=model.model.input,
                                  outputs=model.model.get_layer(config['v4_layer']).output)
+    elif config['extraction_model'] == 'FLAME':
+        print("TODO TAKE CARE OF NO EXTRACTION")
     else:
         raise ValueError("model: {} does not exists! Please change config file or add the model"
                          .format(config['extraction_model']))

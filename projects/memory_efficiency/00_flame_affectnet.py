@@ -2,54 +2,65 @@ import os
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from models.NormBase import NormBase
+from utils.load_config import load_config
+from utils.load_Flame import load_FLAME_csv_params
 
 """
 run: python -m projects.memory_efficiency.00_flame_affectnet
 """
+
+np.set_printoptions(precision=2, linewidth=200, suppress=True)
+
+config_path = 'NB_Memory_Efficiency.json'
+# load config
+config = load_config(config_path, path='configs/norm_base_config')
+
+
 path = "/Users/michaelstettler/PycharmProjects/BVS/data/AffectNet_FLAME"
 train_csv = "flame_training_params.csv"
 test_csv = "flame_validation_params.csv"
 
 df_train = pd.read_csv(os.path.join(path, train_csv), index_col=0)
+df_test = pd.read_csv(os.path.join(path, test_csv), index_col=0)
 print(df_train.head())
+# print(df_test.head())
 
-train_x = df_train['params']
-print("shape train_x", np.shape(train_x))
-print(train_x[0])
-test = train_x[0]
-test = test[1:-1]  # remove '[]'
-test = test.split('\n')
-print(test)
+train_data = load_FLAME_csv_params(df_train)
+test_data = load_FLAME_csv_params(df_test)
 
-# process data
-# read csv columns that are stored as a string of '[xxx yyy zzz]' and set it to a numpy array
-train_data = [[float(t) for i in range(len(train_x[j][1:-1].split('\n'))) for t in train_x[j][1:-1].split('\n')[i].split(' ') if t != ""] for j in range(10)]
-train_x = np.array(train_data)
+model = NormBase(config, tuple(config['input_shape']))
 
-# process label
-train_y = []
-for y in tqdm(df_train['expression']):
-    if y == 'Neutral':
-        train_y.append(0)
-    elif y == 'Happy':
-        train_y.append(1)
-    elif y == 'Anger':
-        train_y.append(2)
-    elif y == 'Sad':
-        train_y.append(3)
-    elif y == 'Surprise':
-        train_y.append(4)
-    elif y == 'Fear':
-        train_y.append(5)
-    elif y == 'Disgust':
-        train_y.append(6)
-    elif y == 'Contempt':
-        train_y.append(7)
+# compute ref
+ref_idx = 0
+train_x = train_data[0]
+train_y = train_data[1]
+print("label")
+print(train_y)
+ref = np.mean(train_x[train_y == ref_idx], axis=0)
+print("ref", np.shape(ref))
+print(ref)
+
+# compute tuning
+tuning_directions = []
+for i in range(8):
+    if i == ref_idx:
+        tun_dir = np.zeros(np.shape(ref))
     else:
-        raise ValueError("{} is not a valid argument".format(y))
-train_y = np.array(train_y)
+        tun_dir = np.mean(train_x[train_y == i], axis=0)
 
-print("train_x", np.shape(train_x))
-print(train_x[0, :5])
-print("shape train_y", np.shape(train_y))
-print(train_y[:5])
+    tuning_directions.append(tun_dir)
+tuning_directions = np.array(tuning_directions)
+
+print("tuning_direction", np.shape(tuning_directions))
+print(tuning_directions)
+
+model.set_ref_vector(ref)
+model.set_tuning_vector(tuning_directions)
+
+print("compute it_resp")
+test_x = test_data[0]
+print("test_x", np.shape(test_x))
+it_resp = model._get_it_resp(test_x)
+print("shape it_resp", np.shape(it_resp))
+
