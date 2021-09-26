@@ -8,12 +8,12 @@ def load_FLAME_csv_params(df):
     print("shape params", np.shape(params))
     # process data
     # read csv columns that are stored as a string of '[xxx yyy zzz]' and set it to a numpy array
-    params_data = [
-        [float(t) for i in range(len(params[j][1:-1].split('\n'))) for t in params[j][1:-1].split('\n')[i].split(' ')
-         if t != ""] for j in range(500)]
     # params_data = [
     #     [float(t) for i in range(len(params[j][1:-1].split('\n'))) for t in params[j][1:-1].split('\n')[i].split(' ')
-    #      if t != ""] for j in range(len(params))]
+    #      if t != ""] for j in range(500)]
+    params_data = [
+        [float(t) for i in range(len(params[j][1:-1].split('\n'))) for t in params[j][1:-1].split('\n')[i].split(' ')
+         if t != ""] for j in range(len(params))]
     params_data = np.array(params_data)
 
     # process label
@@ -39,6 +39,6 @@ def load_FLAME_csv_params(df):
             raise ValueError("{} is not a valid argument".format(y))
 
     label = np.array(label)
-    label = label[:500]
+    # label = label[:500]
 
     return [params_data, label]

@@ -7,34 +7,22 @@ from utils.load_config import load_config
 from utils.load_Flame import load_FLAME_csv_params
 
 """
-run: python -m projects.memory_efficiency.00_flame_affectnet
+run: python -m tests.NormBase.t13_raw_face_space
 """
 
 np.set_printoptions(precision=2, linewidth=200, suppress=True)
 
-config_path = 'NB_Memory_Efficiency.json'
+config_path = 'NB_t13_raw_face_space_m0001.json'
 # load config
 config = load_config(config_path, path='configs/norm_base_config')
 
-
-path = "/Users/michaelstettler/PycharmProjects/BVS/data/AffectNet_FLAME"
-train_csv = "flame_training_params.csv"
-test_csv = "flame_validation_params.csv"
-
-df_train = pd.read_csv(os.path.join(path, train_csv), index_col=0)
-df_test = pd.read_csv(os.path.join(path, test_csv), index_col=0)
-print(df_train.head())
-# print(df_test.head())
-
-train_data = load_FLAME_csv_params(df_train)
-test_data = load_FLAME_csv_params(df_test)
-
 model = NormBase(config, tuple(config['input_shape']))
-
 # compute ref
 ref_idx = 0
-train_x = train_data[0]
-train_y = train_data[1]
+# create train_x with orthogonal space
+train_x = np.eye(8)
+train_x[0, 0] = 0
+train_y = np.arange(8)
 print("label")
 print(train_y)
 ref = np.mean(train_x[train_y == ref_idx], axis=0)
@@ -59,11 +47,18 @@ model.set_ref_vector(ref)
 model.set_tuning_vector(tuning_directions)
 
 print("compute it_resp")
-test_x = test_data[0]
-test_y = test_data[1]
+test_x = np.eye(8)
+test_y = np.arange(8)
 print("test_x", np.shape(test_x))
 it_resp = model._get_it_resp(test_x)
 print("shape it_resp", np.shape(it_resp))
+print(it_resp[0])
+y_pred = np.argmax(it_resp, axis=1)
+print("y_pred")
+print(y_pred)
+print()
 
 accuracy = (test_y == np.argmax(it_resp, axis=1)).mean()
-print("accuracy", accuracy)
+print("----------------------------------------------------")
+print("Test accuracy:", accuracy)
+print("----------------------------------------------------")
