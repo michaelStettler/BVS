@@ -20,11 +20,11 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 """
 test script to try the implementation of the holistic representation model on the BasicFaceShape dataset
 
-run: python -m tests.NormBase.t11h_holistic_masked_template_wh_basic_fs_MerryFull
+run: python -m tests.NormBase.t11h_holistic_masked_template_wh_basic_fs_HumanFull
 """
 
 # define configuration
-config_path = 'NB_t11h_holistic_masked_template_wh_basic_fs_Merry_Full_m0001.json'
+config_path = 'NB_t11h_holistic_masked_template_wh_basic_fs_Human_Full_m0001.json'
 compute_NB = True
 plot_intermediate = False
 
@@ -83,7 +83,6 @@ if train:
     rbf_mask = [[[13, 24], [15, 26]], [[13, 24], [20, 31]], [[13, 24], [28, 39]], [[13, 24], [33, 44]],
                 [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[33, 41], [31, 38]], [[36, 50], [24, 36]],
                 [[19, 29], [17, 24]], [[19, 29], [33, 41]]]
-    # config['rbf_sigma'] = [1800, 1800, 1800, 1800, 2000, 3300, 2500, 2600, 2800, 2800]
     config['rbf_sigma'] = [1900, 1800, 1800, 2000, 2100, 3300, 2500, 2800, 2800, 2800]
     rbf_zeros = {'0': {'idx': 4, 'pos': [[40, 47], [15, 22]]},
                  '1': {'idx': 6, 'pos': [[40, 47], [38, 41]]}}
@@ -149,14 +148,9 @@ if test:
     print("[TEST] shape test_preds", np.shape(test_preds))
 
     # add holistic templates
-    test_rbf_template = [[[17, 20], [12, 15]], [[17, 20], [20, 23]], [[17, 20], [30, 33]], [[17, 20], [37, 40]],
-                         [[40, 43], [19, 22]], [[39, 42], [26, 29]], [[40, 43], [32, 36]], [[41, 44], [25, 30]],
-                         [[27, 31], [15, 18]], [[27, 31], [37, 40]]]
-    test_rbf_mask = [[[13, 24], [10, 19]], [[13, 24], [16, 27]], [[13, 24], [26, 37]], [[13, 24], [34, 44]],
-                     [[37, 47], [15, 26]], [[35, 46], [20, 32]], [[36, 46], [28, 39]], [[40, 56], [21, 34]],
-                     [[22, 33], [13, 20]], [[22, 33], [35, 42]]]
-    test_rbf_zeros = {'0': {'idx': 6, 'pos': [[43, 47], [36, 41]]}}
-    config['rbf_sigma'] = [3500, 3080, 3000, 3300, 2350, 3300, 2580, 3900, 3250, 3250]
+    test_rbf_template = rbf_template
+    test_rbf_mask = rbf_mask
+    test_rbf_zeros = rbf_zeros
     test_patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
     # fit templates

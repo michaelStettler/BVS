@@ -360,7 +360,7 @@ def _load_bfs(config, train, get_raw=False):
     # build filter depending on avatar
     if config_avatar == 'Louise':
         avatar = ['Louise']
-    if config_avatar == 'Louise_all_identities':
+    elif config_avatar == 'Louise_all_identities':
         avatar = ['Louise']
         x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
         y_scale = [1.0]

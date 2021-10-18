@@ -118,7 +118,7 @@ class PatternFeatureSelection:
             # apply zeros
             if self.use_zeros:
                 print("[PATTERN] Transform: use zeros")
-                data = self._apply_zeros(data)
+                data = self._apply_zeros(data, x_scales)
 
         # transform data
         preds = []
@@ -170,13 +170,26 @@ class PatternFeatureSelection:
         print("[PATTERN] apply mask - shape preds", np.shape(preds))
         return preds
 
-    def _apply_zeros(self, data):
+    def _apply_zeros(self, data, x_scales=None):
         preds = data
-        for i in range(len(self.zeros)):
-            dict = self.zeros[str(i)]
-            idx = dict['idx']
-            pos = np.array(dict['pos'])
-            preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
+        if x_scales is None:
+            for i in range(len(self.zeros)):
+                dict = self.zeros[str(i)]
+                idx = dict['idx']
+                pos = np.array(dict['pos'])
+                preds[idx, :, pos[0, 0]:pos[0, 1], pos[1, 0]:pos[1, 1]] = 0
+        else:
+            for j in range(np.shape(data)[1]):
+                for i in range(len(self.zeros)):
+                    mid_x = np.shape(data)[3] / 2
+                    dict = self.zeros[str(i)]
+                    idx = dict['idx']
+                    pos = np.array(dict['pos'])
+
+                    x_start = int(mid_x + (pos[1, 0] - mid_x) * x_scales[j])
+                    x_end = int(mid_x + (pos[1, 1] - mid_x) * x_scales[j])
+
+                    preds[idx, :, pos[0, 0]:pos[0, 1], x_start:x_end] = 0
 
         print("[PATTERN] apply zeros - shape preds", np.shape(preds))
         return preds
