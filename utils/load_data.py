@@ -366,10 +366,13 @@ def _load_bfs(config, train, get_raw=False):
         y_scale = [1.0]
     elif config_avatar == 'Monkey':
         avatar = ['Monkey']
+    elif config_avatar == 'Monkey_all_identities':
+        avatar = ['Monkey']
+        x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
+        y_scale = [1.0]
     elif config_avatar == 'Merry':
         avatar = ['Mery']
     elif config_avatar == 'Merry_all_identities':
-        print("comme in Merry all identities")
         avatar = ['Mery']
         x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
         y_scale = [1.0]
