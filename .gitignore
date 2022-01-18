@@ -138,3 +138,4 @@ logs/
 .idea/
 models/saved/
 logs/
+projects/memory_efficiency/.ipynb_checkpoints
