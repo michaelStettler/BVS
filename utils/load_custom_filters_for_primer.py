@@ -4,19 +4,43 @@ import tensorflow as tf
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
 
-def build_primer(lmk_pos, thresh_val=0.75, filt_size=(7, 7)):
+def build_primer(lmk_pos, thresh_val=0.75, filt_size=(7, 7), neg_factor=6):
     """
 
     :param lmk_pos: nx4 matrix, with 4 the following parameters: 0: idx of the mnsit img, 1: posX, 2: posX, 3: n_rotate
     :param thresh_val:
     :param filt_size:
+    :param neg_factor: value to which the negative parts of the filters get multiplied
     :return:
     """
     pad_x = int(filt_size[0] / 2)
     pad_y = int(filt_size[1] / 2)
 
+    # define start and stop
+    start_x = lmk_pos[1]-pad_x
+    end_x = lmk_pos[1]+pad_x+1
+    start_y = lmk_pos[2]-pad_y
+    end_y = lmk_pos[2]+pad_y+1
+
     # define filter for primer
-    patch = x_train[lmk_pos[0], lmk_pos[1]-pad_x:lmk_pos[1]+pad_x+1, lmk_pos[2]-pad_y:lmk_pos[2]+pad_y+1] / 255.
+    img = x_train[lmk_pos[0]] / 255.
+    patch = img[np.maximum(start_x, 0):end_x, np.maximum(start_y, 0):end_y]
+
+    # add zeros if patch is smaller than the dimension
+    if start_x < 0:
+        zeros_patch = np.zeros((filt_size[0] - np.shape(patch)[0], np.shape(patch)[1]))
+        patch = np.vstack([zeros_patch, patch])
+    elif end_x > np.shape(img)[0]:
+        zeros_patch = np.zeros((end_x - np.shape(img)[0], np.shape(patch)[1]))
+        patch = np.vstack([patch, zeros_patch])
+    if start_y < 0:
+        zeros_patch = np.zeros((np.shape(patch)[0], filt_size[1] - np.shape(patch)[1]))
+        patch = np.hstack([zeros_patch, patch])
+    elif end_y > np.shape(img)[1]:
+        zeros_patch = np.zeros((np.shape(patch)[0], end_y - np.shape(img)[1]))
+        patch = np.hstack([patch, zeros_patch])
+
+    # create filter
     filter = np.copy(patch)
 
     # control size
@@ -36,7 +60,7 @@ def build_primer(lmk_pos, thresh_val=0.75, filt_size=(7, 7)):
     filter *= alpha
 
     # set filter to neutral with the zeros
-    offset_neg_val = -5 * np.sum(filter) / n_zeros
+    offset_neg_val = - neg_factor * np.sum(filter) / n_zeros
     filter[filter == 0] = offset_neg_val
 
     # apply number of rotation
@@ -45,12 +69,12 @@ def build_primer(lmk_pos, thresh_val=0.75, filt_size=(7, 7)):
     return filter
 
 
-def get_top_primer_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
+def get_top_primer_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
     filters = []
 
     # create filters
     for lmk_pos in lmks_pos:
-        custom_filt = build_primer(lmk_pos, filt_size=filt_size)
+        custom_filt = build_primer(lmk_pos, filt_size=filt_size, neg_factor=neg_factor)
         filters.append(custom_filt)
 
     # add zeros if not equal to N_FILTERS
@@ -64,8 +88,8 @@ def get_top_primer_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return filters
 
 
-def get_ends_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
-    top_end = get_top_primer_multi_scale(lmks_pos, n_filters, filt_size=filt_size)
+def get_ends_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
+    top_end = get_top_primer_multi_scale(lmks_pos, n_filters, filt_size=filt_size, neg_factor=neg_factor)
     right_end = np.rot90(top_end, 1, axes=(1, 2))
     down_end = np.rot90(top_end, 2, axes=(1, 2))
     left_end = np.rot90(top_end, 3, axes=(1, 2))
@@ -73,12 +97,12 @@ def get_ends_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return np.concatenate([top_end, right_end, down_end, left_end])
 
 
-def get_top_right_corner_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
+def get_top_right_corner_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
     filters = []
 
     # create filters
     for lmk_pos in lmks_pos:
-        custom_filt = build_primer(lmk_pos, filt_size=filt_size)
+        custom_filt = build_primer(lmk_pos, filt_size=filt_size, neg_factor=neg_factor)
         filters.append(custom_filt)
 
     # add zeros if not equal to N_FILTERS
@@ -92,8 +116,8 @@ def get_top_right_corner_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return filters
 
 
-def get_corners_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
-    top_right = get_top_right_corner_multi_scale(lmks_pos, n_filters, filt_size=filt_size)
+def get_corners_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
+    top_right = get_top_right_corner_multi_scale(lmks_pos, n_filters, filt_size=filt_size, neg_factor=neg_factor)
     down_right = np.rot90(top_right, 1, axes=(1, 2))
     down_left = np.rot90(top_right, 2, axes=(1, 2))
     top_left = np.rot90(top_right, 3, axes=(1, 2))
@@ -101,12 +125,12 @@ def get_corners_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return np.concatenate([top_right, down_right, down_left, top_left])
 
 
-def get_top_T_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
+def get_top_T_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
     filters = []
 
     # create filters
     for lmk_pos in lmks_pos:
-        custom_filt = build_primer(lmk_pos, filt_size=filt_size)
+        custom_filt = build_primer(lmk_pos, filt_size=filt_size, neg_factor=neg_factor)
         filters.append(custom_filt)
 
     # add zeros if not equal to N_FILTERS
@@ -120,8 +144,8 @@ def get_top_T_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return filters
 
 
-def get_T_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
-    top_T = get_top_T_multi_scale(lmks_pos, n_filters, filt_size=filt_size)
+def get_T_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
+    top_T = get_top_T_multi_scale(lmks_pos, n_filters, filt_size=filt_size, neg_factor=neg_factor)
     right_T = np.rot90(top_T, 1, axes=(1, 2))
     down_T = np.rot90(top_T, 2, axes=(1, 2))
     left_T = np.rot90(top_T, 3, axes=(1, 2))
@@ -129,12 +153,12 @@ def get_T_filters_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return np.concatenate([top_T, right_T, down_T, left_T])
 
 
-def get_cross_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
+def get_cross_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), neg_factor=6):
     filters = []
 
     # create filters
     for lmk_pos in lmks_pos:
-        custom_filt = build_primer(lmk_pos, filt_size=filt_size)
+        custom_filt = build_primer(lmk_pos, filt_size=filt_size, neg_factor=neg_factor)
         filters.append(custom_filt)
 
     # add zeros if not equal to N_FILTERS
@@ -148,7 +172,7 @@ def get_cross_multi_scale(lmks_pos, n_filters, filt_size=(7, 7)):
     return filters
 
 
-def get_filters_multi_scale(lmks_pos, filt_size=(7, 7)):
+def get_filters_multi_scale(lmks_pos, filt_size=(7, 7), neg_factor=6):
     n_filters = 0
 
     # get higher number of filters
@@ -159,13 +183,13 @@ def get_filters_multi_scale(lmks_pos, filt_size=(7, 7)):
 
     print("max filters:", n_filters)
 
-    ends_filters = get_ends_filters_multi_scale(lmks_pos[0], n_filters, filt_size=filt_size)
+    ends_filters = get_ends_filters_multi_scale(lmks_pos[0], n_filters, filt_size=filt_size, neg_factor=neg_factor)
 
-    T_filters = get_T_filters_multi_scale(lmks_pos[1], n_filters, filt_size=filt_size)
+    T_filters = get_T_filters_multi_scale(lmks_pos[1], n_filters, filt_size=filt_size, neg_factor=neg_factor)
 
-    corners_filters = get_corners_filters_multi_scale(lmks_pos[2], n_filters, filt_size=filt_size)
+    corners_filters = get_corners_filters_multi_scale(lmks_pos[2], n_filters, filt_size=filt_size, neg_factor=neg_factor)
 
-    cross_filters = get_cross_multi_scale(lmks_pos[3], n_filters, filt_size=filt_size)
+    cross_filters = get_cross_multi_scale(lmks_pos[3], n_filters, filt_size=filt_size, neg_factor=neg_factor)
 
     print("shape ends_filters", np.shape(ends_filters))
     print("shape corners_filters", np.shape(corners_filters))
