@@ -219,7 +219,7 @@ def get_cross_multi_scale(lmks_pos, n_filters, filt_size=(7, 7), thresh_val=0.75
     return filters
 
 
-def get_filters_multi_scale(lmks_pos, filt_size=(7, 7), thresh_val=0.75, neg_factor=6):
+def get_filters_multi_scale(lmks, extend_by_type=True, filt_size=(7, 7), thresh_val=0.75, neg_factor=6):
     n_filters = 0
 
     # get higher number of filters
@@ -230,10 +230,21 @@ def get_filters_multi_scale(lmks_pos, filt_size=(7, 7), thresh_val=0.75, neg_fac
 
     print("max filters:", n_filters)
 
-    ends_filters = get_ends_filters_multi_scale(lmks_pos[0], n_filters,
+    # declare filters
+    n_type_filter = np.amax(lmks[:, 3])
+    print(n_type_filter)
+    # count max filters
+    for lmk in lmks:
+
+        filter = get_filters(lmk, n_filters,
                                                 filt_size=filt_size,
                                                 thresh_val=thresh_val,
                                                 neg_factor=neg_factor)
+
+        if extend_by_type:
+            if lmk[3] in [0, 1, 2, 3]:
+                filters[0].append(filter)
+
 
     T_filters = get_T_filters_multi_scale(lmks_pos[1], n_filters,
                                           filt_size=filt_size,
