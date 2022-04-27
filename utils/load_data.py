@@ -378,6 +378,11 @@ def _load_bfs(config, train, get_raw=False):
         y_scale = [1.0]
     elif config_avatar == 'all_test':
         avatar = ['Monkey', 'Mery']
+    elif config_avatar == 'ref_shapes':
+        avatar = ['Louise', 'Monkey', 'Mery']
+    elif config_avatar == 'ref_shapes':
+        avatar = ['Louise', 'Monkey', 'Mery']
+        x_scale = [0.8, 0.9, 1.1, 1.2]
     else:
         raise ValueError('Avatar {} does not exists in morphing_space dataset!'.format(config_avatar))
 
