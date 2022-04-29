@@ -380,11 +380,11 @@ def _load_bfs(config, train, get_raw=False):
         avatar = ['Monkey', 'Mery']
     elif config_avatar == 'ref_shapes':
         avatar = ['Louise', 'Monkey', 'Mery']
-    elif config_avatar == 'ref_shapes':
+    elif config_avatar == 'identities_shapes':
         avatar = ['Louise', 'Monkey', 'Mery']
         x_scale = [0.8, 0.9, 1.1, 1.2]
     else:
-        raise ValueError('Avatar {} does not exists in morphing_space dataset!'.format(config_avatar))
+        raise ValueError('Avatar {} does not exists in bfs dataset!'.format(config_avatar))
 
     # apply filter
     df = df[df['avatar'].isin(avatar)]
