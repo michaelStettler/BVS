@@ -378,6 +378,8 @@ def _load_bfs(config, train, get_raw=False):
         y_scale = [1.0]
     elif config_avatar == 'all_test':
         avatar = ['Monkey', 'Mery']
+    elif config_avatar == 'louise_merry':
+        avatar = ['Louise', 'Mery']
     elif config_avatar == 'ref_shapes':
         avatar = ['Louise', 'Monkey', 'Mery']
     elif config_avatar == 'identities_shapes':
