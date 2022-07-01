@@ -103,6 +103,7 @@ if train:
         nb_model.n_features = np.shape(pos)[-1]  # todo add this to init
         # train manually ref vector
         nb_model.r = np.zeros(nb_model.n_features)
+        print("shape pos", np.shape(pos), "shape data[1]", np.shape(data[1]))
         nb_model._fit_reference([pos, data[1]], config['batch_size'])
         print("[TRAIN] model.r", np.shape(nb_model.r))
         ref_train = np.copy(nb_model.r)

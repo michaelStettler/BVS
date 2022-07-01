@@ -96,7 +96,7 @@ class PatternFeatureSelection:
 
         return self.transform(data, feature_channel_last=feature_channel_last, from_fit=True)
 
-    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False, use_scales=False):
+    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False, use_scales=False, face_x_scales=None):
         """
         compute activation over the data with the rbf template
 
@@ -108,6 +108,9 @@ class PatternFeatureSelection:
             print("[PATTERN] rescale masks to scaled version")
             x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 1.1,
                         1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2]
+
+        if face_x_scales is not None:
+            x_scales = face_x_scales
 
         if not from_fit:
             # apply mask
