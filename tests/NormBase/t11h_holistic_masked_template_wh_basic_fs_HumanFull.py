@@ -155,7 +155,9 @@ if test:
     test_patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
     # fit templates
+    print("shape test_preds", np.shape(test_preds))
     test_template_preds = np.repeat(np.expand_dims(test_preds, axis=0), len(test_rbf_template), axis=0)
+    print("shape test_template_preds", np.shape(test_template_preds))
     test_template = test_patterns.fit(test_template_preds)  # fits only the ref pattern for scale x = 1.0 as it takes the config arg: 'rbf_template_ref_frame_idx'
     test_template = test_patterns.transform(test_template_preds, use_scales=True)
     test_template[test_template < 0.1] = 0

@@ -1,5 +1,5 @@
 {
-  "config_name": "NR_06_FER_transfer_on_FERG_m0001",
+  "config_name": "NR_07_FER_transfer_on_FERG_m0002",
   "train_data": "bfs_space",
   "x_col": "image_path",
   "y_col": "category",
