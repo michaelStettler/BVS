@@ -1,0 +1,13 @@
+{
+  "config_name": "SEM_t01_find_semantic_units_m0001",
+  "input_shape": [224, 224, 3],
+  "extraction_model": "VGG19",
+  "weights": "imagenet",
+  "include_top": false,
+  "v4_layer": "block3_conv3",
+  "batch_size": 32,
+  "annotation_format": "coco",
+  "coco_annot_json": "FacePart.json",
+  "semantic_img_path": "/Users/michaelstettler/PycharmProjects/BVS/data/Face_semantic",
+  "semantic_units": ["eyebrow", "lips", "eyes", "nose"]
+}

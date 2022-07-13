@@ -17,18 +17,30 @@ from David Bau, Bolei Zhou, Aditya Khosla, Aude Oliva, and Antonio Torralba
 # todo: take only labels that has at least 10 images
 
 
-def find_semantic_units(model, data, config, save=False):
+def find_semantic_units(model, data, config, verbose=2, save=False):
+    """
+    verbose = 1: only progress bar
+    berbose = 2: all print
+
+    :param model:
+    :param data:
+    :param config:
+    :param verbose:
+    :param save:
+    :return:
+    """
     label = data[1]
     data = data[0]
 
     input_size = np.shape(data)[1:]
     n_class = np.shape(label)[-1]
-    print("[IoU] num classes", n_class)
+
+    if verbose > 1:
+        print("[IoU] num classes", n_class)
 
     sem_indexes = {}
     # collect all predictions for each layer (discard input)
     for l_idx, layer in enumerate(tqdm(model.layers[1:])):
-        print("[IoU] layer {} name {}:".format(l_idx, layer.name))
         layer_index = {"layer_name": layer.name, "layer_idx": l_idx}
 
         # stop if the layers flatten tha array since the resize won't work
@@ -42,8 +54,6 @@ def find_semantic_units(model, data, config, save=False):
         # predict face and non_face outputs
         preds = model.predict(data)
         n_unit = np.shape(preds)[-1]
-        print("[IoU] shape preds", np.shape(preds))
-        print("[IoU] num units", n_unit)
 
         # get top quantile level Tk
         tk = _compute_quantile(preds)
@@ -73,14 +83,20 @@ def find_semantic_units(model, data, config, save=False):
         # get number of unit per category
         IoU[IoU < 0.04] = 0
         n_units = np.count_nonzero(IoU, axis=1)
-        print("n_units")
-        print(n_units)
+
+        if verbose > 1:
+            print("[IoU] layer {} name {}:".format(l_idx, layer.name))
+            print("[IoU] shape preds", np.shape(preds))
+            print("[IoU] num units", n_unit)
+            print("n_units")
+            print(n_units)
 
         layer_index["IoU"] = IoU
         sem_indexes[layer.name] = layer_index
 
     # sem_indexes = np.array(sem_indexes)
-    print("[IoU] finished computing IoU")
+    if verbose > 1:
+        print("[IoU] finished computing IoU")
 
     if save:
         save_folder = os.path.join("models/saved", config["config_name"])
