@@ -38,9 +38,15 @@ def find_semantic_units(model, data, config, verbose=2, save=False):
     if verbose > 1:
         print("[IoU] num classes", n_class)
 
+    # silence progress bar if not wanted
+    disable_bar = False
+    if verbose < 1:
+        disable_bar = True
+
+    # run over each layer
     sem_indexes = {}
     # collect all predictions for each layer (discard input)
-    for l_idx, layer in enumerate(tqdm(model.layers[1:])):
+    for l_idx, layer in enumerate(tqdm(model.layers[1:], disable=disable_bar)):
         layer_index = {"layer_name": layer.name, "layer_idx": l_idx}
 
         # stop if the layers flatten tha array since the resize won't work
