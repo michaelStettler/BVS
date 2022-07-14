@@ -159,7 +159,11 @@ if test:
     test_template_preds = np.repeat(np.expand_dims(test_preds, axis=0), len(test_rbf_template), axis=0)
     print("shape test_template_preds", np.shape(test_template_preds))
     test_template = test_patterns.fit(test_template_preds)  # fits only the ref pattern for scale x = 1.0 as it takes the config arg: 'rbf_template_ref_frame_idx'
-    test_template = test_patterns.transform(test_template_preds, use_scales=True)
+    x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 0.81,
+                1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 0.96, 1.2, 1.2, 1.2]
+    x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 0.96,
+                1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.00, 1.2, 1.2, 1.2]
+    test_template = test_patterns.transform(test_template_preds, use_scales=True, face_x_scales=x_scales)
     test_template[test_template < 0.1] = 0
 
     # compute positions
