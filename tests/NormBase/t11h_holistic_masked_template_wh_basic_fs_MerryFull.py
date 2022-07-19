@@ -92,7 +92,6 @@ if train:
     # fit templates
     # template = patterns.fit(mask_template)
     template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
-    print("shape template preds", np.shape(template_preds))
     template = patterns.fit(template_preds)
     template[template < 0.1] = 0
 
@@ -184,6 +183,8 @@ if test:
         total_count = 0
         for i in range(5):
             # test by training new ref
+            print("test_ref_pos[i*7]", np.shape(test_pos[i*7]))
+            print(test_pos[i*7])
             nb_model._fit_reference([test_pos[i*7:i*7+7], test_data[1][i*7:i*7+7]], config['batch_size'])
             ref_test = np.copy(nb_model.r)
             it_ref_test = nb_model._get_it_resp(test_pos[i*7:i*7+7])

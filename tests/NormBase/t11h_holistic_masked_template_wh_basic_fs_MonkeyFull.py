@@ -116,6 +116,7 @@ if train:
         # get it resp
         it_train = nb_model._get_it_resp(pos)
         print("[TRAIN] shape it_train", np.shape(it_train))
+        print(nb_model.t)
 
         print()
         # print true labels versus the predicted label

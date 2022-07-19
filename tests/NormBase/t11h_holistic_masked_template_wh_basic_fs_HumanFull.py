@@ -84,26 +84,22 @@ if train:
                 [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[33, 41], [31, 38]], [[36, 50], [24, 36]],
                 [[19, 29], [17, 24]], [[19, 29], [33, 41]]]
     config['rbf_sigma'] = [1900, 1800, 1800, 2000, 2100, 3300, 2500, 2800, 2800, 2800]
-    rbf_zeros = {'0': {'idx': 4, 'pos': [[40, 47], [15, 22]]},
-                 '1': {'idx': 6, 'pos': [[40, 47], [38, 41]]}}
+    rbf_zeros = {"0": {"idx": 4, "pos": [[40, 47], [15, 22]]}, "1": {"idx": 6, "pos": [[40, 47], [38, 41]]}}
     patterns = PatternFeatureSelection(config, template=rbf_template, mask=rbf_mask, zeros=rbf_zeros)
 
     # fit templates
     # template = patterns.fit(mask_template)
     template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
-    print("shape template preds", np.shape(template_preds))
     template = patterns.fit(template_preds)
     template[template < 0.1] = 0
 
     # compute positions
     pos = calculate_position(template, mode="weighted average", return_mode="xy float flat")
-    print("[TRAIN] shape pos", np.shape(pos))
 
     if compute_NB:
         nb_model.n_features = np.shape(pos)[-1]  # todo add this to init
         # train manually ref vector
         nb_model.r = np.zeros(nb_model.n_features)
-        print("shape pos", np.shape(pos), "shape data[1]", np.shape(data[1]))
         nb_model._fit_reference([pos, data[1]], config['batch_size'])
         print("[TRAIN] model.r", np.shape(nb_model.r))
         ref_train = np.copy(nb_model.r)
@@ -116,7 +112,6 @@ if train:
         it_train = nb_model._get_it_resp(pos)
         print("[TRAIN] shape it_train", np.shape(it_train))
 
-        print()
         # print true labels versus the predicted label
         for i, label in enumerate(data[1]):
             t_label = int(label)
@@ -155,15 +150,15 @@ if test:
     test_patterns = PatternFeatureSelection(config, template=test_rbf_template, mask=test_rbf_mask, zeros=test_rbf_zeros)
 
     # fit templates
-    print("shape test_preds", np.shape(test_preds))
     test_template_preds = np.repeat(np.expand_dims(test_preds, axis=0), len(test_rbf_template), axis=0)
-    print("shape test_template_preds", np.shape(test_template_preds))
     test_template = test_patterns.fit(test_template_preds)  # fits only the ref pattern for scale x = 1.0 as it takes the config arg: 'rbf_template_ref_frame_idx'
-    x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 0.81,
-                1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 0.96, 1.2, 1.2, 1.2]
-    x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 0.96,
-                1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.00, 1.2, 1.2, 1.2]
-    test_template = test_patterns.transform(test_template_preds, use_scales=True, face_x_scales=x_scales)
+    x_scales = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                0.8, 0.8, 0.8, 0.9, 0.8, 0.9, 0.8,
+                0.9, 0.9, 0.9, 0.8, 0.9, 0.9, 0.9,
+                1.1, 1.1, 1.1, 1.0, 1.1, 1.1, 1.1,
+                1.2, 1.2, 1.1, 1.0, 1.2, 1.2, 1.2]
+    # test_template = test_patterns.transform(test_template_preds, use_scales=True)
+    test_template = test_patterns.transform(test_template_preds, face_x_scales=x_scales)
     test_template[test_template < 0.1] = 0
 
     # compute positions

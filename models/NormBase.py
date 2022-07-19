@@ -88,6 +88,8 @@ class NormBase:
         threshold_divided = 50
         self.threshold = self.n_features / threshold_divided
         print("[INIT] Neutral threshold ({:.1f}%):".format(100/threshold_divided), self.threshold)
+        print("[INIT] tunning function:", self.tun_func)
+        print("[INIT] nu:", self.nu)
 
         # v4 prediction of the training data set - used in external script t05_compare_retained_PCA_index.py
         # TODO: eventually delete to save RAM

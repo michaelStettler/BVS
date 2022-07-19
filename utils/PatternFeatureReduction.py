@@ -70,15 +70,18 @@ class PatternFeatureSelection:
         :param data: list (n_pattern)(n_data, n_feature, n_feature, n_dim)
         :return:
         """
-        print("[PATTERN] Fit pattern")
+        if verbose:
+            print("[PATTERN] Fit pattern")
         # apply mask
         if self.use_mask:
-            print("[PATTERN] fit pattern: use mask ON")
+            if verbose:
+                print("[PATTERN] fit pattern: use mask ON")
             data = self._apply_mask(data)
 
         # apply zeros
         if self.use_zeros:
-            print("[PATTERN] fit pattern: use zeros ON")
+            if verbose:
+                print("[PATTERN] fit pattern: use zeros ON")
             data = self._apply_zeros(data)
 
         # compute template
@@ -200,7 +203,6 @@ class PatternFeatureSelection:
 
                     preds[idx, :, pos[0, 0]:pos[0, 1], x_start:x_end] = 0
 
-        print("[PATTERN] apply zeros - shape preds", np.shape(preds))
         return preds
 
     def update_patterns(self, template, sigmas, mask=None, zeros=None):
