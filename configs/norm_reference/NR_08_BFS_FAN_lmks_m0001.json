@@ -12,6 +12,5 @@
   "train_expression": ["Neutral"],
   "val_expression": ["full"],
   "input_shape": [720, 720, 3],
-  "tun_func": "ft_2norm",
   "nu": 1.0
 }
