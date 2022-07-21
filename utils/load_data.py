@@ -357,6 +357,7 @@ def _load_bfs(config, train, get_raw=False):
 
     x_scale = [1.0]
     y_scale = [1.0]
+    expressivity = [1.0]
     # build filter depending on avatar
     if config_avatar == 'Louise':
         avatar = ['Louise']
@@ -385,6 +386,9 @@ def _load_bfs(config, train, get_raw=False):
     elif config_avatar == 'identities_shapes':
         avatar = ['Louise', 'Monkey', 'Mery']
         x_scale = [0.8, 0.9, 1.1, 1.2]
+    elif config_avatar == 'Louise_expressivity':
+        avatar = ['Louise']
+        expressivity = [0.25, 0.5, 0.75, 1.0]
     else:
         raise ValueError('Avatar {} does not exists in bfs dataset!'.format(config_avatar))
 
@@ -392,6 +396,7 @@ def _load_bfs(config, train, get_raw=False):
     df = df[df['avatar'].isin(avatar)]
     df = df[df['x_scale'].isin(x_scale)]
     df = df[df['y_scale'].isin(y_scale)]
+    df = df[df['expressivity'].isin(expressivity)]
 
     # read out the expressions for training
     new_df = pd.DataFrame()

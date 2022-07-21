@@ -1,0 +1,17 @@
+{
+  "config_name": "NR_08_BFS_FAN_lmks_m0001",
+  "train_data": "bfs_space",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 7,
+  "ref_category": 0,
+  "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/BasicFaceShape/BasicFaceShape.csv",
+  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/BasicFaceShape",
+  "train_avatar": "all_identities",
+  "val_avatar": "all_identities",
+  "train_expression": ["Neutral"],
+  "val_expression": ["full"],
+  "input_shape": [720, 720, 3],
+  "tun_func": "ft_2norm",
+  "nu": 1.0
+}
