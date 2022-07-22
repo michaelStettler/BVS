@@ -1,0 +1,14 @@
+{
+  "config_name": "NR_01_FERG_m0001",
+  "train_data": "FERG",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 7,
+  "ref_category": 0,
+  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_train.csv",
+  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_test.csv",
+  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256",
+  "extraction_model": "VGG19",
+  "input_shape": [720, 720, 3],
+  "nu": 1.0
+}

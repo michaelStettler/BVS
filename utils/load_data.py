@@ -44,6 +44,12 @@ def load_data(config, train=True, sort_by=None, get_raw=False):
     elif config['train_data'] == 'bfs_space':  # bfs = basic face shape
         data = _load_bfs(config, train, get_raw=get_raw)
 
+    elif config['train_data'] == 'KDEF':
+        data = _load_KDEF(config, train, get_raw=get_raw)
+
+    elif config['train_data'] == 'FERG':  # bfs = basic face shape
+        data = _load_FERG(config, train, get_raw=get_raw)
+
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
                          .format(config['train_data']))
@@ -441,4 +447,51 @@ def _load_bfs(config, train, get_raw=False):
         print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
 
     return data
+
+
+def _load_KDEF(config, train, get_raw=False):
+    """
+    helper function to load the KDEF dataset
+    """
+    # load csv
+    if train:
+        df = pd.read_csv(config['train_csv'], index_col=0)
+    else:
+        df = pd.read_csv(config['test_csv'], index_col=0)
+
+    # load each image from the csv file
+    data = load_from_csv(df, config)
+
+    if get_raw:
+        data[0] = data[0]
+    elif config["extraction_model"] == "VGG19":
+        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+    else:
+        print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+
+    return data
+
+
+def _load_FERG(config, train, get_raw=False):
+    """
+    helper function to load the FERG dataset
+    """
+    # load csv
+    if train:
+        df = pd.read_csv(config['train_csv'], index_col=0)
+    else:
+        df = pd.read_csv(config['test_csv'], index_col=0)
+
+    # load each image from the csv file
+    data = load_from_csv(df, config)
+
+    if get_raw:
+        data[0] = data[0]
+    elif config["extraction_model"] == "VGG19":
+        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+    else:
+        print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+
+    return data
+
 

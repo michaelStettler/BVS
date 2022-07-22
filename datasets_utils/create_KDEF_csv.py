@@ -10,8 +10,8 @@ csv_train_name = 'KDEF_facial_expr_train.csv'
 csv_test_name = 'KDEF_facial_expr_test.csv'
 
 # declare dataframes
-df_train = pd.DataFrame(columns=["image", "category", "path"])
-df_test = pd.DataFrame(columns=("image", "category", "path"))
+df_train = pd.DataFrame(columns=["image", "category", "image_path"])
+df_test = pd.DataFrame(columns=("image", "category", "image_path"))
 
 
 def get_files(path, folder):
@@ -43,7 +43,7 @@ def get_files(path, folder):
                         elif 'SAS.' in file:  # sad
                             categories_list.append(3)
                         elif 'SUS.' in file:  # surprise
-                            categories_list.append(3)
+                            categories_list.append(4)
                         elif 'AFS.' in file:  # afraid -> fear
                             categories_list.append(5)
                         elif 'DIS.' in file:  # disgust
@@ -90,7 +90,7 @@ print("len training_face_list: {}, len testing_face_list: {}".format(len(trainin
 
 # create training csv
 for file, img_path, category in zip(training_face_list, training_path_list, training_cat_list):
-    new_entry_df = pd.DataFrame([[file, category, img_path]], columns=["image", "category", "path"])
+    new_entry_df = pd.DataFrame([[file, category, img_path]], columns=["image", "category", "image_path"])
     df_train = pd.concat([df_train, new_entry_df], ignore_index=True)
 
 print("train df:")
@@ -99,7 +99,7 @@ print()
 
 # create testing csv
 for file, img_path, category in zip(testing_face_list, testing_path_list, testing_cat_list):
-    new_entry_df = pd.DataFrame([[file, category, img_path]], columns=["image", "category", "path"])
+    new_entry_df = pd.DataFrame([[file, category, img_path]], columns=["image", "category", "image_path"])
     df_test = pd.concat([df_test, new_entry_df], ignore_index=True)
 
 print("test df")
