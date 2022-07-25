@@ -7,8 +7,8 @@ def get_FER_ref_pos(fer_positions, type, scale):
     :param scale:
     :return:
     """
-    scale_factor = 5
-    expression_factor = 7  # (num_expression)
+    scale_factor = 5  # := n_scales
+    expression_factor = 7  # := n_expressions
     factor = type * expression_factor * scale_factor
 
     if scale == 0.8:

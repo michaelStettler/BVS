@@ -378,7 +378,7 @@ def _load_bfs(config, train, get_raw=False):
     elif config_avatar == 'Monkey_all_identities':
         avatar = ['Monkey']
         x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
-    elif config_avatar == 'Merry':
+    elif config_avatar == 'Mery':
         avatar = ['Mery']
     elif config_avatar == 'Merry_all_identities':
         avatar = ['Mery']
@@ -394,6 +394,12 @@ def _load_bfs(config, train, get_raw=False):
         x_scale = [0.8, 0.9, 1.1, 1.2]
     elif config_avatar == 'Louise_expressivity':
         avatar = ['Louise']
+        expressivity = [0.25, 0.5, 0.75, 1.0]
+    elif config_avatar == 'Monkey_expressivity':
+        avatar = ['Monkey']
+        expressivity = [0.25, 0.5, 0.75, 1.0]
+    elif config_avatar == 'Mery_expressivity':
+        avatar = ['Mery']
         expressivity = [0.25, 0.5, 0.75, 1.0]
     else:
         raise ValueError('Avatar {} does not exists in bfs dataset!'.format(config_avatar))
