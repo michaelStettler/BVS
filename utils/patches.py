@@ -148,7 +148,9 @@ def find_primers(image, filters, patch_size=7, threshold=0.5, do_plot=False, ver
 
 def pred_to_patch(pred, patch_size=8):
     # split in patches
-    pred = np.expand_dims(pred, axis=[0, 3])
+    if len(np.shape(pred)) == 2:
+        pred = np.expand_dims(pred, axis=[0, 3])
+
     patches = tf.image.extract_patches(
         images=pred,
         sizes=[1, patch_size, patch_size, 1],
