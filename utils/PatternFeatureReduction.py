@@ -113,12 +113,18 @@ class PatternFeatureSelection:
             # apply mask
             if self.use_mask:
                 print("[PATTERN] Transform: use mask")
-                data = self._apply_mask(data, x_scales)
+                if use_scales:
+                    data = self._apply_mask(data, x_scales)
+                else:
+                    data = self._apply_mask(data)
 
             # apply zeros
             if self.use_zeros:
                 print("[PATTERN] Transform: use zeros")
-                data = self._apply_zeros(data, x_scales)
+                if use_scales:
+                    data = self._apply_zeros(data, x_scales)
+                else:
+                    data = self._apply_zeros(data)
 
         # transform data
         preds = []
