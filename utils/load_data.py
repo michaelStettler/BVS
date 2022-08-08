@@ -44,6 +44,12 @@ def load_data(config, train=True, sort_by=None, get_raw=False):
     elif config['train_data'] == 'bfs_space':  # bfs = basic face shape
         data = _load_bfs(config, train, get_raw=get_raw)
 
+    elif config['train_data'] == 'KDEF':
+        data = _load_KDEF(config, train, get_raw=get_raw)
+
+    elif config['train_data'] == 'FERG':  # bfs = basic face shape
+        data = _load_FERG(config, train, get_raw=get_raw)
+
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
                          .format(config['train_data']))
@@ -357,25 +363,26 @@ def _load_bfs(config, train, get_raw=False):
 
     x_scale = [1.0]
     y_scale = [1.0]
+    expressivity = [1.0]
     # build filter depending on avatar
     if config_avatar == 'Louise':
         avatar = ['Louise']
+    elif config_avatar == 'all_identities':
+        avatar = ['Louise', 'Monkey', 'Mery']
+        x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
     elif config_avatar == 'Louise_all_identities':
         avatar = ['Louise']
         x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
-        y_scale = [1.0]
     elif config_avatar == 'Monkey':
         avatar = ['Monkey']
     elif config_avatar == 'Monkey_all_identities':
         avatar = ['Monkey']
         x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
-        y_scale = [1.0]
-    elif config_avatar == 'Merry':
+    elif config_avatar == 'Mery':
         avatar = ['Mery']
     elif config_avatar == 'Merry_all_identities':
         avatar = ['Mery']
         x_scale = [0.8, 0.9, 1.0, 1.1, 1.2]
-        y_scale = [1.0]
     elif config_avatar == 'all_test':
         avatar = ['Monkey', 'Mery']
     elif config_avatar == 'louise_merry':
@@ -385,6 +392,15 @@ def _load_bfs(config, train, get_raw=False):
     elif config_avatar == 'identities_shapes':
         avatar = ['Louise', 'Monkey', 'Mery']
         x_scale = [0.8, 0.9, 1.1, 1.2]
+    elif config_avatar == 'Louise_expressivity':
+        avatar = ['Louise']
+        expressivity = [0.25, 0.5, 0.75, 1.0]
+    elif config_avatar == 'Monkey_expressivity':
+        avatar = ['Monkey']
+        expressivity = [0.25, 0.5, 0.75, 1.0]
+    elif config_avatar == 'Mery_expressivity':
+        avatar = ['Mery']
+        expressivity = [0.25, 0.5, 0.75, 1.0]
     else:
         raise ValueError('Avatar {} does not exists in bfs dataset!'.format(config_avatar))
 
@@ -392,6 +408,7 @@ def _load_bfs(config, train, get_raw=False):
     df = df[df['avatar'].isin(avatar)]
     df = df[df['x_scale'].isin(x_scale)]
     df = df[df['y_scale'].isin(y_scale)]
+    df = df[df['expressivity'].isin(expressivity)]
 
     # read out the expressions for training
     new_df = pd.DataFrame()
@@ -436,4 +453,51 @@ def _load_bfs(config, train, get_raw=False):
         print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
 
     return data
+
+
+def _load_KDEF(config, train, get_raw=False):
+    """
+    helper function to load the KDEF dataset
+    """
+    # load csv
+    if train:
+        df = pd.read_csv(config['train_csv'], index_col=0)
+    else:
+        df = pd.read_csv(config['test_csv'], index_col=0)
+
+    # load each image from the csv file
+    data = load_from_csv(df, config)
+
+    if get_raw:
+        data[0] = data[0]
+    elif config["extraction_model"] == "VGG19":
+        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+    else:
+        print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+
+    return data
+
+
+def _load_FERG(config, train, get_raw=False):
+    """
+    helper function to load the FERG dataset
+    """
+    # load csv
+    if train:
+        df = pd.read_csv(config['train_csv'], index_col=0)
+    else:
+        df = pd.read_csv(config['test_csv'], index_col=0)
+
+    # load each image from the csv file
+    data = load_from_csv(df, config)
+
+    if get_raw:
+        data[0] = data[0]
+    elif config["extraction_model"] == "VGG19":
+        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+    else:
+        print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
+
+    return data
+
 

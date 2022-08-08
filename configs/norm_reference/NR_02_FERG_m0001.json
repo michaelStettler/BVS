@@ -1,0 +1,22 @@
+{
+  "config_name": "NR_01_FERG_m0001",
+  "train_data": "FERG",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 7,
+  "ref_category": 0,
+  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_train_small.csv",
+  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_test.csv",
+  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256",
+  "input_shape": [224, 224, 3],
+  "extraction_model": "VGG19",
+  "weights": "imagenet",
+  "include_top": false,
+  "v4_layer": "block3_conv3",
+  "batch_size": 32,
+  "best_eyes_IoU_ft": [161, 114, 229, 82,19, 125, 136],
+  "best_nose_IoU_ft": [101, 52, 172, 210, 167, 216, 85, 102, 232, 4, 77, 162, 1,33, 208, 29, 30, 93, 59, 104, 23, 133, 161, 115, 19, 81, 74, 97, 148, 120, 221, 9, 103, 149, 246, 150, 137, 226, 34, 233, 229, 54, 31, 242, 37, 155, 171, 255, 235, 124, 224, 196, 227, 27, 241, 107, 228, 211, 243, 166, 20],
+  "best_eyebrow_IoU_ft": [68, 125],
+  "best_lips_IoU_ft": [235, 203, 68, 125, 3, 181, 197, 2, 87, 240, 6, 95, 60, 157, 227, 111],
+  "nu": 1.0
+}

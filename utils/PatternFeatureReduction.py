@@ -63,22 +63,25 @@ class PatternFeatureSelection:
 
         return sigmas
 
-    def fit(self, data, activation=None, feature_channel_last=True):
+    def fit(self, data, activation=None, feature_channel_last=True, verbose=False):
         """
         data is a list of length (n_pattern)
 
         :param data: list (n_pattern)(n_data, n_feature, n_feature, n_dim)
         :return:
         """
-        print("[PATTERN] Fit pattern")
+        if verbose:
+            print("[PATTERN] Fit pattern")
         # apply mask
         if self.use_mask:
-            print("[PATTERN] fit pattern: use mask ON")
+            if verbose:
+                print("[PATTERN] fit pattern: use mask ON")
             data = self._apply_mask(data)
 
         # apply zeros
         if self.use_zeros:
-            print("[PATTERN] fit pattern: use zeros ON")
+            if verbose:
+                print("[PATTERN] fit pattern: use zeros ON")
             data = self._apply_zeros(data)
 
         # compute template
@@ -94,37 +97,38 @@ class PatternFeatureSelection:
             # fit rbf template
             self.rbf[i].fit2d(template)
 
-        return self.transform(data, feature_channel_last=feature_channel_last, from_fit=True)
+        return self.transform(data, feature_channel_last=feature_channel_last, from_fit=True, verbose=verbose)
 
-    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False, use_scales=False):
+    def transform(self, data, activation=None, feature_channel_last=True, from_fit=False, use_scales=False, face_x_scales=None, verbose=False):
         """
         compute activation over the data with the rbf template
 
         :param data: (n_pattern, n_data, n_feat, n_feat, n_dim)
         :return:
         """
-        print("[PATTERN] Transform Pattern")
+        if verbose:
+            print("[PATTERN] Transform Pattern")
+
         if use_scales:
             print("[PATTERN] rescale masks to scaled version")
             x_scales = [1, 1, 1, 1, 1, 1, 1, .8, .8, .8, .8, .8, .8, .8, .9, .9, .9, .9, .9, .9, .9, 1.1, 1.1, 1.1, 1.1,
                         1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2]
 
+        if face_x_scales is not None:
+            x_scales = face_x_scales
+
         if not from_fit:
             # apply mask
             if self.use_mask:
-                print("[PATTERN] Transform: use mask")
-                if use_scales:
-                    data = self._apply_mask(data, x_scales)
-                else:
-                    data = self._apply_mask(data)
+                if verbose:
+                    print("[PATTERN] Transform: use mask")
+                data = self._apply_mask(data, x_scales, verbose=verbose)
 
             # apply zeros
             if self.use_zeros:
-                print("[PATTERN] Transform: use zeros")
-                if use_scales:
-                    data = self._apply_zeros(data, x_scales)
-                else:
-                    data = self._apply_zeros(data)
+                if verbose:
+                    print("[PATTERN] Transform: use zeros")
+                data = self._apply_zeros(data, x_scales)
 
         # transform data
         preds = []
@@ -147,10 +151,11 @@ class PatternFeatureSelection:
             if len(np.shape(preds)) == 3:
                 preds = np.expand_dims(preds, axis=3)
 
-        print("[PATTERN] prediction transformed!")
+        if verbose:
+            print("[PATTERN] prediction transformed!")
         return preds
 
-    def _apply_mask(self, data, x_scales=None):
+    def _apply_mask(self, data, x_scales=None, verbose=False):
         """
         x_scales allows to define a single mask and then just use the provided scales to apply it on images
 
@@ -173,7 +178,8 @@ class PatternFeatureSelection:
                     preds[i, j, self.mask[i, 0, 0]:self.mask[i, 0, 1], x_start:x_end] = \
                         data[i, j, self.mask[i, 0, 0]:self.mask[i, 0, 1], x_start:x_end]
 
-        print("[PATTERN] apply mask - shape preds", np.shape(preds))
+        if verbose:
+            print("[PATTERN] apply mask - shape preds", np.shape(preds))
         return preds
 
     def _apply_zeros(self, data, x_scales=None):
@@ -197,7 +203,6 @@ class PatternFeatureSelection:
 
                     preds[idx, :, pos[0, 0]:pos[0, 1], x_start:x_end] = 0
 
-        print("[PATTERN] apply zeros - shape preds", np.shape(preds))
         return preds
 
     def update_patterns(self, template, sigmas, mask=None, zeros=None):

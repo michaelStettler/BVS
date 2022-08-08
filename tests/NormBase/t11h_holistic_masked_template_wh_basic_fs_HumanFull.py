@@ -84,20 +84,17 @@ if train:
                 [[35, 42], [20, 27]], [[32, 41], [25, 35]], [[33, 41], [31, 38]], [[36, 50], [24, 36]],
                 [[19, 29], [17, 24]], [[19, 29], [33, 41]]]
     config['rbf_sigma'] = [1900, 1800, 1800, 2000, 2100, 3300, 2500, 2800, 2800, 2800]
-    rbf_zeros = {'0': {'idx': 4, 'pos': [[40, 47], [15, 22]]},
-                 '1': {'idx': 6, 'pos': [[40, 47], [38, 41]]}}
+    rbf_zeros = {"0": {"idx": 4, "pos": [[40, 47], [15, 22]]}, "1": {"idx": 6, "pos": [[40, 47], [38, 41]]}}
     patterns = PatternFeatureSelection(config, template=rbf_template, mask=rbf_mask, zeros=rbf_zeros)
 
     # fit templates
     # template = patterns.fit(mask_template)
     template_preds = np.repeat(np.expand_dims(preds, axis=0), len(rbf_template), axis=0)
-    print("shape template preds", np.shape(template_preds))
     template = patterns.fit(template_preds)
     template[template < 0.1] = 0
 
     # compute positions
     pos = calculate_position(template, mode="weighted average", return_mode="xy float flat")
-    print("[TRAIN] shape pos", np.shape(pos))
 
     if compute_NB:
         nb_model.n_features = np.shape(pos)[-1]  # todo add this to init
@@ -115,7 +112,6 @@ if train:
         it_train = nb_model._get_it_resp(pos)
         print("[TRAIN] shape it_train", np.shape(it_train))
 
-        print()
         # print true labels versus the predicted label
         for i, label in enumerate(data[1]):
             t_label = int(label)
@@ -156,7 +152,13 @@ if test:
     # fit templates
     test_template_preds = np.repeat(np.expand_dims(test_preds, axis=0), len(test_rbf_template), axis=0)
     test_template = test_patterns.fit(test_template_preds)  # fits only the ref pattern for scale x = 1.0 as it takes the config arg: 'rbf_template_ref_frame_idx'
-    test_template = test_patterns.transform(test_template_preds, use_scales=True)
+    x_scales = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                0.8, 0.8, 0.8, 0.9, 0.8, 0.9, 0.8,
+                0.9, 0.9, 0.9, 0.8, 0.9, 0.9, 0.9,
+                1.1, 1.1, 1.1, 1.0, 1.1, 1.1, 1.1,
+                1.2, 1.2, 1.1, 1.0, 1.2, 1.2, 1.2]
+    # test_template = test_patterns.transform(test_template_preds, use_scales=True)
+    test_template = test_patterns.transform(test_template_preds, face_x_scales=x_scales)
     test_template[test_template < 0.1] = 0
 
     # compute positions

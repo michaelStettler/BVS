@@ -145,3 +145,120 @@ def find_primers(image, filters, patch_size=7, threshold=0.5, do_plot=False, ver
 
     return primers
 
+
+def pred_to_patch(pred, patch_size=8):
+    # split in patches
+    if len(np.shape(pred)) == 2:
+        pred = np.expand_dims(pred, axis=[0, 3])
+
+    patches = tf.image.extract_patches(
+        images=pred,
+        sizes=[1, patch_size, patch_size, 1],
+        strides=[1, patch_size, patch_size, 1],
+        rates=[1, 1, 1, 1],
+        padding="VALID",
+    )
+    patches = patches.numpy()
+    return patches
+
+
+def get_patches_centers(patches, patch_size=8, verbose=False):
+    # compute center of activity for each patch
+    centers = []
+    max_patch = []
+    for i in range(np.shape(patches)[1]):
+        for j in range(np.shape(patches)[2]):
+            # control if patches is not all zeros
+            f_patch = patches[0, i, j]
+            if np.sum(f_patch) > 0:
+                CoA = compute_center_of_activity(np.reshape(f_patch, [patch_size, patch_size]), verbose=verbose)
+                # compensate with patch positions
+                centers.append([CoA[0] + j*patch_size, CoA[1] + i*patch_size])
+
+                # keep maximum activity of the patch
+                max_patch.append(np.amax(f_patch))
+
+    return centers, max_patch
+
+
+def get_activity_from_patterns(preds, patterns, rbf_templates, threshold_val=0.25, verbose=False, do_plot=False):
+    templates = []
+    for p, pattern in enumerate(patterns):
+        _preds = np.expand_dims(preds, axis=0)
+        _preds = np.repeat(np.expand_dims(_preds, axis=0), len(rbf_templates[p]), axis=0)
+        template = pattern.transform(_preds)
+        template[template < threshold_val] = 0
+        templates.append(template)
+
+        if verbose:
+            print("max template pattern {}: {}".format(p, np.max(template, axis=(0, 1, 2))))
+
+        if do_plot:
+            plt.figure()
+            plt.subplot(1, 3, 1)
+            plt.imshow(template[0, ..., 0], cmap='Greys')
+            plt.subplot(1, 3, 2)
+            plt.imshow(template[0, ..., 1], cmap='Greys')
+            plt.subplot(1, 3, 3)
+            plt.imshow(template[0, ..., 2], cmap='Greys')
+
+    # concatenate all templates
+    _templates = np.array(templates[0])
+    for i in range(1, len(patterns)):
+        _templates = np.concatenate((_templates, templates[i]), axis=3)
+
+    # get pos for each type
+    pos_dict = {}
+    n_entry = 0
+    for i in range(np.shape(_templates)[-1]):
+        patches = pred_to_patch(_templates[0, ..., i])
+        positions, max_values = get_patches_centers(patches)
+
+        for pos, max_val in zip(positions, max_values):
+            pos_dict[n_entry] = {'type': i, 'pos': pos, 'max': max_val}
+            n_entry += 1
+
+    return pos_dict
+
+
+def max_pool_patches_activity(activity_dict, dist_threshold=5, sorting='max', verbose=False):
+    filt_dictionary = {}
+    discarded_primer_idx = []
+
+    for p_t in range(len(activity_dict)):
+        for p_a in range(p_t + 1, len(activity_dict)):  # only upward diagonal
+            # get primers
+            p_target = activity_dict[p_t]
+            p_agent = activity_dict[p_a]
+
+            # retrieve positions
+            pos_target = np.array(p_target["pos"])
+            pos_agent = np.array(p_agent["pos"])
+            distance = np.linalg.norm(pos_target - pos_agent)
+
+            if verbose:
+                print("distance", distance)
+
+            # sort if distance is smaller than the threshold
+            if distance < dist_threshold:
+                # todo add possibility to sort by clustering the mean
+                if sorting == 'max':
+                    if p_target["max"] > p_agent["max"]:
+                        discarded_primer_idx.append(p_a)
+                    else:
+                        discarded_primer_idx.append(p_t)
+
+    if verbose:
+        print("discarded primers")
+        print(discarded_primer_idx)
+
+    # append all non discarded primers
+    n_primer = 0
+    for p in activity_dict:
+        if p not in discarded_primer_idx:
+            primer = activity_dict[p]
+            filt_dictionary[n_primer] = {"type": primer["type"], "pos": primer["pos"], "max": primer["max"]}
+            n_primer += 1
+
+    return filt_dictionary
+

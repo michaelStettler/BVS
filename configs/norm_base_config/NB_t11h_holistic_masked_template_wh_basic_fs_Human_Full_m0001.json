@@ -23,7 +23,7 @@
   "semantic_units": ["eyebrow", "lips"],
   "tun_func": "ft_2norm",
   "nu": 1.0,
-  "rbf_sigma": [2100],
+  "rbf_sigma": [],
   "rbf_firing_threshold": 0.15,
   "rbf_template_ref_frame_idx": 0,
   "seq_length": 150,

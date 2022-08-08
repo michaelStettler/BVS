@@ -1,0 +1,13 @@
+{
+  "config_name": "NR_01_KDEF_FAN_lmks_m0001",
+  "train_data": "KDEF",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 7,
+  "ref_category": 0,
+  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/KDEF_and_AKDEF/KDEF_facial_expr_train.csv",
+  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/KDEF_and_AKDEF/KDEF_facial_expr_test.csv",
+  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/KDEF_and_AKDEF",
+  "input_shape": [720, 720, 3],
+  "nu": 1.0
+}

@@ -7,7 +7,7 @@ np.random.seed(0)
 
 db_path = "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256"
 csv_name = 'FERG_DB'
-categories_name = ['anger', 'disgust', 'fear', 'joy', 'neutral', 'sadness', 'surprise']
+categories_name = ['neutral', 'joy', 'anger', 'sadness', 'surprise', 'fear', 'disgust']
 
 avatars_path = os.listdir(db_path)
 print("avatars:")
@@ -24,7 +24,12 @@ def get_files(path, folder):
             if isinstance(file, str):
                 if file.endswith((".jpg", ".jpeg", ".png", ".JPEG")):
                     face_files.append(file)
-                    path_files.append(folder.replace("\\", "/"))
+
+                    img_path = root.replace("\\", "/")
+                    img_path = img_path.split("/")[-2:]
+                    img_path = '/'.join(img_path)
+                    path_files.append(os.path.join(img_path, file))
+
     return np.array(face_files), np.array(path_files)
 
 
@@ -46,7 +51,7 @@ n_images = 0
 # sort all images for each avatars
 for avatar in avatars_path:
     if 'README' not in avatar and '.DS' not in avatar:
-        for cat in categories_name:
+        for c, cat in enumerate(categories_name):
             # get all images from sub folders
             files, file_path = get_files(db_path, os.path.join(avatar, avatar + '_' + cat))
 
@@ -55,7 +60,7 @@ for avatar in avatars_path:
             paths = np.concatenate((paths, file_path))
 
             # build category vector
-            cat_v = [cat for x in range(len(files))]
+            cat_v = [c for x in range(len(files))]
             category = np.concatenate((category, cat_v))
 
             # store idx
@@ -78,7 +83,7 @@ for avatar in avatars_path:
                 print("Issue with category:", cat)
             n_images += len(files)
 
-
+category = np.array(category).astype(int)
 print("shape images", np.shape(images))
 print(images[:5])
 print("shape paths", np.shape(paths))
@@ -110,9 +115,9 @@ print("shape val_array", np.shape(val_array))
 print("shape train_array", np.shape(train_array))
 
 # build dataframe
-test_df = pd.DataFrame(data=test_array, columns=['images', "category", "path"])
-val_df = pd.DataFrame(data=val_array, columns=['images', "category", "path"])
-train_df = pd.DataFrame(data=train_array, columns=['images', "category", "path"])
+test_df = pd.DataFrame(data=test_array, columns=['images', "category", "image_path"])
+val_df = pd.DataFrame(data=val_array, columns=['images', "category", "image_path"])
+train_df = pd.DataFrame(data=train_array, columns=['images', "category", "image_path"])
 
 # save dataframe as csv
 test_df.to_csv(os.path.join(db_path, csv_name + "_test.csv"))
