@@ -446,7 +446,7 @@ def _load_bfs(config, train, get_raw=False):
     data = load_from_csv(new_df, config)
 
     if get_raw:
-        data[0] = data[0]
+        data[0] = np.array(data[0]).astype(int)
     elif config["extraction_model"] == "VGG19":
         data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
     else:

@@ -64,6 +64,13 @@ See reports: "FaceParts_Semantic_Units".
 Where I implemented the score for segmentation concept as a data-set-wide intersection over union (IoU) for 12 facial concepts, 
 where I have manually segmented (on going work) the facial parts on the FEI dataset (frontal pose). 
 
+An implementation of the paper: 
+<h3>Facial expression recognition based on fusion feature of PCA and LBP with SVM</h3>
+
+> Luo, Yuan and Wu, Cai-ming and Zhang, Yi (2013)
+
+See jupyter notebook in tests.SVM.t03_SVM_LBP_BVS.ipynb
+
 <h2>Acknowledgments</h2>
 I would like to thanks Prof. Zhaoping Li for her very valuable inputs on her 
 model and the very interesting discussion about what it means to have a V1 

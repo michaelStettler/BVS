@@ -1,0 +1,14 @@
+{
+  "config_name": "SVM_t03_SVM_LBP_BVS_m0001",
+  "train_data": "bfs_space",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 7,
+  "csv": "/Users/michaelstettler/PycharmProjects/BVS/data/BasicFaceShape/BasicFaceShape.csv",
+  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/BasicFaceShape",
+  "train_avatar": "ref_shapes",
+  "val_avatar": "all_identities",
+  "train_expression": ["Neutral"],
+  "val_expression": ["full"],
+  "input_shape": [224, 224, 3]
+}
