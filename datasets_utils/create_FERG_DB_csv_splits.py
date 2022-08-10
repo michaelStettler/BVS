@@ -5,6 +5,10 @@ import pandas as pd
 # set random seed
 np.random.seed(0)
 
+"""
+run: python -m datasets_utils.create_FERG_DB_csv_splits
+"""
+
 db_path = "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256"
 csv_name = 'FERG_DB'
 categories_name = ['neutral', 'joy', 'anger', 'sadness', 'surprise', 'fear', 'disgust']

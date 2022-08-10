@@ -36,6 +36,7 @@ def display_image(image, lmks=None, ref_lmks=None, lmk_size=5, pre_processing=No
 
         if title is not None:
             plt.title(title)
+        plt.show()
     else:
         if is_black_n_white:
             figure.imshow(img, cmap='Greys', vmin=0., vmax=255.)
@@ -90,3 +91,5 @@ def display_images(images, lmks=None, ref_lmks=None, n_max_col=7, size_img=4, lm
                               is_black_n_white=is_black_n_white,
                               figure=axs[i, j],
                               title=title)
+
+    plt.show()
