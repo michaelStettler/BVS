@@ -96,10 +96,10 @@ Labeled images
 save_name = "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/lmk_pos.npy"
 lmk_pos = np.load(save_name, allow_pickle=True).item()
 
-from_idx = 246
-img_idx = 290
+from_idx = 69
+img_idx = 174
 print("lmk_pos[{}]: {}".format(from_idx, lmk_pos[from_idx]))  # print existing pos of same avatar/expression
-lmk_pos[img_idx] = [[[91, 117], [137, 117], [114, 142], [74, 101], [102, 87], [125, 87], [154, 101], [94, 182], [114, 164], [134, 182], [114, 181], [83, 122], [145, 122]]]
+lmk_pos[img_idx] = [[[91, 117], [137, 117], [114, 142], [75, 92], [100, 96], [128, 90], [154, 82], [92, 172], [114, 154], [135, 174], [114, 186], [83, 117], [145, 117]]]
 
 print("len lmk_pos", len(lmk_pos))
 print("idx:", img_idx)
