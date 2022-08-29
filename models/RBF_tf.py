@@ -4,7 +4,7 @@ import numpy as np
 
 class RBF(tf.keras.layers.Layer):
     """
-    own implementation of a Radial Basis Function (RBF)
+    own implementation of a Radial Basis Function (RBF_pattern)
 
     use vectorization. Therefore if data is of size (m, n) dataA and dataB is the m times repetitions of the matrix
     into a new dimension to compute each m*m combination (in order to avoid a double for loop over m)
@@ -60,7 +60,7 @@ class RBF(tf.keras.layers.Layer):
 
     def call(self, input):
         """
-        compute RBF with x - x'
+        compute RBF_pattern with x - x'
 
         :param input:
         :return:
@@ -70,7 +70,7 @@ class RBF(tf.keras.layers.Layer):
         x = tf.reshape(tf.tile(input, [tf.shape(input)[0], 1]), [-1, tf.shape(input)[0], tf.shape(input)[1]])
         # repetition of second dim into new dimension
         x_prime = tf.reshape(tf.tile(input, [1, tf.shape(input)[0]]), [-1, tf.shape(input)[0], tf.shape(input)[1]])
-        # compute the RBF as gaussian
+        # compute the RBF_pattern as gaussian
         rbf = tf.exp(-tf.norm(x - x_prime, axis=2) ** 2 / 2 / self.sigma ** 2)
 
         return rbf

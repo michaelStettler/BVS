@@ -5,15 +5,15 @@ from utils.PatternFeatureReduction import PatternFeatureSelection
 np.set_printoptions(precision=3)
 
 """
-small script to test the Pattern feature selection pipeline using RBF templates
+small script to test the Pattern feature selection pipeline using RBF_pattern templates
 
-run: python -m tests.RBF.t02_pattern_ft_selection
+run: python -m tests.RBF_pattern.t02_pattern_ft_selection
 """
 
 # define configuration
 config_path = 'RBF_t02_pattern_ft_selection_m0001.json'
 # load config
-config = load_config(config_path, path='configs/RBF')
+config = load_config(config_path, path='configs/RBF_pattern')
 
 data = np.zeros((7, 7))
 data[1, 1] = .2
@@ -27,7 +27,7 @@ data[3, 2] = .5
 data[3, 3] = .2
 print("data")
 print(data)
-# expand data for RBF
+# expand data for RBF_pattern
 data = np.expand_dims(data, axis=0)
 data = np.expand_dims(data, axis=3)
 print("shape data", np.shape(data))

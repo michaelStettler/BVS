@@ -5,7 +5,7 @@ import numpy as np
 from models.RBF import RBF
 
 """
-template: position where the RBF kernel is learn
+template: position where the RBF_pattern kernel is learn
 mask: position (size) of the receptive field
 zeros: fine tuning to allow deleting some corners as to create more specific receptive fields (rotation etc) 
 """
@@ -55,7 +55,7 @@ class PatternFeatureSelection:
             self.rbf.append(RBF(config, sigma=sigmas[i]))
 
     def _set_sigmas(self, sigmas):
-        # if only one sigma is provided just repeat it and set the same sigma for all RBF
+        # if only one sigma is provided just repeat it and set the same sigma for all RBF_pattern
         if np.isscalar(sigmas):
             sigmas = np.repeat(sigmas, self.n_template)
         elif len(sigmas) == 1:
@@ -228,7 +228,7 @@ class PatternFeatureSelection:
         # set sigmas
         sigmas = self._set_sigmas(sigmas)
 
-        # create new RBF
+        # create new RBF_pattern
         for i in range(self.n_template):
             self.rbf.append(RBF(self.config, sigma=sigmas[i]))
 
@@ -236,8 +236,8 @@ class PatternFeatureSelection:
         # save only the rbf patterns
         pickle.dump(self.rbf,
                     open(os.path.join(path, "pattern_rbf.pkl"), 'wb'))
-        print("[PATTERN] RBF templates saved")
+        print("[PATTERN] RBF_pattern templates saved")
 
     def load(self, path):
         self.rbf = pickle.load(open(os.path.join(path, "pattern_rbf.pkl"), 'rb'))
-        print("[PATTERN] RBF templates loaded")
+        print("[PATTERN] RBF_pattern templates loaded")

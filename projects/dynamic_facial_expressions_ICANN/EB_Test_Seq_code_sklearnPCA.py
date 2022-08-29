@@ -308,7 +308,7 @@ def compute_expression_neurons(F_IT, config, do_plot=1):
         UNFc = np.zeros((seq_length * n_train_seq, seq_length * n_test_seq))
         for m in range(n_test_seq):
             for n in range(n_train_seq):
-                # CAREFUL UFA AXES ARE SWAP WITH RBF!!!!!!!!!!!!!!!!!!!!
+                # CAREFUL UFA AXES ARE SWAP WITH RBF_pattern!!!!!!!!!!!!!!!!!!!!
                 m_start = m * seq_length
                 n_start = n * seq_length
                 UNFc[n_start:n_start + seq_length, m_start:m_start + seq_length] = np.squeeze(UFA[:, n, :, m])
@@ -368,13 +368,13 @@ def compute_snapshot_neurons(config, do_plot=1, save=1, do_reverse=0):
         print("[SNAP] Reverse sequence")
         ZDMAT = reverse_sequence(ZDMAT, n_test_seq, seq_length)
 
-    ## RBF ENCODING
-    # compute response of input to RBF
+    ## RBF_pattern ENCODING
+    # compute response of input to RBF_pattern
     F_IT_rbfc = compute_rbf_encoding(ZDMAT, RBFct, rbf_sig=rbf_sig)
 
     #      response statistics
     sig_fire = np.mean(F_IT_rbfc > firing_thr_rbf)
-    print('[SNAP] RBF neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
+    print('[SNAP] RBF_pattern neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
 
     #Next section added for plotting
     if do_plot > 0:
@@ -387,7 +387,7 @@ def compute_snapshot_neurons(config, do_plot=1, save=1, do_reverse=0):
         for n in range(1, n_train_seq):
             # draw hori line
             plt.plot([0, n_frames - 1], [n*seq_length, n*seq_length], color='r')
-        plt.title('IT neuron (RBF) responses')
+        plt.title('IT neuron (RBF_pattern) responses')
         plt.xlabel('# of stimulus')
         plt.ylabel('Neuron #')
         plt.savefig('RBF_testresponse.png')
