@@ -2,6 +2,14 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
+from utils.RBF_patch_pattern.RBF_activity_maps import compute_RBF_pattern_activity_maps
+
+
+def batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
+
 
 def compute_center_of_activity(ft_map, verbose=False):
     # initialize indices (x, y) for each entry
@@ -146,6 +154,23 @@ def find_primers(image, filters, patch_size=7, threshold=0.5, do_plot=False, ver
     return primers
 
 
+def transform_RBF_LMK_pos_to_dict(lmk_pos, max_values, lmk_type=None):
+    pos_list = []
+    for i, img_poses in enumerate(lmk_pos):  # image dimensions
+        pos_dict = {}
+        n_entry = 0
+        for l, lmks in enumerate(img_poses):
+            for p, pos in enumerate(lmks):
+                if lmk_type is None:
+                    pos_dict[n_entry] = {'type': l, 'pos': pos, 'max': max_values[i][l][p]}
+                else:
+                    pos_dict[n_entry] = {'type': lmk_type, 'pos': pos, 'max': max_values[i][l][p]}
+                n_entry += 1
+        pos_list.append(pos_dict)
+
+    return pos_list
+
+
 def pred_to_patch(pred, patch_size=8):
     # split in patches
     if len(np.shape(pred)) == 2:
@@ -261,4 +286,61 @@ def max_pool_patches_activity(activity_dict, dist_threshold=5, sorting='max', ve
             n_primer += 1
 
     return filt_dictionary
+
+
+def get_lmk_from_RBF_activity(preds, patch_size=8, verbose=False):
+    # compute fr lmk activity
+    lmks = []
+    max_values = []
+    for pred in preds:
+        lmk_pos = []
+        max_val = []
+        for act_map in pred:  # loop for each landmarks
+            patches = pred_to_patch(act_map, patch_size=patch_size)
+            lmk, max_value = get_patches_centers(patches, patch_size=patch_size)
+            lmk_pos.append(lmk)
+            max_val.append(max_value)
+        lmks.append(lmk_pos)
+        max_values.append(max_val)
+
+        if verbose:
+            for j in range(len(lmks)):
+                print("[LMK] {}) {}".format(j, lmks[j]))
+            print()
+
+    return lmks, max_values
+
+
+def predict_RBF_patch_pattern_lmk_pos(preds, patterns, sigma, lmk_idx, batch_size=16, act_threshold=0.1, dist_threshold=1.5, patch_size=14):
+    """
+    predict lmk positions
+    """
+    # compute RBF pattern activity maps
+    activity_maps = np.array([])  # (n_images, n_patterns, n_lmks, ft_size, ft_size)
+    for x in batch(range(np.shape(preds)[0]), batch_size):
+        act_maps = compute_RBF_pattern_activity_maps(preds[x], patterns, sigmas=sigma, lmk_idx=[lmk_idx], disable_tqdm=True)
+        if len(np.shape(activity_maps)) == 1:
+            activity_maps = act_maps
+        else:
+            activity_maps = np.concatenate((activity_maps, act_maps), axis=0)
+
+    # max pool along patterns
+    max_pool_activities = np.amax(activity_maps, axis=1)
+
+    # threshold small activities
+    max_pool_activities[max_pool_activities < act_threshold] = 0.0
+
+    # apply patch trick
+    lmks_poses, max_values = get_lmk_from_RBF_activity(max_pool_activities, patch_size=patch_size)
+
+    lmks_poses_dict = transform_RBF_LMK_pos_to_dict(lmks_poses, max_values, lmk_type=lmk_idx)
+
+    # apply distance threshold between center of activities
+    max_pool_activities_dict = []
+    for lmk_pos in lmks_poses_dict:
+        max_spacial_activities = max_pool_patches_activity(lmk_pos, dist_threshold=dist_threshold, verbose=False)
+        max_pool_activities_dict.append(max_spacial_activities)
+
+    return max_pool_activities_dict
+
 

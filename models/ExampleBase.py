@@ -17,7 +17,7 @@ class ExampleBase:
     The example base model is a physiologically inspired model that comes from recognition of body social interaction in
     the FIND REFERENCE (Caggiano 2016)
 
-    It uses the so called snapshot neurons (RBF_pattern) followed by a neural field (AMARY) to model the dynamic
+    It uses the so called snapshot neurons (RBF_patch_pattern) followed by a neural field (AMARY) to model the dynamic
 
     """
 

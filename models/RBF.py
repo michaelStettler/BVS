@@ -33,9 +33,9 @@ class RBF:
 
         # initialize centers (fit)
         self.centers = data
-        print("[RBF_pattern FIT] shape centers", np.shape(self.centers))
+        print("[RBF_patch_pattern FIT] shape centers", np.shape(self.centers))
 
-        # predict RBF_pattern kernel
+        # predict RBF_patch_pattern kernel
         return self._compute_rbf_kernel(data)
 
     def fit2d(self, data):
@@ -60,8 +60,8 @@ class RBF:
         """
         seq_length = self.config['seq_length']
         n_sequence = np.shape(preds)[1] // seq_length
-        print("[RBF_pattern RESHAPE] shape preds", np.shape(preds))
-        print("[RBF_pattern RESHAPE] n_sequence", n_sequence)
+        print("[RBF_patch_pattern RESHAPE] shape preds", np.shape(preds))
+        print("[RBF_patch_pattern RESHAPE] n_sequence", n_sequence)
 
         # reorder
         kernel = np.zeros((seq_length, self.n_category, seq_length, n_sequence))
@@ -78,14 +78,14 @@ class RBF:
     def get_response_statistics(self, data):
         sig_fire = data > self.firing_threshold
         sig_fire = np.mean(sig_fire)
-        print('[RBF_pattern FIT] RBF_pattern neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
+        print('[RBF_patch_pattern FIT] RBF_patch_pattern neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
 
     def predict(self, data):
-        # compute RBF_pattern kernel according to the centers
+        # compute RBF_patch_pattern kernel according to the centers
         return self._compute_rbf_kernel(data)
 
     def predict2d(self, data):
-        # compute RBF_pattern kernel according to the centers
+        # compute RBF_patch_pattern kernel according to the centers
         return self._compute_2d_rbf_kernel(data)
 
     def _compute_rbf_kernel(self, data):
@@ -100,7 +100,7 @@ class RBF:
         """
 
         # self.cov_kernel = np.zeros((size_centers[1], size_centers[1]))
-        # print("[RBF_pattern FIT] shape cov_kernel", np.shape(self.cov_kernel))
+        # print("[RBF_patch_pattern FIT] shape cov_kernel", np.shape(self.cov_kernel))
         # for n in range(0, size_centers[1]):
         #     for m in range(0, size_centers[1]):
         #         x_tmp = data[:, n] - self.centers[:, m]
@@ -122,11 +122,11 @@ class RBF:
         shape_x = np.shape(data)[1]
         shape_y = np.shape(data)[2]
         n_channels = np.shape(data)[3]
-        # print("[RBF_pattern] shape x/y", shape_x, shape_y)
+        # print("[RBF_patch_pattern] shape x/y", shape_x, shape_y)
 
         # get shapes of centers (kernel)
         ker_size = (np.shape(self.centers)[1], np.shape(self.centers)[2])
-        # print("[RBF_pattern] ker_size", ker_size)
+        # print("[RBF_patch_pattern] ker_size", ker_size)
         padd_x = ker_size[0] // 2
         padd_y = ker_size[1] // 2
 
@@ -181,7 +181,7 @@ class RBF:
         for n in range(1, n_cat):
             # draw hori line
             plt.plot([0, n_frames - 1], [n*seq_length, n*seq_length], color='r')
-        plt.title('IT neuron (RBF_pattern) responses')
+        plt.title('IT neuron (RBF_patch_pattern) responses')
         plt.xlabel('# of stimulus')
         plt.ylabel('Neuron #')
 

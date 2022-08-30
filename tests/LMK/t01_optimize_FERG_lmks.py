@@ -1,19 +1,14 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import tqdm
 import tensorflow as tf
 
 from utils.load_config import load_config
 from utils.load_data import load_data
 from utils.extraction_model import load_extraction_model
-from utils.patches import pred_to_patch
-from utils.patches import get_patches_centers
-from utils.patches import max_pool_patches_activity
-from plots_utils.plot_BVS import display_image
-from plots_utils.plot_BVS import display_images
-from utils.RBF_pattern.construct_patterns import construct_pattern
-from utils.RBF_pattern.construct_patterns import compute_RBF_pattern_activity_maps
+from utils.RBF_patch_pattern.construct_patterns import construct_pattern
+from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_pos
+from utils.RBF_patch_pattern.optimize_sigma import optimize_sigma_by_landmarks_count
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
@@ -23,27 +18,23 @@ run: python -m tests.LMK.t01_optimize_FERG_lmks
 """
 
 
-def get_latent_image(v4_model, image, lmk_type, config):
-    print("get_latent_image, shape image", np.shape(image))
+def get_latent_pred(v4_model, image, lmk_type, config):
+    # et latent prediction
     v4_pred = v4_model.predict(np.expand_dims(image, axis=0), verbose=0)
-    print("shape v4_pred", np.shape(v4_pred))
 
+    # filter feature maps with semantic concepts
     if lmk_type == 'FR':
         # FR predictions
-        print("FR predictions")
         eyes_preds = v4_pred[..., config['best_eyes_IoU_ft']]
         nose_preds = v4_pred[..., config['best_nose_IoU_ft']]
         preds = np.concatenate((eyes_preds, nose_preds), axis=3)
     elif lmk_type == 'FER':
         # FER predictions
-        print("FER predictions")
         eyebrow_preds = v4_pred[..., config['best_eyebrow_IoU_ft']]
         lips_preds = v4_pred[..., config['best_lips_IoU_ft']]
         preds = np.concatenate((eyebrow_preds, lips_preds), axis=3)
     else:
         print("lmk_type {} is not implemented".format(lmk_type))
-
-    print("shape v4_pred after filtering", np.shape(preds))
 
     return preds
 
@@ -114,62 +105,83 @@ def get_lmk_on_image(image, im_ratio=1, pre_processing=None):
     return inter_img.press
 
 
-def optimize_sigma(images, patterns, threshold):
-    print("optimize_delta")
+def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_processing='VGG19'):
+    # label image
+    lmk_pos = get_lmk_on_image(img, im_ratio=im_ratio, pre_processing=pre_processing)
 
-    # compute latent predictions
+    if lmk_pos is not None:
+        # construct patterns
+        pattern = construct_pattern(pred, lmk_pos, k_size, ratio=224 / 56)
+        pattern = np.expand_dims(pattern, axis=0)  # add a dimension to mimic 1 landmark dimension
+    else:
+        raise ValueError("no landmark position!")
+
+    return lmk_pos, pattern
+
+
+def optimize_sigma(images, patterns, label_img_idx, init_sigma):
+    # get all latent image (feature extractions) from the labeled images
     preds = []
-    for image in images:
-        lat_image = np.squeeze(get_latent_image(v4_model, image, lmk_type, config))
-        preds.append(lat_image)
+    for labeled_idx in label_img_idx:
+        im_pred = get_latent_pred(v4_model, images[labeled_idx], lmk_type, config)
+        preds.append(np.squeeze(im_pred))
     preds = np.array(preds)
 
-    # compute activity maps
-    print("shape preds", np.shape(preds))
-    print("shape patterns", np.shape(patterns))
-    activity_maps = compute_RBF_pattern_activity_maps(preds, patterns)
-    print("shape activity_maps", np.shape(activity_maps))
+    # optimize sigma over all labeled images for each pattern
+    lmks_dict, opt_sigmas = optimize_sigma_by_landmarks_count(preds, patterns,
+                                                              init_sigmas=[init_sigma],
+                                                              act_threshold=0.1)
 
-    # threshold activity
-
-    # get center of activity
-
-    # count number of lmk found
-    return 0
+    # save sigma
+    return opt_sigmas[0]
 
 
-def optimize(images, v4_model, lmk_type, config, im_ratio=1, filt_size=(3, 3)):
+def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, im_ratio=1, k_size=(7, 7)):
     patterns = []
+    sigma = init_sigma
     label_img_idx = []
+    lmk_idx = 0
 
     for i, img in enumerate(images):
-        print(i, "shape img", np.shape(img))
+        print("image: ", i, end='')
         # transform image to latent space
-        lat_image = get_latent_image(v4_model, img, lmk_type, config)
+        lat_pred = get_latent_pred(v4_model, img, lmk_type, config)
 
-        # find landmarks
-        # if no lmk_pos that means its the first image and so we need a first label
+        # label first image if no patterns
         if len(patterns) == 0:
+            print(" - need labeling")
             # label image
-            lmk_pos = get_lmk_on_image(img, im_ratio=im_ratio, pre_processing='VGG19')
-            print("lmk_pos", lmk_pos)
+            lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred, im_ratio=im_ratio, k_size=k_size)
 
-            # construct patterns
-            if lmk_pos is not None:
-                pattern = construct_pattern(lat_image, lmk_pos, (7, 7), ratio=224/56)
-                pattern = np.expand_dims(pattern, axis=0)  # add a dimension to mimic 1 landmark dimension
-                print("shape pattern", np.shape(pattern))
-                patterns.append(pattern)
+            # save labelled image idx
+            patterns.append(new_pattern)
+            label_img_idx.append(i)
 
-                # save image idx
-                label_img_idx.append(i)
-
-                # optimize sigma over all labeled images for each patterns
-                sigma = optimize_sigma(images[label_img_idx], patterns, threshold=0.1)
-
+            # optimize sigma
+            sigma = optimize_sigma(images, np.array(patterns), label_img_idx, init_sigma)
+            print("new sigma", sigma)
         else:
             # predict landmark pos
-            print("predict lmk pos")
+            lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, np.array(patterns), sigma, lmk_idx)
+
+            # check if we need to add a new pattern
+            if not lmks_list_dict[0]:
+                print(" - need labeling")
+                # label image
+                lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred, im_ratio=im_ratio, k_size=k_size)
+
+                # save labelled image idx
+                patterns.append(new_pattern)
+                label_img_idx.append(i)
+                print("len(patterns)", len(patterns))
+                print("label_img_idx", label_img_idx)
+
+                # optimize sigma
+                sigma = optimize_sigma(images, np.array(patterns), label_img_idx, init_sigma)
+                print("new sigma", sigma)
+            else:
+                print(" - OK")
+
         print()
 
     return patterns, sigma
@@ -178,8 +190,10 @@ def optimize(images, v4_model, lmk_type, config, im_ratio=1, filt_size=(3, 3)):
 if __name__ == '__main__':
     # declare variables
     im_ratio = 3
-    filt_size = (3, 3)
+    k_size = (7, 7)
     lmk_type = 'FER'
+    avatar_name = 'jules'
+    lmk_name = 'left_eyebrow_ext'
 
     # define configuration
     config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'
@@ -190,18 +204,28 @@ if __name__ == '__main__':
 
     # load data
     train_data = load_data(config)
-    print("len train_data[0]", len(train_data[0]))
     print("-- Data loaded --")
+    print("len train_data[0]", len(train_data[0]))
     print()
 
     # load feature extraction model
     v4_model = load_extraction_model(config, input_shape=tuple(config["input_shape"]))
     v4_model = tf.keras.Model(inputs=v4_model.input, outputs=v4_model.get_layer(config['v4_layer']).output)
     size_ft = tuple(np.shape(v4_model.output)[1:3])
-    print("size_ft", size_ft)
     print("-- Extraction Model loaded --")
+    print("size_ft", size_ft)
     print()
 
-    # optimize
-    optimize(train_data[0], v4_model, lmk_type, config, im_ratio=im_ratio, filt_size=filt_size)
+    # construct_RBF_patterns
+    patterns, sigma = construct_RBF_patterns(train_data[0], v4_model, lmk_type, config, init_sigma=100, im_ratio=im_ratio, k_size=k_size)
+    print("-- Labeling and optimization finished --")
+    print("shape patterns", np.shape(patterns))
+    print("sigma", sigma)
+
+    save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
+    save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
+    save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
+    np.save(os.path.join(save_path, save_patterns_name), patterns)
+    np.save(os.path.join(save_path, save_sigma_name), sigma)
+
 

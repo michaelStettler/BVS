@@ -31,13 +31,13 @@ def train_model_seq(config):
     #split data array in prototypes and compute reference pattern (mean of first frames)
     Nptt = n_train_category  # =3, Length of TRP got from original code OR len(TRP)
      
-    ##RBF_pattern ENCODING
+    ##RBF_patch_pattern ENCODING
     firing_thr_rbf = 0.15
 
     #      train recognition units
     RBFct = ZDMAT
 
-    #      compute responses of RBF_pattern units for all training stimuli
+    #      compute responses of RBF_patch_pattern units for all training stimuli
     rbf_sig = 2.5  # 0.1; #0.05; 0.15;0.2;0.53;0.6;
     
     n_train_cond = (RBFct.shape[1])/Nt
@@ -66,9 +66,9 @@ def train_model_seq(config):
     print(F_IT_rbfc)
     sig_fire = F_IT_rbfc > firing_thr_rbf
     sig_fire = np.mean(sig_fire)
-    print('RBF_pattern neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
+    print('RBF_patch_pattern neurons fire on average for ' + str(sig_fire * 100) + ' % of the training stimuli.')
     
-    # Plot RBF_pattern section (until##)
+    # Plot RBF_patch_pattern section (until##)
     if do_plot > 0:
         plt.clf
         plt.cla

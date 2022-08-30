@@ -18,7 +18,7 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
 """
-test script to try an implementation of a holistic representation model by a RBF_pattern function of the face
+test script to try an implementation of a holistic representation model by a RBF_patch_pattern function of the face
 
 
 run: python -m tests.NormBase.t11g_holisitc_template

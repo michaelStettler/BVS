@@ -19,7 +19,7 @@ print(data)
 
 start_vect = time.time()
 
-# hard code RBF_pattern to have a result to compare
+# hard code RBF_patch_pattern to have a result to compare
 sigma = 0.1
 dataA = np.matlib.repmat(data, np.shape(data)[0], 1).reshape((-1, np.shape(data)[0], np.shape(data)[1]))  # repetition of matrix
 dataB = np.tile(data, np.shape(data)[0]).reshape((-1, np.shape(data)[0], np.shape(data)[1]))  # repetitions of rows
@@ -39,12 +39,12 @@ print(rbf2)
 
 dur_vect = time.time() - start_vect
 print("duration", dur_vect)
-# ------------------------- test tf RBF_pattern layer ------------------------#
+# ------------------------- test tf RBF_patch_pattern layer ------------------------#
 print()
 print("---------------------------------------------------------------")
-print("-----------------------  LAYER RBF_pattern  ---------------------------")
+print("-----------------------  LAYER RBF_patch_pattern  ---------------------------")
 # todo take care of the batch issue! (input has to be a multiplier of 32)
-#  But is RBF_pattern as a layer even a good idea ? -> doesn't compute over all possibilities
+#  But is RBF_patch_pattern as a layer even a good idea ? -> doesn't compute over all possibilities
 #  (don't return 1x1024x1024 but 32x32x32)
 # -----------------   build model   ---------------
 input = Input(shape=(40))
