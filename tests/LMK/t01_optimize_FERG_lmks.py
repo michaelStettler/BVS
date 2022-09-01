@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -9,6 +10,7 @@ from utils.extraction_model import load_extraction_model
 from utils.RBF_patch_pattern.construct_patterns import construct_pattern
 from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_pos
 from utils.RBF_patch_pattern.optimize_sigma import optimize_sigma_by_landmarks_count
+from plots_utils.plot_BVS import display_images
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
@@ -130,17 +132,33 @@ def optimize_sigma(images, patterns, label_img_idx, init_sigma):
     # optimize sigma over all labeled images for each pattern
     lmks_dict, opt_sigmas = optimize_sigma_by_landmarks_count(preds, patterns,
                                                               init_sigmas=[init_sigma],
-                                                              act_threshold=0.1)
+                                                              act_threshold=0.1,
+                                                              disable_tqdm=True)
 
     # save sigma
     return opt_sigmas[0]
 
 
-def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, im_ratio=1, k_size=(7, 7)):
+def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, im_ratio=1, k_size=(7, 7),
+                           use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None):
     patterns = []
     sigma = init_sigma
+    do_force_label = False
+
+    if loaded_patterns is not None:
+        for p in loaded_patterns:
+            patterns.append(p)
+
+    if loaded_sigma is not None:
+        sigma = loaded_sigma
+
     label_img_idx = []
     lmk_idx = 0
+
+    if train_idx is not None:
+        images = images[train_idx]
+        print("shape images", np.shape(images))
+        do_force_label = True
 
     for i, img in enumerate(images):
         print("image: ", i, end='')
@@ -165,7 +183,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, i
             lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, np.array(patterns), sigma, lmk_idx)
 
             # check if we need to add a new pattern
-            if not lmks_list_dict[0]:
+            if not lmks_list_dict[0] or do_force_label:
                 print(" - need labeling")
                 # label image
                 lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred, im_ratio=im_ratio, k_size=k_size)
@@ -177,7 +195,13 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, i
                 print("label_img_idx", label_img_idx)
 
                 # optimize sigma
-                sigma = optimize_sigma(images, np.array(patterns), label_img_idx, init_sigma)
+                if use_only_last:
+                    new_sigma = optimize_sigma(images, np.array(patterns), [label_img_idx[-1]], init_sigma)
+                else:
+                    sigma = optimize_sigma(images, np.array(patterns), label_img_idx, init_sigma)
+
+                if new_sigma < sigma:
+                    sigma = new_sigma
                 print("new sigma", sigma)
             else:
                 print(" - OK")
@@ -187,13 +211,49 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, i
     return patterns, sigma
 
 
+def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config, display_failed_img=False):
+    lmk_idx = 0
+    n_found = 0
+    failed_img_idx = []
+
+    for i, img in tqdm(enumerate(images)):
+        # transform image to latent space
+        lat_pred = get_latent_pred(v4_model, img, lmk_type, config)
+
+        # predict landmark pos
+        lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, patterns, sigma, lmk_idx)
+
+        # count if not empty
+        if lmks_list_dict[0]:
+            n_found += 1
+        else:
+            print("no landmark found on image idx:", i)
+            failed_img_idx.append(i)
+
+    if display_failed_img and len(failed_img_idx) > 0:
+        display_images(images[failed_img_idx], pre_processing='VGG19')
+
+    return n_found
+
+
 if __name__ == '__main__':
     # declare variables
+    do_load = False
+    do_train = True
+    use_only_last = True
     im_ratio = 3
     k_size = (7, 7)
     lmk_type = 'FER'
+    init_sigma = 2000
+    train_idx = None
+    # train_idx = [5452]
+
+    # saving variables
     avatar_name = 'jules'
-    lmk_name = 'left_eyebrow_ext'
+    lmk_name = 'right_eyelid'
+    save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
+    save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
+    save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
 
     # define configuration
     config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'
@@ -216,16 +276,45 @@ if __name__ == '__main__':
     print("size_ft", size_ft)
     print()
 
-    # construct_RBF_patterns
-    patterns, sigma = construct_RBF_patterns(train_data[0], v4_model, lmk_type, config, init_sigma=100, im_ratio=im_ratio, k_size=k_size)
-    print("-- Labeling and optimization finished --")
-    print("shape patterns", np.shape(patterns))
-    print("sigma", sigma)
+    if do_load:
+        patterns = np.load(os.path.join(save_path, save_patterns_name + ".npy"))
+        sigma = int(np.load(os.path.join(save_path, save_sigma_name + ".npy")))
 
-    save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
-    save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
-    save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
-    np.save(os.path.join(save_path, save_patterns_name), patterns)
-    np.save(os.path.join(save_path, save_sigma_name), sigma)
+        print("-- Loaded optimized patterns finished --")
+        print("shape patterns", np.shape(patterns))
+        print("sigma", sigma)
+    else:
+        patterns = None
+        sigma = None
+
+    if do_train:
+        # construct_RBF_patterns
+        patterns, sigma = construct_RBF_patterns(train_data[0], v4_model, lmk_type, config,
+                                                 init_sigma=init_sigma,
+                                                 im_ratio=im_ratio,
+                                                 k_size=k_size,
+                                                 use_only_last=use_only_last,
+                                                 loaded_patterns=patterns,
+                                                 loaded_sigma=sigma,
+                                                 train_idx=train_idx)
+        print("-- Labeling and optimization finished --")
+        print("shape patterns", np.shape(patterns))
+        print("sigma", sigma)
+
+        np.save(os.path.join(save_path, save_patterns_name), patterns)
+        np.save(os.path.join(save_path, save_sigma_name), sigma)
+
+        # just to make sure...
+        patterns = np.array(patterns)
+        sigma = int(sigma)
+
+
+    # test with test data
+    test_data = load_data(config, train=False)
+    print("shape test_data[0]", np.shape(test_data[0]))
+    n_found = count_found_RBF_patterns(test_data[0], patterns, sigma, v4_model, lmk_type, config,
+                                       display_failed_img=True)
+    print("n_found: {} (accuracy: {:.2f}%)".format(n_found, (n_found/len(test_data[0]))*100))
+
 
 

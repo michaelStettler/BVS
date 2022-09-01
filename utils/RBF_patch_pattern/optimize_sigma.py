@@ -5,9 +5,11 @@ from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_po
 
 
 def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100, batch_size=16, init_sigmas=None,
-                                      act_threshold=0.1, dist_threshold=1.5, patch_size=14, verbose=False):
+                                      act_threshold=0.1, dist_threshold=1.5, patch_size=14, verbose=False,
+                                      disable_tqdm=False):
 
     activities_dict = []
+    n_images = np.shape(preds)[0]
     print("shape preds", np.shape(preds))
     print("shape patterns", np.shape(patterns))
 
@@ -17,7 +19,7 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
         lmk_indexes = lmk_idx
 
     opt_sigmas = []
-    for l in tqdm(lmk_indexes):
+    for l in tqdm(lmk_indexes, disable=disable_tqdm):
 
         do_continue = True
 
@@ -41,7 +43,7 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
             min_lmk_per_image = 1000
             max_lmk_per_image = 0
             # check if more than one lmk per image
-            for i in range(np.shape(preds)[0]):
+            for i in range(n_images):
                 n_lmk = len(lmks_dict[i])
 
                 if n_lmk < min_lmk_per_image:

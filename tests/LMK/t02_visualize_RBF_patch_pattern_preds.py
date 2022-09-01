@@ -61,8 +61,6 @@ def predict_and_visualize_RBF_patterns(images, patterns, sigma, v4_model, lmk_ty
 
         # transform dict to pos array
         lmk_pos = convert_dict_to_pos(lmks_list_dict)
-        print("lmk_pos", np.shape(lmk_pos))
-        print(lmk_pos)
         ft2img_ratio = 224/56
         lmk_pos *= ft2img_ratio
 
