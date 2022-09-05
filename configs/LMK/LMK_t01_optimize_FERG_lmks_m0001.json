@@ -5,7 +5,7 @@
   "y_col": "category",
   "n_category": 7,
   "ref_category": 0,
-  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_train_jules_small.csv",
+  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_train_jules.csv",
   "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_test_jules.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256",
   "input_shape": [224, 224, 3],

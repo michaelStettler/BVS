@@ -6,7 +6,7 @@ from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_po
 
 def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100, batch_size=16, init_sigmas=None,
                                       act_threshold=0.1, dist_threshold=1.5, patch_size=14, verbose=False,
-                                      disable_tqdm=False):
+                                      disable_tqdm=False, prev_sigma=None):
 
     activities_dict = []
     n_images = np.shape(preds)[0]
@@ -55,6 +55,10 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
                 memory_sigma = sigma
                 sigma += lr_rate
                 memory_max_pool_activity = lmks_dict
+
+                if prev_sigma is not None:
+                    if sigma > prev_sigma:
+                        do_continue = False
             else:
                 do_continue = False
 

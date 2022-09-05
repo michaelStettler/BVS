@@ -47,25 +47,33 @@ def convert_dict_to_pos(dict, n_lmk=1):
     return input
 
 
-def predict_and_visualize_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config, im_ratio=1):
+def predict_and_visualize_RBF_patterns(images, patterns_files, sigma_files, v4_model, lmk_type, config, im_ratio=1):
     lmk_idx = 0
 
-    for img in images:
+    for i, img in enumerate(images):
+        print("image:", i)
         # transform image to latent space
         lat_pred = get_latent_pred(v4_model, img, lmk_type, config)
 
-        # predict landmark pos
-        lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, patterns, sigma, lmk_idx)
-        print("lmks_list_dict")
-        print(lmks_list_dict)
+        lmks_pos = []
+        for l in range(len(patterns_files)):
+            patterns = np.load(os.path.join(config['patterns_path'], patterns_files[l]))
+            sigma = int(np.load(os.path.join(config['sigma_path'], sigma_files[l])))
 
-        # transform dict to pos array
-        lmk_pos = convert_dict_to_pos(lmks_list_dict)
-        ft2img_ratio = 224/56
-        lmk_pos *= ft2img_ratio
+            # predict landmark pos
+            lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, patterns, sigma, lmk_idx)
+            print("lmks_list_dict lmk:", l, lmks_list_dict)
 
+            # transform dict to pos array
+            lmk_pos = convert_dict_to_pos(lmks_list_dict)
+            ft2img_ratio = 224/56
+            lmk_pos *= ft2img_ratio
+
+            lmks_pos.append(lmk_pos)
+
+        print()
         # display image
-        display_image(img, lmks=lmk_pos[0], pre_processing='VGG19')
+        display_image(img, lmks=np.reshape(lmks_pos, (-1, 2)), pre_processing='VGG19', lmk_size=3)
         plt.show()
 
 
@@ -73,6 +81,17 @@ if __name__ == '__main__':
     # declare variables
     im_ratio = 3
     lmk_type = 'FER'
+
+    patterns_files = ['patterns_jules_left_eyebrow_ext.npy', 'patterns_jules_left_eyebrow_int.npy',
+                      'patterns_jules_right_eyebrow_int.npy', 'patterns_jules_right_eyebrow_ext.npy',
+                      'patterns_jules_left_mouth.npy', 'patterns_jules_top_mouth.npy',
+                      'patterns_jules_right_mouth.npy', 'patterns_jules_down_mouth.npy',
+                      'patterns_jules_left_eyelid.npy']
+    sigma_files = ['sigma_jules_left_eyebrow_ext.npy', 'sigma_jules_left_eyebrow_int.npy',
+                   'sigma_jules_right_eyebrow_int.npy', 'sigma_jules_right_eyebrow_ext.npy',
+                   'sigma_jules_left_mouth.npy', 'sigma_jules_top_mouth.npy',
+                   'sigma_jules_right_mouth.npy', 'sigma_jules_down_mouth.npy',
+                   'sigma_jules_left_eyelid.npy']
 
     # define configuration
     config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0001.json'
@@ -82,13 +101,9 @@ if __name__ == '__main__':
     print()
 
     # load data
-    train_data = load_data(config)
-    patterns = np.load(config['patterns_file'])
-    sigma = int(np.load(config['sigma_file']))
+    train_data = load_data(config, train=False)
     print("-- Data loaded --")
     print("len train_data[0]", len(train_data[0]))
-    print("shape patterns", np.shape(patterns))
-    print("sigma", sigma)
     print()
 
     # load feature extraction model
@@ -100,5 +115,5 @@ if __name__ == '__main__':
     print()
 
     # construct_RBF_patterns
-    predict_and_visualize_RBF_patterns(train_data[0], patterns, sigma, v4_model, lmk_type, config, im_ratio=im_ratio)
+    predict_and_visualize_RBF_patterns(train_data[0], patterns_files, sigma_files, v4_model, lmk_type, config, im_ratio=im_ratio)
     print("-- Predict and Visualize finished --")

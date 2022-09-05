@@ -121,7 +121,7 @@ def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_proce
     return lmk_pos, pattern
 
 
-def optimize_sigma(images, patterns, label_img_idx, init_sigma):
+def optimize_sigma(images, patterns, sigma, label_img_idx, init_sigma, lr_rate, is_first=False):
     # get all latent image (feature extractions) from the labeled images
     preds = []
     for labeled_idx in label_img_idx:
@@ -129,17 +129,72 @@ def optimize_sigma(images, patterns, label_img_idx, init_sigma):
         preds.append(np.squeeze(im_pred))
     preds = np.array(preds)
 
+    if is_first:
+        prev_sigma = None
+    else:
+        prev_sigma = sigma
+
     # optimize sigma over all labeled images for each pattern
     lmks_dict, opt_sigmas = optimize_sigma_by_landmarks_count(preds, patterns,
+                                                              lr_rate=lr_rate,
                                                               init_sigmas=[init_sigma],
                                                               act_threshold=0.1,
-                                                              disable_tqdm=True)
+                                                              disable_tqdm=True,
+                                                              prev_sigma=prev_sigma)
 
     # save sigma
     return opt_sigmas[0]
 
+def get_lmk_distances(lmks_dict):
+    # retrieve all positions
+    positions = []
+    for l in lmks_dict[0]:
+        positions.append(lmks_dict[0][l]['pos'])
+    positions = np.array(positions)
 
-def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, im_ratio=1, k_size=(7, 7),
+    # compute distances between all positions as a square matrix
+    distances = []
+    for p_start in positions:
+        for p_end in positions:
+            dist = np.linalg.norm(p_start - p_end)
+            distances.append(dist)
+
+    return np.array(distances)
+
+
+def decrease_sigma(image, patterns, sigma, lr_rate, lmk_type, config,
+                   act_threshold=0.1, dist_threshold=1.5, patch_size=14, max_dist=3):
+    im_pred = get_latent_pred(v4_model, image, lmk_type, config)
+    print("shape im_pred", np.shape(im_pred))
+    is_too_close = True
+
+    while(is_too_close):
+        lmks_dict = predict_RBF_patch_pattern_lmk_pos(im_pred, patterns, sigma, 0,
+                                                      act_threshold=act_threshold,
+                                                      dist_threshold=dist_threshold,
+                                                      patch_size=patch_size)
+        # check how many landmarks found
+        n_lmk = len(lmks_dict[0])
+
+        # if (still )more than 1, then look if they are too close
+        if n_lmk > 1:
+            # get distance between all find lmks
+            distances = get_lmk_distances(lmks_dict)
+
+            # check if distance is smaller than max distance
+            if np.amax(distances) < max_dist:
+                is_too_close = False
+            else:
+                sigma -= lr_rate
+            print("sigma: {} (max_dist:{})".format(sigma, np.amax(distances)), end='\r')
+        else:
+            is_too_close = False
+    print("")
+
+    return sigma
+
+
+def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init_sigma=100, im_ratio=1, k_size=(7, 7),
                            use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None):
     patterns = []
     sigma = init_sigma
@@ -176,7 +231,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, i
             label_img_idx.append(i)
 
             # optimize sigma
-            sigma = optimize_sigma(images, np.array(patterns), label_img_idx, init_sigma)
+            sigma = optimize_sigma(images, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate, is_first=True)
             print("new sigma", sigma)
         else:
             # predict landmark pos
@@ -196,22 +251,27 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, init_sigma=100, i
 
                 # optimize sigma
                 if use_only_last:
-                    new_sigma = optimize_sigma(images, np.array(patterns), [label_img_idx[-1]], init_sigma)
+                    new_sigma = optimize_sigma(images, np.array(patterns), sigma, [label_img_idx[-1]], init_sigma, lr_rate)
                 else:
-                    sigma = optimize_sigma(images, np.array(patterns), label_img_idx, init_sigma)
+                    new_sigma = optimize_sigma(images, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate)
 
                 if new_sigma < sigma:
                     sigma = new_sigma
                 print("new sigma", sigma)
+            elif len(lmks_list_dict[0]) > 1:
+                print("- {} landmarks found!".format(len(lmks_list_dict[0])))
+                new_sigma = decrease_sigma(img, np.array(patterns), sigma, lr_rate, lmk_type, config)
+                print("old sigma: {}, new sigma: {}".format(sigma, new_sigma))
+                sigma = new_sigma
             else:
-                print(" - OK")
+                    print(" - OK")
 
         print()
 
     return patterns, sigma
 
 
-def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config, display_failed_img=False):
+def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config, max_value=3, display_failed_img=False):
     lmk_idx = 0
     n_found = 0
     failed_img_idx = []
@@ -224,11 +284,22 @@ def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config
         lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, patterns, sigma, lmk_idx)
 
         # count if not empty
-        if lmks_list_dict[0]:
-            n_found += 1
-        else:
+        if len(lmks_list_dict[0]) == 0:
+            # no lmk found, this is bad
             print("no landmark found on image idx:", i)
             failed_img_idx.append(i)
+        elif len(lmks_list_dict[0]) == 1:
+            n_found += 1
+        else:
+            # means we have more than 2
+            distances = get_lmk_distances(lmks_list_dict)
+
+            # check if the distance between found lmk are greater than the max_value
+            if np.amax(distances) > max_value:
+                failed_img_idx.append(i)
+                print("distance between landmark found on image idx {} seem too big:".format(i))
+            else:
+                n_found += 1
 
     if display_failed_img and len(failed_img_idx) > 0:
         display_images(images[failed_img_idx], pre_processing='VGG19')
@@ -246,11 +317,11 @@ if __name__ == '__main__':
     lmk_type = 'FER'
     init_sigma = 2000
     train_idx = None
-    # train_idx = [5452]
+    # train_idx = [0]
 
     # saving variables
     avatar_name = 'jules'
-    lmk_name = 'right_eyelid'
+    lmk_name = 'right_eyelid.npy'
     save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
     save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
     save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
