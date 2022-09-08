@@ -79,22 +79,30 @@ def predict_and_visualize_RBF_patterns(images, patterns_files, sigma_files, v4_m
 
 if __name__ == '__main__':
     # declare variables
-    im_ratio = 3
+    n_image = 15
     lmk_type = 'FER'
+    im_ratio = 3
 
-    patterns_files = ['patterns_jules_left_eyebrow_ext.npy', 'patterns_jules_left_eyebrow_int.npy',
-                      'patterns_jules_right_eyebrow_int.npy', 'patterns_jules_right_eyebrow_ext.npy',
-                      'patterns_jules_left_mouth.npy', 'patterns_jules_top_mouth.npy',
-                      'patterns_jules_right_mouth.npy', 'patterns_jules_down_mouth.npy',
-                      'patterns_jules_left_eyelid.npy']
-    sigma_files = ['sigma_jules_left_eyebrow_ext.npy', 'sigma_jules_left_eyebrow_int.npy',
-                   'sigma_jules_right_eyebrow_int.npy', 'sigma_jules_right_eyebrow_ext.npy',
-                   'sigma_jules_left_mouth.npy', 'sigma_jules_top_mouth.npy',
-                   'sigma_jules_right_mouth.npy', 'sigma_jules_down_mouth.npy',
-                   'sigma_jules_left_eyelid.npy']
+    avatar_name = 'jules'
+    avatar_name = 'malcolm'
+    patterns_files = ['patterns_' + avatar_name + '_left_eyebrow_ext.npy', 'patterns_' + avatar_name + '_left_eyebrow_int.npy',
+                      'patterns_' + avatar_name + '_right_eyebrow_int.npy', 'patterns_' + avatar_name + '_right_eyebrow_ext.npy',
+                      'patterns_' + avatar_name + '_left_mouth.npy', 'patterns_' + avatar_name + '_top_mouth.npy',
+                      'patterns_' + avatar_name + '_right_mouth.npy', 'patterns_' + avatar_name + '_down_mouth.npy',
+                      'patterns_' + avatar_name + '_left_eyelid.npy', 'patterns_' + avatar_name + '_right_eyelid.npy']
+    sigma_files = ['sigma_' + avatar_name + '_left_eyebrow_ext.npy', 'sigma_' + avatar_name + '_left_eyebrow_int.npy',
+                   'sigma_' + avatar_name + '_right_eyebrow_int.npy', 'sigma_' + avatar_name + '_right_eyebrow_ext.npy',
+                   'sigma_' + avatar_name + '_left_mouth.npy', 'sigma_' + avatar_name + '_top_mouth.npy',
+                   'sigma_' + avatar_name + '_right_mouth.npy', 'sigma_' + avatar_name + '_down_mouth.npy',
+                   'sigma_' + avatar_name + '_left_eyelid.npy', 'sigma_' + avatar_name + '_right_eyelid.npy']
 
     # define configuration
-    config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0001.json'
+    if avatar_name == 'jules':
+        config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0001.json'
+    elif avatar_name == 'malcolm':
+        config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0002.json'
+    else:
+        raise ValueError("please select a valid avatar name")
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
@@ -115,5 +123,5 @@ if __name__ == '__main__':
     print()
 
     # construct_RBF_patterns
-    predict_and_visualize_RBF_patterns(train_data[0], patterns_files, sigma_files, v4_model, lmk_type, config, im_ratio=im_ratio)
+    predict_and_visualize_RBF_patterns(train_data[0][:n_image], patterns_files, sigma_files, v4_model, lmk_type, config, im_ratio=im_ratio)
     print("-- Predict and Visualize finished --")

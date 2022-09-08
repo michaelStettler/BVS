@@ -40,6 +40,7 @@ def filter_df_by_avatar(csv_name, avatar_name, verbose=False):
 if __name__ == '__main__':
     db_path = "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256"
     avatar_name = 'jules'
+    avatar_name = 'malcolm'
     conditions = ['train', 'val', 'test']
 
     for condition in conditions:

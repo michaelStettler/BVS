@@ -1,12 +1,12 @@
 {
-  "config_name": "LMK_t02_visualize_RBF_patch_pattern_preds_m0001",
+  "config_name": "LMK_t03_create_lmk_data_m0001",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
   "n_category": 7,
   "ref_category": 0,
-  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_train_jules_small.csv",
-  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_test_jules_small.csv",
+  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_train_malcolm.csv",
+  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/FERG_DB_test_malcolm.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256",
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
@@ -19,6 +19,7 @@
   "best_eyebrow_IoU_ft": [68, 125],
   "best_lips_IoU_ft": [235, 203, 68, 125, 3, 181, 197, 2, 87, 240, 6, 95, 60, 157, 227, 111],
   "nu": 1.0,
-  "patterns_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns",
-  "sigma_path": "/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns"
+  "activity_threshold": 0.1,
+  "distance_threshold": 1.5,
+  "patch_size": 14
 }

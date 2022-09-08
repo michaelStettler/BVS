@@ -264,7 +264,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
                 print("old sigma: {}, new sigma: {}".format(sigma, new_sigma))
                 sigma = new_sigma
             else:
-                    print(" - OK")
+                print(" - OK")
 
         print()
 
@@ -320,14 +320,20 @@ if __name__ == '__main__':
     # train_idx = [0]
 
     # saving variables
-    avatar_name = 'jules'
-    lmk_name = 'right_eyelid.npy'
+    # avatar_name = 'jules'
+    avatar_name = 'malcolm'
+    lmk_name = 'right_eyelid'
     save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
     save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
     save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
 
     # define configuration
-    config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'
+    if avatar_name == 'jules':
+        config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'
+    elif avatar_name == 'malcolm':
+        config_path = 'LMK_t01_optimize_FERG_lmks_m0002.json'
+    else:
+        raise ValueError("please select a valid avatar name")
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
@@ -378,7 +384,6 @@ if __name__ == '__main__':
         # just to make sure...
         patterns = np.array(patterns)
         sigma = int(sigma)
-
 
     # test with test data
     test_data = load_data(config, train=False)
