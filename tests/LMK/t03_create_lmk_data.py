@@ -5,6 +5,7 @@ import tensorflow as tf
 
 from utils.load_config import load_config
 from utils.load_data import load_data
+from utils.get_csv_file_FERG import edit_FERG_csv_file_from_config
 from utils.extraction_model import load_extraction_model
 from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_pos
 
@@ -78,20 +79,18 @@ if __name__ == '__main__':
     k_size = (7, 7)
     lmk_type = 'FER'
     # define avatar
-    # avatar_name = 'jules'
-    avatar_name = 'malcolm'
+    avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
+    avatar_name = avatar_names[2]
 
     # define configuration
-    if avatar_name == 'jules':
-        config_path = 'LMK_t03_create_lmk_data_m0001.json'
-    elif avatar_name == 'malcolm':
-        config_path = 'LMK_t03_create_lmk_data_m0002.json'
-    else:
-        raise ValueError("please select a valid avatar name")
+    config_path = 'LMK_t03_create_lmk_data_m0001.json'
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
     print()
+
+    # modify csv according to avatar name
+    edit_FERG_csv_file_from_config(config, avatar_name)
 
     # define loading variables -> add all to config
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',

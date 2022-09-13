@@ -5,6 +5,7 @@ import tensorflow as tf
 
 from utils.load_config import load_config
 from utils.load_data import load_data
+from utils.get_csv_file_FERG import edit_FERG_csv_file_from_config
 from utils.extraction_model import load_extraction_model
 from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_pos
 from plots_utils.plot_BVS import display_image
@@ -83,30 +84,30 @@ if __name__ == '__main__':
     lmk_type = 'FER'
     im_ratio = 3
 
-    avatar_name = 'jules'
-    avatar_name = 'malcolm'
+    avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
+    avatar_name = avatar_names[2]
     patterns_files = ['patterns_' + avatar_name + '_left_eyebrow_ext.npy', 'patterns_' + avatar_name + '_left_eyebrow_int.npy',
                       'patterns_' + avatar_name + '_right_eyebrow_int.npy', 'patterns_' + avatar_name + '_right_eyebrow_ext.npy',
                       'patterns_' + avatar_name + '_left_mouth.npy', 'patterns_' + avatar_name + '_top_mouth.npy',
                       'patterns_' + avatar_name + '_right_mouth.npy', 'patterns_' + avatar_name + '_down_mouth.npy',
                       'patterns_' + avatar_name + '_left_eyelid.npy', 'patterns_' + avatar_name + '_right_eyelid.npy']
+    patterns_files = ['patterns_' + avatar_name + '_down_mouth.npy']
     sigma_files = ['sigma_' + avatar_name + '_left_eyebrow_ext.npy', 'sigma_' + avatar_name + '_left_eyebrow_int.npy',
                    'sigma_' + avatar_name + '_right_eyebrow_int.npy', 'sigma_' + avatar_name + '_right_eyebrow_ext.npy',
                    'sigma_' + avatar_name + '_left_mouth.npy', 'sigma_' + avatar_name + '_top_mouth.npy',
                    'sigma_' + avatar_name + '_right_mouth.npy', 'sigma_' + avatar_name + '_down_mouth.npy',
                    'sigma_' + avatar_name + '_left_eyelid.npy', 'sigma_' + avatar_name + '_right_eyelid.npy']
+    sigma_files = ['sigma_' + avatar_name + '_down_mouth.npy']
 
     # define configuration
-    if avatar_name == 'jules':
-        config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0001.json'
-    elif avatar_name == 'malcolm':
-        config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0002.json'
-    else:
-        raise ValueError("please select a valid avatar name")
+    config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0001.json'
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
     print()
+
+    # modify csv according to avatar name
+    edit_FERG_csv_file_from_config(config, avatar_name)
 
     # load data
     train_data = load_data(config, train=False)

@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from utils.load_config import load_config
 from utils.load_data import load_data
+from utils.get_csv_file_FERG import edit_FERG_csv_file_from_config
 from plots_utils.plot_BVS import display_image
 
 np.random.seed(0)
@@ -29,7 +30,8 @@ def control_lmk_data(lmk_pos_data, images):
 
 if __name__ == '__main__':
     # declare variables
-    avatar_name = 'jules'
+    avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
+    avatar_name = avatar_names[2]
     n_images = 10
 
     # define configuration
@@ -38,6 +40,9 @@ if __name__ == '__main__':
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
     print()
+
+    # modify csv according to avatar name
+    edit_FERG_csv_file_from_config(config, avatar_name)
 
     # define loading variables
     path = config['directory']
