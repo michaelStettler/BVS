@@ -341,7 +341,7 @@ if __name__ == '__main__':
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',
                  'left_mouth', 'top_mouth', 'right_mouth', 'down_mouth',
                  'left_eyelid', 'right_eyelid']
-    lmk_name = lmk_names[6]
+    lmk_name = lmk_names[7]
 
 
     save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
