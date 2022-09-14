@@ -126,7 +126,7 @@ def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_proce
         pattern = construct_pattern(pred, lmk_pos, k_size, ratio=224 / 56)
         pattern = np.expand_dims(pattern, axis=0)  # add a dimension to mimic 1 landmark dimension
     else:
-        raise ValueError("no landmark position!")
+        print("no landmark positions!")
         pattern = None
 
     return lmk_pos, pattern
@@ -323,7 +323,7 @@ def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config
 
 if __name__ == '__main__':
     # declare variables
-    do_load = True
+    do_load = False
     do_train = True
     use_only_last = True
     im_ratio = 3
@@ -332,28 +332,28 @@ if __name__ == '__main__':
     init_sigma = 2000
     train_idx = None
     # train_idx = [0]
-    # train_idx = [5387, 2031, 4059]
 
     # saving variables
     avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
-    avatar_name = avatar_names[3]
+    avatar_name = avatar_names[4]
 
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',
                  'left_mouth', 'top_mouth', 'right_mouth', 'down_mouth',
                  'left_eyelid', 'right_eyelid']
-    lmk_name = lmk_names[7]
-
-
-    save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
-    save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
-    save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
+    lmk_name = lmk_names[4]
 
     # define configuration
     config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'
+    config_path = 'LMK_t01_optimize_FERG_lmks_w0001.json'
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
     print()
+
+    # define path an name
+    save_path = config['save_path']
+    save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
+    save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
 
     # modify csv according to avatar name
     edit_FERG_csv_file_from_config(config, avatar_name)

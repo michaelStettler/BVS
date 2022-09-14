@@ -1,5 +1,7 @@
 import numpy as np
 from tqdm import tqdm
+from multiprocessing import Pool
+import os
 
 
 def compute_RBF_pattern_activity_maps(ft_maps, patterns, sigmas=1, lmk_idx=None, disable_tqdm=False):
@@ -14,11 +16,13 @@ def compute_RBF_pattern_activity_maps(ft_maps, patterns, sigmas=1, lmk_idx=None,
     :param sigmas:
     :return: activity_map (n_images, n_patterns, n_lmks, ft_size, ft_size)
     """
+    n_patterns = len(patterns)
+
     # declare activity map
     if lmk_idx is None:
-        activity_map = np.zeros((np.shape(ft_maps)[0], np.shape(patterns)[0], np.shape(patterns)[1], np.shape(ft_maps)[1], np.shape(ft_maps)[2]))
+        activity_map = np.zeros((np.shape(ft_maps)[0], n_patterns, np.shape(patterns)[1], np.shape(ft_maps)[1], np.shape(ft_maps)[2]))
     else:
-        activity_map = np.zeros((np.shape(ft_maps)[0], np.shape(patterns)[0], 1, np.shape(ft_maps)[1], np.shape(ft_maps)[2]))
+        activity_map = np.zeros((np.shape(ft_maps)[0], n_patterns, 1, np.shape(ft_maps)[1], np.shape(ft_maps)[2]))
 
     # compute padding
     pad_x = int(np.shape(patterns)[2] / 2)
@@ -49,6 +53,8 @@ def compute_RBF_pattern_activity_maps(ft_maps, patterns, sigmas=1, lmk_idx=None,
             sigma = sigmas
         elif isinstance(sigmas, float):
             sigma = sigmas
+        elif isinstance(sigmas, np.int32):
+            sigma = sigmas
         elif isinstance(sigmas, np.int64):
             sigma = sigmas
         elif isinstance(sigmas, list):
@@ -63,7 +69,6 @@ def compute_RBF_pattern_activity_maps(ft_maps, patterns, sigmas=1, lmk_idx=None,
         # expand pattern to match dimension of patch (n_images, n_pattern, 1 (lmk), k_size, k_size, n_ft_maps)
         pattern = np.repeat(np.expand_dims(patterns[:, l_idx], axis=0), np.shape(ft_maps)[0], axis=0)
 
-        # compute for each position of the feature maps
         for i in range(pad_x, np.shape(ft_maps)[1] + pad_x):
             for j in range(pad_y, np.shape(ft_maps)[2] + pad_y):
                 # get patch with matching size of the pattern
@@ -72,7 +77,7 @@ def compute_RBF_pattern_activity_maps(ft_maps, patterns, sigmas=1, lmk_idx=None,
                 patch = padded_ft_maps[:, x_pos[0]:x_pos[1], y_pos[0]:y_pos[1]]
 
                 # expand patch and patterns to match dimensions (n_images, n_patterns, k_size, k_size, n_ft_maps)
-                patch = np.repeat(np.expand_dims(patch, axis=1), len(patterns), axis=1)
+                patch = np.repeat(np.expand_dims(patch, axis=1), n_patterns, axis=1)
 
                 # compute diff between pattern and patch
                 # (n_images, n_patterns, n_lmks, k_size, k_size, n_ft_map)
@@ -86,3 +91,4 @@ def compute_RBF_pattern_activity_maps(ft_maps, patterns, sigmas=1, lmk_idx=None,
                 activity_map[..., l, i - pad_x, j - pad_y] = activity
 
     return activity_map
+
