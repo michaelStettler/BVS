@@ -80,7 +80,7 @@ if __name__ == '__main__':
     lmk_type = 'FER'
     # define avatar
     avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
-    avatar_name = avatar_names[2]
+    avatar_name = avatar_names[3]
 
     # define configuration
     config_path = 'LMK_t03_create_lmk_data_m0001.json'
@@ -118,6 +118,7 @@ if __name__ == '__main__':
     patterns = []
     sigma = []
     for lmk_name in lmk_names:
+        print("lmk_name", lmk_name)
         patttern = np.load(os.path.join(path, 'saved_patterns', 'patterns_' + avatar_name + '_' + lmk_name + '.npy'))
         patterns.append(patttern)
         sigma.append(

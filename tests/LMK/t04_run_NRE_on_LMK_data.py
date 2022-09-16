@@ -75,7 +75,7 @@ def compute_accuracy(preds, labels):
 if __name__ == '__main__':
     # declare variables
     avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
-    avatar_name = avatar_names[2]
+    avatar_name = avatar_names[3]
     n_cat = 7
 
     # define configuration

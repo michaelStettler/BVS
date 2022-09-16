@@ -85,19 +85,20 @@ if __name__ == '__main__':
     im_ratio = 3
 
     avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
-    avatar_name = avatar_names[2]
+    avatar_name = avatar_names[3]
+
     patterns_files = ['patterns_' + avatar_name + '_left_eyebrow_ext.npy', 'patterns_' + avatar_name + '_left_eyebrow_int.npy',
                       'patterns_' + avatar_name + '_right_eyebrow_int.npy', 'patterns_' + avatar_name + '_right_eyebrow_ext.npy',
                       'patterns_' + avatar_name + '_left_mouth.npy', 'patterns_' + avatar_name + '_top_mouth.npy',
                       'patterns_' + avatar_name + '_right_mouth.npy', 'patterns_' + avatar_name + '_down_mouth.npy',
                       'patterns_' + avatar_name + '_left_eyelid.npy', 'patterns_' + avatar_name + '_right_eyelid.npy']
-    patterns_files = ['patterns_' + avatar_name + '_down_mouth.npy']
+    patterns_files = ['patterns_' + avatar_name + '_top_mouth.npy']
     sigma_files = ['sigma_' + avatar_name + '_left_eyebrow_ext.npy', 'sigma_' + avatar_name + '_left_eyebrow_int.npy',
                    'sigma_' + avatar_name + '_right_eyebrow_int.npy', 'sigma_' + avatar_name + '_right_eyebrow_ext.npy',
                    'sigma_' + avatar_name + '_left_mouth.npy', 'sigma_' + avatar_name + '_top_mouth.npy',
                    'sigma_' + avatar_name + '_right_mouth.npy', 'sigma_' + avatar_name + '_down_mouth.npy',
                    'sigma_' + avatar_name + '_left_eyelid.npy', 'sigma_' + avatar_name + '_right_eyelid.npy']
-    sigma_files = ['sigma_' + avatar_name + '_down_mouth.npy']
+    sigma_files = ['sigma_' + avatar_name + '_top_mouth.npy']
 
     # define configuration
     config_path = 'LMK_t02_visualize_RBF_patch_pattern_preds_m0001.json'

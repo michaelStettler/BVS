@@ -349,7 +349,13 @@ if __name__ == '__main__':
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',
                  'left_mouth', 'top_mouth', 'right_mouth', 'down_mouth',
                  'left_eyelid', 'right_eyelid']
-    lmk_name = lmk_names[9]
+    lmk_name = lmk_names[5]
+    print("lmk_name:", lmk_name)
+
+
+    save_path = '/Users/michaelstettler/PycharmProjects/BVS/data/FERG_DB_256/saved_patterns/'
+    save_patterns_name = 'patterns_' + avatar_name + '_' + lmk_name
+    save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
 
     # define configuration
     # config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'  # mac
