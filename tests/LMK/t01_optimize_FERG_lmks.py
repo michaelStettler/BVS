@@ -98,7 +98,7 @@ class InteractiveImag:
         self.ax.figure.canvas.mpl_disconnect(self.cidenter)
 
 
-def get_lmk_on_image(image, im_ratio=1, pre_processing=None):
+def get_lmk_on_image(image, im_ratio=1, pre_processing=None, fig_title=''):
     if pre_processing == 'VGG19':
         # (un-)process image from VGG19 pre-processing
         image = np.array(image + 128) / 256
@@ -106,6 +106,7 @@ def get_lmk_on_image(image, im_ratio=1, pre_processing=None):
         image[image > 1] = 1.0
 
     fig, ax = plt.subplots(figsize=(2.24 * im_ratio, 2.24 * im_ratio))
+    fig.suptitle(fig_title)
     inter_img = InteractiveImag(ax, image)
     inter_img.connect()
     plt.show()
@@ -117,9 +118,9 @@ def get_lmk_on_image(image, im_ratio=1, pre_processing=None):
     return lmk_pos
 
 
-def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_processing='VGG19'):
+def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_processing='VGG19', fig_title=''):
     # label image
-    lmk_pos = get_lmk_on_image(img, im_ratio=im_ratio, pre_processing=pre_processing)
+    lmk_pos = get_lmk_on_image(img, im_ratio=im_ratio, pre_processing=pre_processing, fig_title=fig_title)
 
     if lmk_pos is not None:
         # construct patterns
@@ -207,7 +208,7 @@ def decrease_sigma(image, patterns, sigma, lr_rate, lmk_type, config,
 
 
 def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init_sigma=100, im_ratio=1, k_size=(7, 7),
-                           use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None):
+                           use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None, lmk_name=''):
     patterns = []
     sigma = init_sigma
     do_force_label = False
@@ -232,11 +233,16 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
         # transform image to latent space
         lat_pred = get_latent_pred(v4_model, img, lmk_type, config)
 
+        fig_title = "image:{} {}".format(i, lmk_name)
+
         # label first image if no patterns
         if len(patterns) == 0:
             print(" - need labeling")
             # label image
-            lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred, im_ratio=im_ratio, k_size=k_size)
+            lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred,
+                                                                im_ratio=im_ratio,
+                                                                k_size=k_size,
+                                                                fig_title=fig_title)
 
             if lmk_pos is not None:
                 # save labelled image idx
@@ -254,7 +260,10 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
             if not lmks_list_dict[0] or do_force_label:
                 print(" - need labeling")
                 # label image
-                lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred, im_ratio=im_ratio, k_size=k_size)
+                lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred,
+                                                                    im_ratio=im_ratio,
+                                                                    k_size=k_size,
+                                                                    fig_title=fig_title)
 
                 if lmk_pos is not None:
                     # save labelled image idx
@@ -340,11 +349,11 @@ if __name__ == '__main__':
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',
                  'left_mouth', 'top_mouth', 'right_mouth', 'down_mouth',
                  'left_eyelid', 'right_eyelid']
-    lmk_name = lmk_names[4]
+    lmk_name = lmk_names[9]
 
     # define configuration
-    config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'
-    config_path = 'LMK_t01_optimize_FERG_lmks_w0001.json'
+    # config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'  # mac
+    config_path = 'LMK_t01_optimize_FERG_lmks_w0001.json'  # windows
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
@@ -392,7 +401,8 @@ if __name__ == '__main__':
                                                  use_only_last=use_only_last,
                                                  loaded_patterns=patterns,
                                                  loaded_sigma=sigma,
-                                                 train_idx=train_idx)
+                                                 train_idx=train_idx,
+                                                 lmk_name=lmk_name)
         print("-- Labeling and optimization finished --")
         print("shape patterns", np.shape(patterns))
         print("sigma", sigma)
