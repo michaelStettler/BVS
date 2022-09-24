@@ -17,16 +17,21 @@ run: python -m tests.LMK.t04_run_NRE_on_LMK_data
 """
 
 
-def compute_projections(input, ref_vector, tun_vectors, nu=1, neutral_threshold=5, verbose=False):
+def compute_projections(inputs, ref_vector, tun_vectors, nu=1, neutral_threshold=5, verbose=False):
     projections = []
 
     # normalize by norm of each landmarks
     norm_t = np.linalg.norm(tun_vectors, axis=2)
 
     # for each images
-    for i in range(len(input)):
+    for i in range(len(inputs)):
+        inp = inputs[i]
+
+        # replace occluded lmk by ref value
+        inp[inp < 0] = ref_vector[inp < 0]
+
         # compute relative vector (difference)
-        diff = input[i] - ref_vector
+        diff = inp - ref_vector
         proj = []
         # for each category
         for j in range(len(tun_vectors)):
@@ -72,10 +77,67 @@ def compute_accuracy(preds, labels):
     return n_correct/n_total
 
 
+def learn_ref_vector(lmk_pos, labels):
+    # learn neutral pattern
+    ref_idx = np.reshape(np.argwhere(labels == 0), -1)
+    ref_vector = lmk_pos[ref_idx[0]]
+
+    return ref_vector
+
+
+def learn_tun_vectors(lmk_pos, labels, ref_vector, idx_array=None):
+    # learn tun vectors
+    tun_vectors = []
+    for i in range(n_cat):
+        cat_idx = np.reshape(np.argwhere(labels == i), -1)
+
+        if idx_array is not None:
+            tun_vectors.append(lmk_pos[cat_idx[idx_array[i]]] - ref_vector)
+        else:
+            tun_vectors.append(lmk_pos[cat_idx[0]] - ref_vector)
+
+    return np.array(tun_vectors)
+
+
+def optimize_tuning_vectors(lmk_pos, labels, category_to_optimize, idx_array):
+    # learn neutral pattern
+    ref_vector = learn_ref_vector(lmk_pos, labels)
+
+    img_idx = np.arange(len(labels))
+    cat_img_idx = img_idx[labels == category_to_optimize]
+    print("len cat_img_idx", len(cat_img_idx))
+    n_img_in_cat = len(labels[labels == category_to_optimize])
+    print("n_img_in_cat", n_img_in_cat)
+
+    accuracy = 0
+    best_idx = 0
+    for i in tqdm(range(n_img_in_cat)):
+        # learn tun vectors
+        idx_array[category_to_optimize] = i
+        tun_vectors = learn_tun_vectors(lmk_pos, labels, ref_vector, idx_array=idx_array)
+
+        # compute projections
+        projections_preds = compute_projections(lmk_pos, ref_vector, tun_vectors,
+                                                neutral_threshold=5,
+                                                verbose=False)
+        # compute accuracy
+        new_accuracy = compute_accuracy(projections_preds, labels)
+
+        if new_accuracy > accuracy:
+            print("new accuracy: {}, idx: {} (matching {})".format(new_accuracy, i, cat_img_idx[i]))
+            accuracy = new_accuracy
+            best_idx = i
+
+    print("best idx:", best_idx)
+    print("best accuracy:", accuracy)
+    return best_idx, accuracy, cat_img_idx[best_idx]
+
+
 if __name__ == '__main__':
     # declare variables
     avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
-    avatar_name = avatar_names[3]
+    avatar_name = avatar_names[5]
+    print("avatar_name:", avatar_name)
     n_cat = 7
 
     # define configuration
@@ -96,7 +158,6 @@ if __name__ == '__main__':
     print("len test_data[0]", len(test_data[0]))
     print()
 
-
     # load lmk dataset
     lmk_pos_data = np.load(os.path.join(config['directory'], config['LMK_data_directory'], avatar_name + "_lmk_pos.npy"))
     test_lmk_pos_data = np.load(os.path.join(config['directory'], config['LMK_data_directory'], "test_" + avatar_name + "_lmk_pos.npy"))
@@ -104,16 +165,10 @@ if __name__ == '__main__':
     print("shape test_lmk_pos_data", np.shape(test_lmk_pos_data))
 
     # learn neutral pattern
-    ref_idx = np.reshape(np.argwhere(train_data[1] == 0), -1)
-    ref_vector = lmk_pos_data[ref_idx[0]]
+    ref_vector = learn_ref_vector(lmk_pos_data, train_data[1])
 
     # learn tun vectors
-    tun_vectors = []
-    for i in range(n_cat):
-        cat_idx = np.reshape(np.argwhere(train_data[1] == i), -1)
-        print("category ({}) idx: {}".format(i, cat_idx[0]))
-        tun_vectors.append(lmk_pos_data[cat_idx[0]] - ref_vector)
-    tun_vectors = np.array(tun_vectors)
+    tun_vectors = learn_tun_vectors(lmk_pos_data, train_data[1], ref_vector)
     print("shape tun_vectors", np.shape(tun_vectors))
 
     # compute projections
@@ -123,7 +178,8 @@ if __name__ == '__main__':
     print("shape projections_preds", np.shape(projections_preds))
 
     # compute accuracy
-    print("train accuracy", compute_accuracy(projections_preds, train_data[1]))
+    train_accuracy = compute_accuracy(projections_preds, train_data[1])
+    print("train accuracy:", train_accuracy)
 
     # ------ test -----------
     # compute test projections
@@ -135,11 +191,24 @@ if __name__ == '__main__':
     # compute accuracy
     print("test accuracy", compute_accuracy(test_projections_preds, test_data[1]))
 
+    # test optimization of selected tuning vectors
+    idx_array = np.zeros(n_cat).astype(int)
+    best_idexes = []
+    new_accuracy = 0
+    for cat in range(1, 7):
+        category_to_optimize = cat
+        best_idx, accuracy,  best_matching_idx = optimize_tuning_vectors(lmk_pos_data, train_data[1], category_to_optimize, idx_array)
+        print("category: {}, best_idx: {}, accuracy: {}".format(cat, best_idx, accuracy))
+        print()
+        idx_array[cat] = best_idx
+        best_idexes.append(best_matching_idx)
 
-    n_test = 10
-    test_projections_preds = compute_projections(test_lmk_pos_data[:n_test], ref_vector, tun_vectors,
-                                                 neutral_threshold=5,
-                                                 verbose=True)
-    print(test_data[1][:n_test])
+        if accuracy > new_accuracy:
+            new_accuracy = accuracy
 
+    print("best_idexes", best_idexes)
+    np.save(os.path.join(config['directory'], 'best_indexes', avatar_name + '_best_idx'), best_idexes)
+
+
+    print("optimization increased from {} to {}".format(train_accuracy, new_accuracy))
 

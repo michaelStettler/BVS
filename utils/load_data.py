@@ -494,7 +494,7 @@ def _load_FERG(config, train, get_raw=False):
     if get_raw:
         data[0] = data[0]
     elif config["extraction_model"] == "VGG19":
-        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0]))
+        data[0] = tf.keras.applications.vgg19.preprocess_input(np.copy(data[0])).astype(np.float32)
     else:
         print("[LOAD DATA] Warning the preprocessing funtion may be wrong for {}".format(config["extraction_model"]))
 

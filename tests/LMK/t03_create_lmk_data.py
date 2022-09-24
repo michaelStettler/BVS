@@ -64,8 +64,10 @@ def create_lmk_dataset(images, v4_model, lmk_type, config, patterns, sigma):
                         max_val_idx = l_idx
                 lmks_pos.append(lmks_dict[0][max_val_idx]['pos'])
 
-            else:
+            elif len(lmks_dict[0]) == 1:
                 lmks_pos.append(lmks_dict[0][0]['pos'])
+            else:
+                lmks_pos.append([-1, -1])
 
         lmks_positions.append(lmks_pos)
 
@@ -80,7 +82,7 @@ if __name__ == '__main__':
     lmk_type = 'FER'
     # define avatar
     avatar_names = ['jules', 'malcolm', 'ray', 'aia', 'bonnie', 'mery']
-    avatar_name = avatar_names[3]
+    avatar_name = avatar_names[4]
 
     # define configuration
     config_path = 'LMK_t03_create_lmk_data_m0001.json'

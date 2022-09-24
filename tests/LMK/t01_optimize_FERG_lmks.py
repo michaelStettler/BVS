@@ -332,7 +332,7 @@ def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config
 
 if __name__ == '__main__':
     # declare variables
-    do_load = False
+    do_load = True
     do_train = True
     use_only_last = True
     im_ratio = 3
@@ -349,7 +349,17 @@ if __name__ == '__main__':
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',
                  'left_mouth', 'top_mouth', 'right_mouth', 'down_mouth',
                  'left_eyelid', 'right_eyelid']
-    lmk_name = lmk_names[5]
+    # 0
+    # 1
+    # 2
+    # 3
+    # 4 - done
+    # 5 -
+    # 6 - done
+    # 7 - done
+    # 8 -
+    # 9 -
+    lmk_name = lmk_names[9]
     print("lmk_name:", lmk_name)
 
 
@@ -358,8 +368,8 @@ if __name__ == '__main__':
     save_sigma_name = 'sigma_' + avatar_name + '_' + lmk_name
 
     # define configuration
-    # config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'  # mac
-    config_path = 'LMK_t01_optimize_FERG_lmks_w0001.json'  # windows
+    config_path = 'LMK_t01_optimize_FERG_lmks_m0001.json'  # mac
+    # config_path = 'LMK_t01_optimize_FERG_lmks_w0001.json'  # windows
     # load config
     config = load_config(config_path, path='configs/LMK')
     print("-- Config loaded --")
