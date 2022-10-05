@@ -103,7 +103,7 @@ def learn_ref_vector(lmk_pos, labels, avatar_labels, n_avatar):
     return ref_vectors
 
 
-def learn_tun_vectors(lmk_pos, labels, ref_vectors, avatar_labels, idx_array=None):
+def learn_tun_vectors(lmk_pos, labels, ref_vectors, avatar_labels, n_cat=7, idx_array=None, avatar_type_idx=None):
     # learn tun vectors
     tun_vectors = []
 
@@ -112,11 +112,27 @@ def learn_tun_vectors(lmk_pos, labels, ref_vectors, avatar_labels, idx_array=Non
         cat_idx = img_idx[labels == i]
 
         if idx_array is not None:
+            # take the index from the idx_arra
             avatar_type = avatar_labels[cat_idx[idx_array[i]]]
             tun_vectors.append(lmk_pos[cat_idx[idx_array[i]]] - ref_vectors[avatar_type])
         else:
-            avatar_type = avatar_labels[cat_idx[0]]
-            tun_vectors.append(lmk_pos[cat_idx[0]] - ref_vectors[avatar_type])
+            if avatar_type_idx is not None:
+                # take first image of all the dataset but for a specific avatar (transfer learning)
+
+                # take only data from that category
+                lmk_pos_category = lmk_pos[cat_idx]  # only from that category
+                avatar_labels_category = avatar_labels[cat_idx]
+
+                # filter and keep only from the avatar of interest
+                cat_avatar_idx = np.arange(len(lmk_pos_category))
+                cat_avatar_idx = cat_avatar_idx[avatar_labels_category == avatar_type_idx]
+                lmk_pos_av_cat = lmk_pos_category[cat_avatar_idx]
+
+                tun_vectors.append(lmk_pos_av_cat[0] - ref_vectors[avatar_type_idx])
+            else:
+                # take first image of all the dataset
+                avatar_type = avatar_labels[cat_idx[0]]
+                tun_vectors.append(lmk_pos[cat_idx[0]] - ref_vectors[avatar_type])
 
     return np.array(tun_vectors)
 
@@ -197,7 +213,11 @@ print("shape ref_vectors", np.shape(ref_vectors))
 
 #%%
 # learn tun vectors from one avatar
-tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar)
+avatar_type = None
+avatar_type = 5
+if avatar_type is not None:
+    print("avatar name:", config['avatar_names'][avatar_type])
+tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar, n_cat=n_cat, avatar_type_idx=avatar_type)
 print("shape tun_vectors", np.shape(tun_vectors))
 
 #%%
@@ -222,39 +242,8 @@ print("shape test_projections_preds", np.shape(test_projections_preds))
 # compute accuracy
 print("test accuracy", compute_accuracy(test_projections_preds, test_label))
 
-#%%
-# optimize
-idx_array = np.zeros(n_cat).astype(int)
-best_idexes = []
-new_accuracy = 0
-for cat in range(1, 7):
-    category_to_optimize = cat
-    best_idx, accuracy, best_matching_idx = optimize_tuning_vectors(train_data, train_label, train_avatar,
-                                                                    category_to_optimize, idx_array,
-                                                                    len(config['avatar_names']))
-    print("category: {}, best_idx: {}, accuracy: {}".format(cat, best_idx, accuracy))
-    print()
-    idx_array[cat] = best_idx
-    best_idexes.append(best_matching_idx)
-
-    if accuracy > new_accuracy:
-        new_accuracy = accuracy
-
-print("best_indexes".format(best_idexes))
-print("optimized from: {} to {}".format(train_accuracy, accuracy))
-
-"""
-    Aia (from 73.07 to 90.23): 
-        - 3993  (30100)    
-        - 6957  (42040)  
-        - 418   (3043)   
-        - 6214  (39900)  
-        - 1945  (14713)  
-        - 4406  (28686) 
-"""
-
 #%% analysis
-confusion_matrix(train_label, projections_preds)
+confusion_matrix(test_label, test_projections_preds)
 
 #%%
 # accuracy per avatar
@@ -267,6 +256,82 @@ for a in range(len(config['avatar_names'])):
     conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
     print(conf_mat)
     print()
+
+#%%
+
+"""
+    Full (from 73.07 to 90.23): 
+        - 3993  (30100)    
+        - 6957  (42040)  
+        - 418   (3043)   
+        - 6214  (39900)  
+        - 1945  (14713)  
+        - 4406  (28686) 
+"""
+
+# # optimize
+# idx_array = np.zeros(n_cat).astype(int)
+# best_idexes = []
+# new_accuracy = 0
+# for cat in range(1, 7):
+#     category_to_optimize = cat
+#     best_idx, accuracy, best_matching_idx = optimize_tuning_vectors(train_data, train_label, train_avatar,
+#                                                                     category_to_optimize, idx_array,
+#                                                                     len(config['avatar_names']))
+#     print("category: {}, best_idx: {}, accuracy: {}".format(cat, best_idx, accuracy))
+#     print()
+#     idx_array[cat] = best_idx
+#     best_idexes.append(best_matching_idx)
+#
+#     if accuracy > new_accuracy:
+#         new_accuracy = accuracy
+#
+# print("best_indexes".format(best_idexes))
+# print("optimized from: {} to {}".format(train_accuracy, accuracy))
+
+# #%%
+# # set tuning vector with optimized direction
+# idx_array = [0, 3993, 6957, 418, 6214, 1945, 4406]
+# # learn tun vectors from one avatar
+# opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar, n_cat=n_cat, idx_array=idx_array)
+# print("shape opt_tun_vectors", np.shape(opt_tun_vectors))
+#
+# #%%
+# # compute optimized projections
+# opt_projections_preds = compute_projections(train_data, train_avatar, ref_vectors, opt_tun_vectors,
+#                                         neutral_threshold=5,
+#                                         verbose=False)
+# print("shape opt_projections_preds", np.shape(opt_projections_preds))
+#
+# # compute accuracy
+# opt_train_accuracy = compute_accuracy(opt_projections_preds, train_label)
+# print("opt_train_accuracy accuracy", opt_train_accuracy)
+#
+# #%%
+# # ------ test -----------
+# # compute test projections
+# opt_test_projections_preds = compute_projections(test_data, test_avatar, ref_vectors, opt_tun_vectors,
+#                                              neutral_threshold=5,
+#                                              verbose=False)
+# print("shape opt_test_projections_preds", np.shape(opt_test_projections_preds))
+#
+# # compute accuracy
+# print("opt test accuracy", compute_accuracy(opt_test_projections_preds, test_label))
+#
+# #%% analysis
+# confusion_matrix(test_label, opt_test_projections_preds)
+#
+# #%%
+# # accuracy per avatar
+# for a in range(len(config['avatar_names'])):
+#     avatar_test_projections_preds = opt_test_projections_preds[test_avatar == a]
+#     avatar_test_label = test_label[test_avatar == a]
+#     accuracy = compute_accuracy(avatar_test_projections_preds, avatar_test_label)
+#     print("test accuracy avatar {}: {}".format(a, accuracy))
+#
+#     conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
+#     print(conf_mat)
+#     print()
 
 
 
