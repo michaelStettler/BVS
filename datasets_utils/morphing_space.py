@@ -63,3 +63,23 @@ def transform_morph_space_list2space(data):
             space[4 - j, 4 - i] = data[i, j]
 
     return space
+
+
+def get_NRE_from_morph_space(data):
+    print("coucou")
+    """
+    return only the extremes from each avatar and category
+    
+    human avatar
+    angry_human (HumanAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0.0048): 3048  
+    fear_human (HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0.0062):  62
+    angry_monkey (HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0.0052): 3652
+    fear_monkey (HumanAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0051): 651
+    
+    monkey avatar
+    angry_human (MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0.0048): 6798
+    fear_human (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0.0048): 3798
+    angry_monkey (MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0.0055): 7405
+    fear_monkey (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0037): 4387
+    
+    """
