@@ -66,7 +66,6 @@ def transform_morph_space_list2space(data):
 
 
 def get_NRE_from_morph_space(data):
-    print("coucou")
     """
     return only the extremes from each avatar and category
     
@@ -83,3 +82,8 @@ def get_NRE_from_morph_space(data):
     fear_monkey (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0037): 4387
     
     """
+    filtered_data = data[0][[3048, 62, 3652, 651, 6798, 3798, 7405, 4387]]
+    filtered_label = data[1][[3048, 62, 3652, 651, 6798, 3798, 7405, 4387]]
+
+    return [filtered_data, filtered_label]
+

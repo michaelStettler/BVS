@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_pos
+from utils.Semantic.filter_with_semantic_units import get_semantic_pred
 
 
 def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100, batch_size=16, init_sigmas=None,
@@ -89,3 +90,77 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
         print()
 
     return activities_map_dict, np.array(opt_sigmas)
+
+
+def optimize_sigma(images, patterns, sigma, label_img_idx, init_sigma, lr_rate, is_first=False):
+    # get all latent image (feature extractions) from the labeled images
+    preds = []
+    for labeled_idx in label_img_idx:
+        im_pred = get_semantic_pred(v4_model, images[labeled_idx], lmk_type, config)
+        preds.append(np.squeeze(im_pred))
+    preds = np.array(preds)
+
+    if is_first:
+        prev_sigma = None
+    else:
+        prev_sigma = sigma
+
+    # optimize sigma over all labeled images for each pattern
+    lmks_dict, opt_sigmas = optimize_sigma_by_landmarks_count(preds, patterns,
+                                                              lr_rate=lr_rate,
+                                                              init_sigmas=[init_sigma],
+                                                              act_threshold=0.1,
+                                                              disable_tqdm=True,
+                                                              prev_sigma=prev_sigma)
+
+    # save sigma
+    return opt_sigmas[0]
+
+
+def get_lmk_distances(lmks_dict):
+    # retrieve all positions
+    positions = []
+    for l in lmks_dict[0]:
+        positions.append(lmks_dict[0][l]['pos'])
+    positions = np.array(positions)
+
+    # compute distances between all positions as a square matrix
+    distances = []
+    for p_start in positions:
+        for p_end in positions:
+            dist = np.linalg.norm(p_start - p_end)
+            distances.append(dist)
+
+    return np.array(distances)
+
+
+def decrease_sigma(image, patterns, sigma, lr_rate, lmk_type, config,
+                   act_threshold=0.1, dist_threshold=1.5, patch_size=14, max_dist=3):
+    im_pred = get_semantic_pred(v4_model, image, lmk_type, config)
+    print("shape im_pred", np.shape(im_pred))
+    is_too_close = True
+
+    while(is_too_close):
+        lmks_dict = predict_RBF_patch_pattern_lmk_pos(im_pred, patterns, sigma, 0,
+                                                      act_threshold=act_threshold,
+                                                      dist_threshold=dist_threshold,
+                                                      patch_size=patch_size)
+        # check how many landmarks found
+        n_lmk = len(lmks_dict[0])
+
+        # if (still )more than 1, then look if they are too close
+        if n_lmk > 1:
+            # get distance between all find lmks
+            distances = get_lmk_distances(lmks_dict)
+
+            # check if distance is smaller than max distance
+            if np.amax(distances) < max_dist:
+                is_too_close = False
+            else:
+                sigma -= lr_rate
+            print("sigma: {} (max_dist:{})".format(sigma, np.amax(distances)), end='\r')
+        else:
+            is_too_close = False
+    print("")
+
+    return sigma

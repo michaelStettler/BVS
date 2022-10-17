@@ -9,6 +9,7 @@ from utils.load_data import load_data
 from utils.get_csv_file_FERG import edit_FERG_csv_file_from_config
 from utils.extraction_model import load_extraction_model
 from utils.RBF_patch_pattern.construct_patterns import construct_pattern
+from utils.RBF_patch_pattern.construct_patterns import construct_RBF_patterns
 from utils.RBF_patch_pattern.lmk_patches import predict_RBF_patch_pattern_lmk_pos
 from utils.RBF_patch_pattern.optimize_sigma import optimize_sigma_by_landmarks_count
 from plots_utils.plot_BVS import display_images
@@ -205,93 +206,6 @@ def decrease_sigma(image, patterns, sigma, lr_rate, lmk_type, config,
     print("")
 
     return sigma
-
-
-def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init_sigma=100, im_ratio=1, k_size=(7, 7),
-                           use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None, lmk_name=''):
-    patterns = []
-    sigma = init_sigma
-    do_force_label = False
-
-    if loaded_patterns is not None:
-        for p in loaded_patterns:
-            patterns.append(p)
-
-    if loaded_sigma is not None:
-        sigma = loaded_sigma
-
-    label_img_idx = []
-    lmk_idx = 0
-
-    if train_idx is not None:
-        images = images[train_idx]
-        print("shape images", np.shape(images))
-        do_force_label = True
-
-    for i, img in enumerate(images):
-        print("image: ", i, end='')
-        # transform image to latent space
-        lat_pred = get_latent_pred(v4_model, img, lmk_type, config)
-
-        fig_title = "image:{} {}".format(i, lmk_name)
-
-        # label first image if no patterns
-        if len(patterns) == 0:
-            print(" - need labeling")
-            # label image
-            lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred,
-                                                                im_ratio=im_ratio,
-                                                                k_size=k_size,
-                                                                fig_title=fig_title)
-
-            if lmk_pos is not None:
-                # save labelled image idx
-                patterns.append(new_pattern)
-                label_img_idx.append(i)
-
-                # optimize sigma
-                sigma = optimize_sigma(images, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate, is_first=True)
-                print("new sigma", sigma)
-        else:
-            # predict landmark pos
-            lmks_list_dict = predict_RBF_patch_pattern_lmk_pos(lat_pred, np.array(patterns), sigma, lmk_idx)
-
-            # check if we need to add a new pattern
-            if not lmks_list_dict[0] or do_force_label:
-                print(" - need labeling")
-                # label image
-                lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred,
-                                                                    im_ratio=im_ratio,
-                                                                    k_size=k_size,
-                                                                    fig_title=fig_title)
-
-                if lmk_pos is not None:
-                    # save labelled image idx
-                    patterns.append(new_pattern)
-                    label_img_idx.append(i)
-                    print("len(patterns)", len(patterns))
-                    print("label_img_idx", label_img_idx)
-
-                    # optimize sigma
-                    if use_only_last:
-                        new_sigma = optimize_sigma(images, np.array(patterns), sigma, [label_img_idx[-1]], init_sigma, lr_rate)
-                    else:
-                        new_sigma = optimize_sigma(images, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate)
-
-                    if new_sigma < sigma:
-                        sigma = new_sigma
-                    print("new sigma", sigma)
-            elif len(lmks_list_dict[0]) > 1:
-                print("- {} landmarks found!".format(len(lmks_list_dict[0])))
-                new_sigma = decrease_sigma(img, np.array(patterns), sigma, lr_rate, lmk_type, config)
-                print("old sigma: {}, new sigma: {}".format(sigma, new_sigma))
-                sigma = new_sigma
-            else:
-                print(" - OK")
-
-        print()
-
-    return patterns, sigma
 
 
 def count_found_RBF_patterns(images, patterns, sigma, v4_model, lmk_type, config, max_value=3, display_failed_img=False):
