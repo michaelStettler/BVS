@@ -263,16 +263,6 @@ if __name__ == '__main__':
     lmk_names = ['left_eyebrow_ext', 'left_eyebrow_int', 'right_eyebrow_int', 'right_eyebrow_ext',
                  'left_mouth', 'top_mouth', 'right_mouth', 'down_mouth',
                  'left_eyelid', 'right_eyelid']
-    # 0
-    # 1
-    # 2
-    # 3
-    # 4 - done
-    # 5 -
-    # 6 - done
-    # 7 - done
-    # 8 -
-    # 9 -
     lmk_name = lmk_names[9]
     print("lmk_name:", lmk_name)
 

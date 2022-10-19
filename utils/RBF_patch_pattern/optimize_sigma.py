@@ -92,7 +92,7 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
     return activities_map_dict, np.array(opt_sigmas)
 
 
-def optimize_sigma(images, patterns, sigma, label_img_idx, init_sigma, lr_rate, is_first=False):
+def optimize_sigma(images, v4_model, lmk_type, config, patterns, sigma, label_img_idx, init_sigma, lr_rate, is_first=False):
     # get all latent image (feature extractions) from the labeled images
     preds = []
     for labeled_idx in label_img_idx:
@@ -134,7 +134,7 @@ def get_lmk_distances(lmks_dict):
     return np.array(distances)
 
 
-def decrease_sigma(image, patterns, sigma, lr_rate, lmk_type, config,
+def decrease_sigma(image, v4_model, patterns, sigma, lr_rate, lmk_type, config,
                    act_threshold=0.1, dist_threshold=1.5, patch_size=14, max_dist=3):
     im_pred = get_semantic_pred(v4_model, image, lmk_type, config)
     print("shape im_pred", np.shape(im_pred))

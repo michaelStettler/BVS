@@ -1,15 +1,13 @@
 import os
-from tqdm import tqdm
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
 
 from utils.load_config import load_config
 from utils.load_data import load_data
 from datasets_utils.morphing_space import get_NRE_from_morph_space
 from utils.extraction_model import load_extraction_model
-from utils.RBF_patch_pattern.construct_patterns import construct_RBF_patterns
-from plots_utils.plot_BVS import display_image
+from utils.RBF_patch_pattern.load_RBF_patterns import load_LMK_patterns_and_sigma
+from utils.RBF_patch_pattern.construct_patterns import create_RBF_LMK
 from plots_utils.plot_BVS import display_images
 
 np.random.seed(0)
@@ -21,7 +19,8 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 
 #%%
 # declare script variables
-load_LMK_pattern = False
+load_LMK_pattern = True
+n_iter = 2
 
 #%%
 # import config
@@ -53,7 +52,6 @@ print()
 display_images(NRE_train[0], pre_processing='VGG19', n_max_col=4)
 
 #%%
-# predict images
 # load feature extraction model
 v4_model = load_extraction_model(config, input_shape=tuple(config["input_shape"]))
 v4_model = tf.keras.Model(inputs=v4_model.input, outputs=v4_model.get_layer(config['v4_layer']).output)
@@ -64,18 +62,21 @@ print()
 
 
 #%%
-# train LMK detector
+# get RBF LMK detector
 if load_LMK_pattern:
     print("load LMKs")
+    FR_patterns_list, FR_sigma_list, FER_patterns_list, FER_sigma_list = \
+        load_LMK_patterns_and_sigma(config, avatar_name=["human", "monkey"])
 
 else:
     print("create patterns")
-    patterns, sigma = construct_RBF_patterns(train_data[0], v4_model, lmk_type, config,
-                                             init_sigma=init_sigma,
-                                             im_ratio=im_ratio,
-                                             k_size=k_size,
-                                             use_only_last=use_only_last,
-                                             loaded_patterns=patterns,
-                                             loaded_sigma=sigma,
-                                             train_idx=train_idx,
-                                             lmk_name=lmk_name)
+    FR_patterns_list, FR_sigma_list, FER_patterns_list, FER_sigma_list = \
+        create_RBF_LMK(config, LMK_train, v4_model, n_iter=n_iter)
+
+#%%
+print("len FR_patterns_list", len(FR_patterns_list))
+print("len FR_patterns_list[0]", len(FR_patterns_list[0]))
+print("len FR_patterns_list[1]", len(FR_patterns_list[1]))
+print("len FER_patterns_list", len(FER_patterns_list))
+
+#%% predict LMK pos

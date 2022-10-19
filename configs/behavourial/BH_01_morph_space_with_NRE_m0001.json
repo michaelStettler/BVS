@@ -22,5 +22,12 @@
   "nu": 1.0,
   "activity_threshold": 0.1,
   "distance_threshold": 1.5,
-  "patch_size": 14
+  "patch_size": 14,
+  "FR_lmk_name": ["left_eye", "right_eye", "nose"],
+  "FER_lmk_name": ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
+                 "left_mouth", "top_mouth", "right_mouth", "down_mouth",
+                 "left_eyelid", "right_eyelid"],
+  "init_sigma": 1000,
+  "k_size": [5, 5],
+  "use_only_last": true
 }

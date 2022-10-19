@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from utils.Semantic.filter_with_semantic_units import get_semantic_pred
 from utils.LMK.interactive_labelling import get_lmk_on_image
@@ -43,9 +44,9 @@ def construct_patterns(preds, pos, k_size, ratio=1):
     return patterns
 
 
-def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_processing='VGG19', fig_title=''):
+def label_and_construct_patterns(img, pred, im_factor=1, k_size=(7, 7), pre_processing='VGG19', fig_title=''):
     # label image
-    lmk_pos = get_lmk_on_image(img, im_ratio=im_ratio, pre_processing=pre_processing, fig_title=fig_title)
+    lmk_pos = get_lmk_on_image(img, im_factor=im_factor, pre_processing=pre_processing, fig_title=fig_title)
 
     if lmk_pos is not None:
         # construct patterns
@@ -58,7 +59,7 @@ def label_and_construct_patterns(img, pred, im_ratio=1, k_size=(7, 7), pre_proce
     return lmk_pos, pattern
 
 
-def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init_sigma=100, im_ratio=1, k_size=(7, 7),
+def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init_sigma=100, im_factor=1, k_size=(7, 7),
                            use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None, lmk_name=''):
     patterns = []
     sigma = init_sigma
@@ -91,7 +92,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
             print(" - need labeling")
             # label image
             lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred,
-                                                                im_ratio=im_ratio,
+                                                                im_factor=im_factor,
                                                                 k_size=k_size,
                                                                 fig_title=fig_title)
 
@@ -101,7 +102,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
                 label_img_idx.append(i)
 
                 # optimize sigma
-                sigma = optimize_sigma(images, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate, is_first=True)
+                sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate, is_first=True)
                 print("new sigma", sigma)
         else:
             # predict landmark pos
@@ -112,7 +113,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
                 print(" - need labeling")
                 # label image
                 lmk_pos, new_pattern = label_and_construct_patterns(img, lat_pred,
-                                                                    im_ratio=im_ratio,
+                                                                    im_factor=im_factor,
                                                                     k_size=k_size,
                                                                     fig_title=fig_title)
 
@@ -125,16 +126,16 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
 
                     # optimize sigma
                     if use_only_last:
-                        new_sigma = optimize_sigma(images, np.array(patterns), sigma, [label_img_idx[-1]], init_sigma, lr_rate)
+                        new_sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns), sigma, [label_img_idx[-1]], init_sigma, lr_rate)
                     else:
-                        new_sigma = optimize_sigma(images, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate)
+                        new_sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate)
 
                     if new_sigma < sigma:
                         sigma = new_sigma
                     print("new sigma", sigma)
             elif len(lmks_list_dict[0]) > 1:
                 print("- {} landmarks found!".format(len(lmks_list_dict[0])))
-                new_sigma = decrease_sigma(img, np.array(patterns), sigma, lr_rate, lmk_type, config)
+                new_sigma = decrease_sigma(img, v4_model, np.array(patterns), sigma, lr_rate, lmk_type, config)
                 print("old sigma: {}, new sigma: {}".format(sigma, new_sigma))
                 sigma = new_sigma
             else:
@@ -143,3 +144,70 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
         print()
 
     return patterns, sigma
+
+
+def create_RBF_LMK(config, data, v4_model, n_iter=2):
+    FR_patterns_list = []
+    FR_sigma_list = []
+    FER_patterns_list = []
+    FER_sigma_list = []
+
+    patterns = None
+    sigma = None
+    train_idx = None
+
+    num_img_per_avatar = 3750
+    # FR lmk pattern
+    for lmk_name in config["FR_lmk_name"]:
+        for avatar, idx in zip(["human", "monkey"], [0, 3750]):
+            print("avatar: {}, lmk_name: {}".format(avatar, lmk_name))
+            for i in range(n_iter):
+                patterns, sigma = construct_RBF_patterns(data[0][idx:(idx+num_img_per_avatar)], v4_model, "FR", config,
+                                                         init_sigma=config["init_sigma"],
+                                                         im_factor=3,  # size of image
+                                                         k_size=config["k_size"],
+                                                         use_only_last=config["use_only_last"],
+                                                         loaded_patterns=patterns,
+                                                         loaded_sigma=sigma,
+                                                         train_idx=train_idx,
+                                                         lmk_name=lmk_name)
+
+            print("-- Labeling and optimization finished --")
+            print("shape patterns", np.shape(patterns))
+            print("sigma", sigma)
+
+            FR_patterns_list.append(patterns)
+            FR_sigma_list.append(sigma)
+
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_patterns_{}".format(avatar, lmk_name)), patterns)
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_sigma_{}".format(avatar, lmk_name)), sigma)
+
+            patterns = None
+            sigma = None
+
+    # FER LMK patterns
+    for lmk_name in config["FER_lmk_name"]:
+        print("lmk_name:", lmk_name)
+        for i in range(n_iter):
+            patterns, sigma = construct_RBF_patterns(LMK_train[0], v4_model, "FER", config,
+                                                     init_sigma=config["init_sigma"],
+                                                     im_factor=3,  # size of image
+                                                     k_size=config["k_size"],
+                                                     use_only_last=config["use_only_last"],
+                                                     loaded_patterns=patterns,
+                                                     loaded_sigma=sigma,
+                                                     train_idx=train_idx,
+                                                     lmk_name=lmk_name)
+
+        print("-- Labeling and optimization finished --")
+        print("shape patterns", np.shape(patterns))
+        print("sigma", sigma)
+
+        FER_patterns_list.append(patterns)
+        FER_sigma_list.append(sigma)
+
+        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_patterns_{}".format(lmk_name)), patterns)
+        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_sigma_{}".format(lmk_name)), sigma)
+
+        patterns = None
+        sigma = None
