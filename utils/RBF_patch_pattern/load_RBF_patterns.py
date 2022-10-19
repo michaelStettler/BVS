@@ -6,16 +6,20 @@ def load_files(config, condition, file_name, avatar_name=None):
     files = []
     for lmk_name in config["{}_lmk_name".format(condition)]:
         if avatar_name is not None:
-            pattern_name = "{}_{}_{}_{}.npy".format(condition, avatar_name, file_name, lmk_name)
+            name = "{}_{}_{}_{}.npy".format(condition, avatar_name, file_name, lmk_name)
         else:
-            pattern_name = "{}_{}_{}.npy".format(condition, file_name, lmk_name)
-        pattern_path = os.path.join(config["directory"], config["LMK_data_directory"], pattern_name)
-        files.append(np.load(pattern_path))
+            name = "{}_{}_{}.npy".format(condition, file_name, lmk_name)
+        path = os.path.join(config["directory"], config["LMK_data_directory"], name)
+
+        if file_name == "sigma":
+            files.append(int(np.load(path)))
+        else:
+            files.append(np.load(path))
 
     return files
 
 
-def load_LMK_patterns_and_sigma(config, avatar_name=None, load_FR=True, load_FER=True):
+def load_RBF_patterns_and_sigma(config, avatar_name=None, load_FR=True, load_FER=True):
     """
     return all the patterns and sigma saved for the LMK detector
 
