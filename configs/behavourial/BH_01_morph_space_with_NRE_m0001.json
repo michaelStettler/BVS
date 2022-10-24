@@ -23,6 +23,7 @@
   "activity_threshold": 0.1,
   "distance_threshold": 1.5,
   "patch_size": 14,
+  "avatar_types": ["human", "monkey"],
   "FR_lmk_name": ["left_eye", "right_eye", "nose"],
   "FER_lmk_name": ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",

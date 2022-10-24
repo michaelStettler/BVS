@@ -146,7 +146,7 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
     return patterns, sigma
 
 
-def create_RBF_LMK(config, data, v4_model, n_iter=2):
+def create_RBF_LMK(config, data, v4_model, n_iter=2, FR_patterns=None, FR_sigma=None, FER_patterns=None, FER_sigma=None, save=True):
     FR_patterns_list = []
     FR_sigma_list = []
     FER_patterns_list = []
@@ -154,12 +154,20 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2):
 
     patterns = None
     sigma = None
-    train_idx = None
 
-    num_img_per_avatar = 3750
+    num_img_per_avatar = int(len(data[0]) / len(config["avatar_types"]))
+    avatar_idx = [i * num_img_per_avatar for i in range(len(config["avatar_types"]))]
+    print("num_img_per_avatar", num_img_per_avatar)
+    print("avatar_idx", avatar_idx)
     # FR lmk pattern
-    for lmk_name in config["FR_lmk_name"]:
-        for avatar, idx in zip(["human", "monkey"], [0, 3750]):
+    for a, (avatar, idx) in enumerate(zip(config["avatar_types"], avatar_idx)):
+        FR_pat_list = []
+        FR_sig_list = []
+        for l, lmk_name in enumerate(config["FR_lmk_name"]):
+            if FR_patterns is not None:
+                patterns = FR_patterns[a][l]
+                sigma = FR_sigma[a][l]
+
             print("avatar: {}, lmk_name: {}".format(avatar, lmk_name))
             for i in range(n_iter):
                 patterns, sigma = construct_RBF_patterns(data[0][idx:(idx+num_img_per_avatar)], v4_model, "FR", config,
@@ -169,34 +177,40 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2):
                                                          use_only_last=config["use_only_last"],
                                                          loaded_patterns=patterns,
                                                          loaded_sigma=sigma,
-                                                         train_idx=train_idx,
                                                          lmk_name=lmk_name)
 
             print("-- Labeling and optimization finished --")
             print("shape patterns", np.shape(patterns))
             print("sigma", sigma)
 
-            FR_patterns_list.append(patterns)
-            FR_sigma_list.append(sigma)
+            FR_pat_list.append(patterns)
+            FR_sig_list.append(sigma)
 
-            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_patterns_{}".format(avatar, lmk_name)), patterns)
-            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_sigma_{}".format(avatar, lmk_name)), sigma)
+            if save:
+                np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_patterns_{}".format(avatar, lmk_name)), patterns)
+                np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_sigma_{}".format(avatar, lmk_name)), sigma)
 
             patterns = None
             sigma = None
 
+        FR_patterns_list.append(FR_pat_list)
+        FR_sigma_list.append(FR_sig_list)
+
     # FER LMK patterns
-    for lmk_name in config["FER_lmk_name"]:
+    for l, lmk_name in enumerate(config["FER_lmk_name"]):
+        if FER_patterns is not None:
+            patterns = FER_patterns[l]
+            sigma = FER_sigma[l]
+
         print("lmk_name:", lmk_name)
         for i in range(n_iter):
-            patterns, sigma = construct_RBF_patterns(LMK_train[0], v4_model, "FER", config,
+            patterns, sigma = construct_RBF_patterns(data[0], v4_model, "FER", config,
                                                      init_sigma=config["init_sigma"],
                                                      im_factor=3,  # size of image
                                                      k_size=config["k_size"],
                                                      use_only_last=config["use_only_last"],
                                                      loaded_patterns=patterns,
                                                      loaded_sigma=sigma,
-                                                     train_idx=train_idx,
                                                      lmk_name=lmk_name)
 
         print("-- Labeling and optimization finished --")
@@ -206,8 +220,11 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2):
         FER_patterns_list.append(patterns)
         FER_sigma_list.append(sigma)
 
-        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_patterns_{}".format(lmk_name)), patterns)
-        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_sigma_{}".format(lmk_name)), sigma)
+        if save:
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_patterns_{}".format(lmk_name)), patterns)
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_sigma_{}".format(lmk_name)), sigma)
 
         patterns = None
         sigma = None
+
+    return FR_patterns_list, FR_sigma_list, FER_patterns_list, FER_sigma_list

@@ -74,6 +74,7 @@ def display_images(images, lmks=None, ref_lmks=None, n_max_col=7, size_img=4, lm
     fig.set_figwidth(n_col*size_img)
 
     lmk_pos = None
+    ref_lmk_pos = None
 
     for i in range(n_row):
         for j in range(n_col):
@@ -82,12 +83,20 @@ def display_images(images, lmks=None, ref_lmks=None, n_max_col=7, size_img=4, lm
             if lmks is not None:
                 lmk_pos = lmks[img_idx]
 
+            if ref_lmks is not None:
+                if len(np.shape(ref_lmks)) == 3:
+                    ref_lmk_pos = ref_lmks[img_idx]
+                elif len(np.shape(ref_lmks)) == 2:
+                    ref_lmk_pos = ref_lmks
+                else:
+                    raise NotImplementedError("Issues with ref_lmks tensor of size {}".format(len(np.shape(ref_lmks))))
+
             title=None
             if titles is not None:
                 title = titles[img_idx]
 
             if n_row == 1 and n_col == 1:
-                display_image(images[img_idx], lmks=lmk_pos, ref_lmks=ref_lmks, lmk_size=lmk_size,
+                display_image(images[img_idx], lmks=lmk_pos, ref_lmks=ref_lmk_pos, lmk_size=lmk_size,
                               pre_processing=pre_processing,
                               is_black_n_white=is_black_n_white,
                               axs=axs,
@@ -96,7 +105,7 @@ def display_images(images, lmks=None, ref_lmks=None, n_max_col=7, size_img=4, lm
                               save=save,
                               save_name=save_name)
             elif n_row == 1:
-                display_image(images[img_idx], lmks=lmk_pos, ref_lmks=ref_lmks, lmk_size=lmk_size,
+                display_image(images[img_idx], lmks=lmk_pos, ref_lmks=ref_lmk_pos, lmk_size=lmk_size,
                               pre_processing=pre_processing,
                               is_black_n_white=is_black_n_white,
                               axs=axs[img_idx],
@@ -105,7 +114,7 @@ def display_images(images, lmks=None, ref_lmks=None, n_max_col=7, size_img=4, lm
                               save=save,
                               save_name=save_name)
             else:
-                display_image(images[img_idx], lmks=lmk_pos, ref_lmks=ref_lmks, lmk_size=lmk_size,
+                display_image(images[img_idx], lmks=lmk_pos, ref_lmks=ref_lmk_pos, lmk_size=lmk_size,
                               pre_processing=pre_processing,
                               is_black_n_white=is_black_n_white,
                               axs=axs[i, j],
