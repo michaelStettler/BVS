@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from datasets_utils.morphing_space import get_morph_extremes_idx
 from datasets_utils.morphing_space import get_NRE_from_morph_space
@@ -26,17 +27,19 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 """
 
 #%% declare script variables
-show_plot = False
+show_plot = True
 load_RBF_pattern = True
-train_RBF_pattern = False
-save_RBF_pattern = False
-load_FR_pathway = True
-save_FR_pos = False
-load_FER_pos = True
-save_FER_pos = False
+train_RBF_pattern = True
+save_RBF_pattern = True
+load_FR_pathway = False
+save_FR_pos = True
+load_FER_pos = False
+save_FER_pos = True
 
 #%% declare hyper parameters
 n_iter = 2
+max_sigma = None
+max_sigma = 3000
 
 #%% import config
 config_path = 'BH_01_morph_space_with_NRE_m0001.json'
@@ -44,6 +47,16 @@ config_path = 'BH_01_morph_space_with_NRE_m0001.json'
 config = load_config(config_path, path='configs/behavourial')
 print("-- Config loaded --")
 print()
+
+config["FR_lmk_name"] = ["left_eye", "right_eye", "nose"]
+# config["FR_lmk_name"] = []
+
+config["FER_lmk_name"] = ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
+                 "left_mouth", "top_mouth", "right_mouth", "down_mouth",
+                 "left_eyelid", "right_eyelid"]
+# config["FER_lmk_name"] = ["right_eyebrow_int", "right_eyebrow_ext",
+#                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
+#                  "left_eyelid", "right_eyelid"]
 
 #%% import data
 train_data = load_data(config)
@@ -85,6 +98,7 @@ if train_RBF_pattern:
     print("create patterns")
     FR_patterns_list, FR_sigma_list, FER_patterns_list, FER_sigma_list = \
         create_RBF_LMK(config, LMK_train, v4_model,
+                       max_sigma=max_sigma,
                        n_iter=n_iter,
                        FR_patterns=FR_patterns_list,
                        FR_sigma=FR_sigma_list,
@@ -137,26 +151,101 @@ print("shape ref_vectors", np.shape(ref_vectors))
 #%% plot landmarks on NRE_train
 if show_plot:
     extremes_idx = get_morph_extremes_idx()
+    extremes_idx = [0] + extremes_idx[:4] + [3750] + extremes_idx[4:]
+    print("extremes_idx", extremes_idx)
     NRE_train_img = train_data[0][extremes_idx]
     NRE_lmk_pos = FER_pos[extremes_idx] * 224 / 56
     NRE_ref_pos = ref_vectors * 224 / 56
-    NRE_ref_pos = np.repeat(NRE_ref_pos, 4, axis=0)  # expand ref_pos for each images
+    NRE_ref_pos = np.repeat(NRE_ref_pos, 5, axis=0)  # expand ref_pos for each images
 
     display_images(NRE_train_img,
                    lmks=NRE_lmk_pos,
                    ref_lmks=NRE_ref_pos,
-                   n_max_col=4,
+                   n_max_col=5,
                    pre_processing="VGG19")
 
 #%% learn tuning vectors
-tun_idx = [0] + get_morph_extremes_idx()
+tun_idx = [0] + get_morph_extremes_idx()[:4]
 tun_vectors = learn_tun_vectors(FER_pos[tun_idx], train_data[1][tun_idx], ref_vectors, face_ids[tun_idx], n_cat=5)
 print("shape tun_vectors", np.shape(tun_vectors))
+print(tun_vectors)
 
 #%% Compute projections
 # todo remove face positions from the FER_pos
 NRE_proj = compute_projections(FER_pos, face_ids, ref_vectors, tun_vectors, return_proj_length=True)
 print("shape NRE_proj", np.shape(NRE_proj))
 
+#%%
+# plot test human fear
+plt.figure()
+plt.plot(NRE_proj[:150])
+plt.legend(["HA", "HF", "MA", "MF"])
+plt.show()
 
+#%%
+from plots_utils.plot_tuning_signatures import plot_tuning_signatures
+import matplotlib.cm as cm
+from plots_utils.plot_ft_map_pos import _set_fig_name
+from plots_utils.plot_ft_map_pos import _set_save_folder
+
+
+def plot_tuning_signatures(data, ref_tuning=None, fig_name=None, save_folder=None, fig_size=(5, 5), dpi=600):
+    print("shape data", np.shape(data))
+
+    # set images name
+    images_name = _set_fig_name(fig_name, 'signature_tuning.png')
+
+    # set save folder
+    save_folder = _set_save_folder(save_folder, '')
+
+    # create colors
+    colors = cm.rainbow(np.linspace(0, 1, len(data)))
+
+    # create figure
+    plt.figure(figsize=fig_size, dpi=dpi)
+
+    for i, d, c in zip(np.arange(len(data)), data, colors):
+        plt.scatter(d[1], -d[0], color=c)
+        plt.arrow(0, 0, d[1], -d[0], color=c, linewidth=1)
+        plt.text(d[1] * 1.1, -d[0] * 1.1, str(i), color=c)
+
+        if ref_tuning is not None:
+            plt.scatter(ref_tuning[i, 1], -ref_tuning[i, 0], color=c)
+            plt.arrow(0, 0, ref_tuning[i, 1], -ref_tuning[i, 0], color=c, linewidth=1, linestyle=':')
+
+    plt.xlim([-5, 5])
+    plt.ylim([-5, 5])
+
+    plt.savefig(os.path.join(save_folder, images_name))
+
+plot_tuning_signatures(tun_vectors[1] * 2, fig_size=(2, 2), dpi=200)
+
+#%%
+
+def print_morph_space(data, title=None):
+    morph_space_data = np.reshape(data, [25, 150, -1])
+    print("shape morph_space_data", np.shape(morph_space_data))
+
+    # fig, axs = plt.subplots(len(morph_space_data))
+    # for i in range(len(morph_space_data)):
+    #     axs[i].plot(morph_space_data[i])
+
+    # get max values for each video and category
+    amax_ms = np.amax(morph_space_data, axis=1)
+    print("shape amax_ms", np.shape(amax_ms))
+    print(amax_ms)
+
+    # make into grid
+    amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
+    print("shape amax_ms_grid", np.shape(amax_ms_grid))
+
+    fig, axs = plt.subplots(2, 2)
+    axs[0, 0].imshow(amax_ms_grid[..., 1], cmap='hot', interpolation='nearest')
+    axs[0, 1].imshow(amax_ms_grid[..., 2], cmap='hot', interpolation='nearest')
+    axs[1, 0].imshow(amax_ms_grid[..., 3], cmap='hot', interpolation='nearest')
+    axs[1, 1].imshow(amax_ms_grid[..., 4], cmap='hot', interpolation='nearest')
+    plt.show()
+
+
+print_morph_space(NRE_proj[:3750], title="Human")
 

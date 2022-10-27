@@ -67,21 +67,24 @@ def transform_morph_space_list2space(data):
 
 def get_morph_extremes_idx():
     """
+    idx: sorted (old)
+
     human avatar
-    angry_human (HumanAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0.0048): 3048
-    fear_human (HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0.0062):  62
-    angry_monkey (HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0.0052): 3652
-    fear_monkey (HumanAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0051): 651
+    angry_human (HumanAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0.0048): 48 (3048)
+    fear_human (HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0.0062):  662 (62)
+    angry_monkey (HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0.0052): 3052 (3652)
+    fear_monkey (HumanAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0051): 3651 (651)
 
     monkey avatar
-    angry_human (MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0.0048): 6798
-    fear_human (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0.0048): 3798
-    angry_monkey (MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0.0055): 7405
-    fear_monkey (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0037): 4387
+    angry_human (MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0.0048): 3798 (6798)
+    fear_human (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0.0048): 4398 (3798)
+    angry_monkey (MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0.0055): 6805 (7405)
+    fear_monkey (MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0.0037): 7387 (4387)
 
     """
 
-    return [3048, 62, 3652, 651, 6798, 3798, 7405, 4387]
+    # return [3048, 62, 3652, 651, 6798, 3798, 7405, 4387]
+    return [48, 662, 3052, 3651, 3798, 4398, 6805, 7387]
 
 
 def get_NRE_from_morph_space(data):

@@ -77,7 +77,7 @@ print("shape tun_vectors", np.shape(tun_vectors))
 #%%
 # compute projections
 projections_preds = compute_projections(train_data, train_avatar, ref_vectors, tun_vectors,
-                                        neutral_threshold=5,
+                                        neutral_threshold=0,
                                         verbose=False)
 print("shape projections_preds", np.shape(projections_preds))
 
@@ -157,7 +157,7 @@ elif avatar_type == 2:
 elif avatar_type == 3:
     idx_array = [0, 624, 390, 581, 471, 207, 518]  # NRE-aia best
 elif avatar_type == 4:
-    idx_array = [0, 517, 315, 877, 868, 20, ]  # NRE-bonnie best
+    idx_array = [0, 517, 315, 877, 868, 20, 1273]  # NRE-bonnie best
 elif avatar_type == 5:
     idx_array = [0, 131, 855, 51, 354, 584, 532]  # NRE-mery best
 # learn tun vectors from one avatar

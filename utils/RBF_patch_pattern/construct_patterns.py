@@ -60,7 +60,8 @@ def label_and_construct_patterns(img, pred, im_factor=1, k_size=(7, 7), pre_proc
 
 
 def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init_sigma=100, im_factor=1, k_size=(7, 7),
-                           use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None, lmk_name=''):
+                           use_only_last=False, loaded_patterns=None, loaded_sigma=None, train_idx=None, lmk_name='',
+                           max_sigma=None):
     patterns = []
     sigma = init_sigma
     do_force_label = False
@@ -102,7 +103,10 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
                 label_img_idx.append(i)
 
                 # optimize sigma
-                sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate, is_first=True)
+                sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns),
+                                       sigma, label_img_idx, init_sigma, lr_rate,
+                                       is_first=True,
+                                       max_sigma=max_sigma)
                 print("new sigma", sigma)
         else:
             # predict landmark pos
@@ -126,9 +130,13 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
 
                     # optimize sigma
                     if use_only_last:
-                        new_sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns), sigma, [label_img_idx[-1]], init_sigma, lr_rate)
+                        new_sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns),
+                                                   sigma, [label_img_idx[-1]], init_sigma, lr_rate,
+                                                   max_sigma=max_sigma)
                     else:
-                        new_sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns), sigma, label_img_idx, init_sigma, lr_rate)
+                        new_sigma = optimize_sigma(images, v4_model, lmk_type, config, np.array(patterns),
+                                                   sigma, label_img_idx, init_sigma, lr_rate,
+                                                   max_sigma=max_sigma)
 
                     if new_sigma < sigma:
                         sigma = new_sigma
@@ -146,7 +154,8 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
     return patterns, sigma
 
 
-def create_RBF_LMK(config, data, v4_model, n_iter=2, FR_patterns=None, FR_sigma=None, FER_patterns=None, FER_sigma=None, save=True):
+def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
+                   FR_patterns=None, FR_sigma=None, FER_patterns=None, FER_sigma=None, save=True):
     FR_patterns_list = []
     FR_sigma_list = []
     FER_patterns_list = []
@@ -168,7 +177,7 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, FR_patterns=None, FR_sigma=
                 patterns = FR_patterns[a][l]
                 sigma = FR_sigma[a][l]
 
-            print("avatar: {}, lmk_name: {}".format(avatar, lmk_name))
+            print("avatar: {}, lmk_name: {}, sigma: {}".format(avatar, lmk_name, sigma))
             for i in range(n_iter):
                 patterns, sigma = construct_RBF_patterns(data[0][idx:(idx+num_img_per_avatar)], v4_model, "FR", config,
                                                          init_sigma=config["init_sigma"],
@@ -177,7 +186,8 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, FR_patterns=None, FR_sigma=
                                                          use_only_last=config["use_only_last"],
                                                          loaded_patterns=patterns,
                                                          loaded_sigma=sigma,
-                                                         lmk_name=lmk_name)
+                                                         lmk_name=lmk_name,
+                                                         max_sigma=max_sigma)
 
             print("-- Labeling and optimization finished --")
             print("shape patterns", np.shape(patterns))

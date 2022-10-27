@@ -7,7 +7,7 @@ from utils.Semantic.filter_with_semantic_units import get_semantic_pred
 
 def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100, batch_size=16, init_sigmas=None,
                                       act_threshold=0.1, dist_threshold=1.5, patch_size=14, verbose=False,
-                                      disable_tqdm=False, prev_sigma=None):
+                                      disable_tqdm=False, prev_sigma=None, max_sigma=None):
 
     activities_dict = []
     n_images = np.shape(preds)[0]
@@ -57,9 +57,13 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
                 sigma += lr_rate
                 memory_max_pool_activity = lmks_dict
 
-                if prev_sigma is not None:
-                    if sigma > prev_sigma:
-                        do_continue = False
+                # stop if sigma gets bigger than a previous one
+                if prev_sigma is not None and sigma > prev_sigma:
+                    do_continue = False
+
+                # stop if sigma is bigger than a set value
+                if max_sigma is not None and sigma > max_sigma:
+                    do_continue = False
             else:
                 do_continue = False
 
@@ -92,7 +96,8 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
     return activities_map_dict, np.array(opt_sigmas)
 
 
-def optimize_sigma(images, v4_model, lmk_type, config, patterns, sigma, label_img_idx, init_sigma, lr_rate, is_first=False):
+def optimize_sigma(images, v4_model, lmk_type, config, patterns, sigma, label_img_idx, init_sigma, lr_rate,
+                   is_first=False, max_sigma=None):
     # get all latent image (feature extractions) from the labeled images
     preds = []
     for labeled_idx in label_img_idx:
@@ -111,7 +116,8 @@ def optimize_sigma(images, v4_model, lmk_type, config, patterns, sigma, label_im
                                                               init_sigmas=[init_sigma],
                                                               act_threshold=0.1,
                                                               disable_tqdm=True,
-                                                              prev_sigma=prev_sigma)
+                                                              prev_sigma=prev_sigma,
+                                                              max_sigma=max_sigma)
 
     # save sigma
     return opt_sigmas[0]
