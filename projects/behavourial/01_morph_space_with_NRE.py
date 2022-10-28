@@ -34,7 +34,7 @@ save_RBF_pattern = True
 load_FR_pathway = False
 save_FR_pos = True
 load_FER_pos = False
-save_FER_pos = True
+save_FER_pos = False
 
 #%% declare hyper parameters
 n_iter = 2
@@ -49,11 +49,12 @@ print("-- Config loaded --")
 print()
 
 config["FR_lmk_name"] = ["left_eye", "right_eye", "nose"]
-# config["FR_lmk_name"] = []
+config["FR_lmk_name"] = []
 
 config["FER_lmk_name"] = ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
                  "left_eyelid", "right_eyelid"]
+config["FER_lmk_name"] = ["left_mouth", "right_mouth", "left_eyelid", "right_eyelid"]
 # config["FER_lmk_name"] = ["right_eyebrow_int", "right_eyebrow_ext",
 #                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
 #                  "left_eyelid", "right_eyelid"]

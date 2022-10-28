@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
 viridis = cm.get_cmap('viridis', 12)
 
@@ -93,7 +92,56 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=
     plt.show()
 
 
-def optimize_NRE(x, y, neutral=0):
+def compute_projections(x, ref_vectors, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
+    """
+
+    :param x: (n_img, n_feat_map, n_dim)
+    :param ref_vectors: (n_feat_map, n_dim)
+    :param tun_vectors: (n_cat, n_feat_map, n_dim)
+    :param nu:
+    :param neutral_threshold:
+    :param verbose:
+    :return:
+    """
+
+    # normalize by norm of each landmark
+    norm_t = np.linalg.norm(tun_vectors, axis=2)  # (n_cat, n_feat_map)
+
+    # vectorized version
+    diff = x - ref_vectors
+    projections = np.dot(diff, np.moveaxis(tun_vectors, 0, -1)) / norm_t  # does not take care of norm_t == 0
+    projections = np.power(projections, nu)
+    projections[projections < 0] = 0
+    projections = projections[..., 0, :]  # remove duplicate from the 3 by 3,
+    # todo: is there not a better way to do the dot product?
+    projections = np.sum(projections, axis=1)  # sum of feature maps
+
+    # apply neutral threshold
+    projections[projections < neutral_threshold] = 0
+
+    return projections
+
+
+def compute_loss(proj: np.array, y: np.array) -> float:
+    """
+
+    :param proj: (n_img, n_cat)
+    :param y: (n_img, )
+    :return:
+    """
+
+    # compute sum of all exp proj
+    sum_proj = np.sum(np.exp(proj), axis=1)
+
+    loss = 0
+    for i in range(len(proj)):
+        if y[i] != 0:  # assume neutral == 0
+            loss += np.exp(proj[i, y[i] - 1]) / sum_proj[i]
+
+    return loss
+
+
+def optimize_NRE(x: np.array, y, neutral=0, lr=0.1):
     """
 
     :param x: (n_pts, n_feature_maps, n_dim)
@@ -131,6 +179,17 @@ def optimize_NRE(x, y, neutral=0):
     print("tun_vectors", np.shape(tun_vectors))
     print(tun_vectors)
 
+    # get projections
+    projections = compute_projections(x, ref_vectors, tun_vectors)
+    print("projections", np.shape(projections))
+
+    # compute loss
+    loss = compute_loss(projections, y)
+    print("loss", loss)
+
+    # move ref vector (do something like)
+    ref_vectors += lr * loss
+
     plot_space(x_train, y_train, ref_vector=ref_vectors[0], tun_vectors=tun_vectors[:, 0])
 
 
@@ -140,7 +199,7 @@ if __name__ == '__main__':
     n_cat = 4  # (3 + random)
     n_points = 5
     # generate random data
-    x_train, y_train = generate_data_set(n_dim, n_cat, n_points, ref_at_origin=True)
+    x_train, y_train = generate_data_set(n_dim, n_cat, n_points, ref_at_origin=False)
     print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
 

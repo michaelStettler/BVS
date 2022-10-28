@@ -157,3 +157,62 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
                proj_pred[proj_pred == match[0]] = match[1]
 
     return proj_pred
+
+
+def compute_projections_cleaned(x, ref_vectors, tun_vectors, nu=1, neutral_threshold=0,
+                        verbose=False) -> np.array:
+    """
+
+    :param x: (n_img, n_feat_map, n_dim)
+    :param ref_vectors: (n_feat_map, n_dim)
+    :param tun_vectors: (n_cat, n_feat_map, n_dim)
+    :param nu:
+    :param neutral_threshold:
+    :param verbose:
+    :return:
+    """
+
+    projections = []
+    n_img = len(x)
+    n_feat_map = len(ref_vectors)
+    n_cat = len(tun_vectors)
+
+    # normalize by norm of each landmark
+    norm_t = np.linalg.norm(tun_vectors, axis=2)  # (n_cat, n_feat_map)
+
+    # for each images
+    for x_ in x:
+        # for each feat map (landmark)
+        for f in range(n_feat_map):
+
+            # compute relative vector (difference)
+            diff = x_ - ref_vectors[f]
+            proj = []
+            for c in range(n_cat):
+                # for each category
+                proj_length = 0
+                if norm_t[c, f] != 0.0:
+                    p = np.dot(diff[f], tun_vectors[c, f]) / norm_t[c, f]
+                    p = np.power(p, nu)
+                else:
+                    p = 0
+                proj_length += p
+                # ReLu activation
+                if proj_length < 0:
+                    proj_length = 0
+                proj.append(proj_length)
+            projections.append(proj)
+
+    projections = np.array(projections)
+
+    # apply neutral threshold
+    projections[projections < neutral_threshold] = 0
+
+    if verbose:
+        print("projections", np.shape(projections))
+        print(projections)
+        print()
+        print("max_projections", np.shape(np.amax(projections, axis=1)))
+        print(np.amax(projections, axis=1))
+
+    return projections

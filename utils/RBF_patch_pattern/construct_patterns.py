@@ -1,6 +1,8 @@
 import numpy as np
 import os
 
+from multiprocessing import Pool
+
 from utils.Semantic.filter_with_semantic_units import get_semantic_pred
 from utils.LMK.interactive_labelling import get_lmk_on_image
 from utils.RBF_patch_pattern.optimize_sigma import optimize_sigma
