@@ -131,14 +131,16 @@ def compute_loss(proj: np.array, y: np.array) -> float:
     """
 
     # compute sum of all exp proj
-    sum_proj = np.sum(np.exp(proj), axis=1)
+    # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
 
     loss = 0
     for i in range(len(proj)):
         if y[i] != 0:  # assume neutral == 0
-            loss += np.exp(proj[i, y[i] - 1]) / sum_proj[i]
+            # loss += np.exp(proj[i, y[i] - 1]) / sum_proj[i]
+            loss += np.exp(proj[i, y[i] - 1])
 
-    return loss
+    # return loss
+    return loss / len(proj)
 
 
 def optimize_NRE(x: np.array, y, neutral=0, lr=0.1):
