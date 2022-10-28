@@ -75,11 +75,19 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=
         # get all positions for this label
         pos = positions[labels == label]
 
+        # scale tuning vector for plotting
+        max_length = np.max(np.linalg.norm(pos, axis=1))
+        x_direction = pos[np.argmax(np.linalg.norm(pos, axis=1))][0]
+        if x_direction * tun_vectors[i - 1, 0] < 0:
+            sign = -1
+        else:
+            sign = 1
+
         # plot the positions
         plt.scatter(pos[:, 0], pos[:, 1], color=color, label=label_name)
 
         if i != 0 and tun_vectors is not None and ref_vector is not None:
-            plt.plot([ref_vector[0], tun_vectors[i - 1, 0]], [ref_vector[1], tun_vectors[i - 1, 1]], color=color)
+            plt.plot([ref_vector[0], sign * max_length * tun_vectors[i - 1, 0]], [ref_vector[1], sign * max_length * tun_vectors[i - 1, 1]], color=color)
 
     if ref_vector is not None:
         print("ref_vector", ref_vector)
