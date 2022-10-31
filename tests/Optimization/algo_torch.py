@@ -68,16 +68,24 @@ def center_reference(x: np.array, ref_vectors: np.array) -> np.array:
     return x - ref_vectors
 
 
-def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=5, max_length=5, save=False, name=None):
+def plot_space(positions, labels, ref_vector=None, tun_vectors=None, radius=None, min_length=5, max_length=5, save=False, name=None):
     uniques = np.unique(labels)
     n_cat = len(uniques)
 
     positions, labels = positions.clone().detach().data.cpu().numpy(), labels.clone().detach().data.cpu().numpy()
     tun_vectors = tun_vectors.clone().detach().data.cpu().numpy()
+    radius = radius.clone().detach().data.cpu().numpy()
     positions = np.squeeze(positions)
     # plot
     cmap = cm.get_cmap('viridis', n_cat)
     plt.figure()
+    r = radius
+    circle_x = np.linspace(0, r, 1000)
+    circle_y = (np.sqrt(r**2 -circle_x**2))
+    plt.scatter(circle_x, circle_y, s=1, color="black")
+    plt.scatter(circle_x, -circle_y, s=1, color="black")
+    plt.scatter(-circle_x, circle_y, s=1, color="black")
+    plt.scatter(-circle_x, -circle_y, s=1, color="black")
     for i, color in zip(range(n_cat), cmap(range(n_cat))):
         label = uniques[i]
 
@@ -138,15 +146,24 @@ def compute_tun_vectors(x, y, neutral):
                 u, s, vh = torch.linalg.svd(x_cat[:, f, :])
                 print(v_cat[f, :].shape, vh.shape)
 
-                v_cat[f, :] = vh[0, :]
+                # Orient tuning vectors properly
+                x_np = x_cat.detach().numpy()
+                v_np = vh[0, :].detach().numpy()
+                x_direction = x_np[np.argmax(np.linalg.norm(x_np[:, f, :], axis=-1), axis=0), 0][0]
+                if x_direction * v_np[0] < 0:
+                    sign = -1
+                else:
+                    sign = 1
 
+                v_cat[f, :] = vh[0, :] * sign
             tun_vectors[c] = v_cat
+
             c += 1
+
     return tun_vectors
 
 def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
     """
-
     :param x: (n_img, n_feat_map, n_dim)
     :param ref_vectors: (n_feat_map, n_dim)
     :param tun_vectors: (n_cat, n_feat_map, n_dim)
@@ -156,15 +173,12 @@ def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
     :return:
     """
 
-    # Shift all data points by [n_feat_map, n_dim]. Equivalent to shifting the norm reference but computationally easier
-    # The objective is to optimize the shift parameters [z_1,...,z_{n_dim}]
-
     projections = torch.matmul(x, torch.moveaxis(tun_vectors, 0, -1))
     projections = projections ** nu
     print("projections", projections.shape)
 
-
-    projections[projections < 0] = 0
+    # todo: Revisit cutting off negative projections. Buggy atm since the tuning vector may have arbitrary sign
+    # projections[projections < 0] = 0
     # todo: is there not a better way to do the dot product?
     projections = torch.sum(projections, axis=1)  # sum of feature maps
 
@@ -175,11 +189,13 @@ def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
 
     return projections
 
-def compute_neutral_probability(length: int, radius):
-    return None
+def compute_neutral_probability(proj: torch.tensor, radius):
+    length = torch.sum(proj, axis=1)
+    p_expression = 1 / (1 + torch.exp(radius - length))
+    return 1 - p_expression
 
 
-def compute_loss(proj: np.array, y: np.array, radius: float) -> float:
+def compute_loss(proj: np.array, x, y: np.array, radius: float) -> float:
     """
     :param proj: (n_img, n_cat)
     :param y: (n_img, )
@@ -188,11 +204,31 @@ def compute_loss(proj: np.array, y: np.array, radius: float) -> float:
 
     losses = torch.zeros(len(proj), dtype=torch.float64)
     for i in range(len(proj)):
+        if y[i] == 0:
+            length = torch.linalg.norm(x[i, :, :], axis=-1)
+            prob_neutral = 1 - 1 / (1 + torch.exp(radius - length))
+            losses[i] = prob_neutral * 0
         if y[i] != 0:  # assume neutral == 0
-            losses[i] = torch.exp(proj[i, y[i] - 1]) / torch.sum(torch.exp(proj[i, :]))
+            prob_expression = torch.exp(proj[i, y[i] - 1]) / torch.sum(torch.exp(proj[i, :]))
+            # print(proj[i, :])
+            # print(prob_expression)
+            # length = torch.linalg.norm(x[i, :, :], axis=-1)
+            # prob_neutral = 1 - 1 / (1 + torch.exp(radius - length))
+            prob_neutral = 0
+            losses[i] = prob_expression * (1 - prob_neutral)
+            # print(prob_expression)
+    print(losses)
     loss = torch.sum(losses)
-    return loss
+    print("loss", loss)
+    return - loss
 
+# def compute_neutral_loss(x, y, radius):
+#     x_neutral = x[y == 0]
+#     x_neutral = torch.linalg.norm(x_neutral, axis=-1)
+#     x_neutral = 1 / (1 + torch.exp(radius - x_neutral))
+#     print("x neutral", x_neutral)
+#     return torch.sum(x_neutral)
+#     # return 0
 
 def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
     """
@@ -205,11 +241,10 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
     n_feat_maps = x.shape[1]
 
     # Initialize the shift to zero
-    shift = torch.ones((n_feat_maps, n_dim), requires_grad=True)
+    shift = torch.full((n_feat_maps, n_dim), 1, dtype=torch.float64 ,requires_grad=True)
     # Initialize the neutral-radius to zero
-    r = torch.ones(1, requires_grad=True)
-    parameters = [shift, r]
-
+    radius = torch.full([n_feat_maps], 0.01, dtype=torch.float64 ,requires_grad=True)
+    parameters = [shift, radius]
 
     for i in range(20):
         x_shifted = x - shift
@@ -222,17 +257,22 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
         projections = compute_projections(x_shifted, tun_vectors)
 
         # compute loss
-        loss = compute_loss(projections, y, radius)
+        loss = compute_loss(projections, x, y, radius)
 
-        plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], save=True, name=str(i))
+        # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], save=True, name=str(i))
+        plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
         print("shift", shift)
+        print("radius", radius)
         loss.backward()
         print("shift grad", shift.grad)
+        print("radius grad", radius.grad)
 
         # print("shift grad", shift.grad)
         with torch.no_grad():
             shift = shift - lr * shift.grad
             shift.requires_grad = True
+            radius = radius - lr * radius.grad
+            radius.requires_grad = True
 
 
 
