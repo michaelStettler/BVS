@@ -13,7 +13,7 @@ def display_image(image, lmks=None, ref_lmks=None, lmk_size=5, pre_processing=No
         img[img > 1] = 1.0
 
     rgb_factor = 1
-    if np.max(image) > 1:
+    if np.max(img) > 1:
         rgb_factor = 255
 
     # compute padding
@@ -51,7 +51,7 @@ def display_image(image, lmks=None, ref_lmks=None, lmk_size=5, pre_processing=No
         if title is not None:
             figure.set_title(title)
 
-    if save:
+    if save or save_name is not None:
         if save_name is not None:
             img = np.array(img).astype(np.uint8)
             plt.imsave(save_name, img)

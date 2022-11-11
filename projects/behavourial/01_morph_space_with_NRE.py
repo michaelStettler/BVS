@@ -18,6 +18,7 @@ from utils.NormReference.tuning_vectors import learn_tun_vectors
 from utils.NormReference.tuning_vectors import compute_projections
 
 from plots_utils.plot_BVS import display_images
+from plots_utils.plot_sequence import plot_sequence
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
@@ -29,12 +30,13 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 #%% declare script variables
 show_plot = True
 load_RBF_pattern = True
-train_RBF_pattern = True
-save_RBF_pattern = True
-load_FR_pathway = False
-save_FR_pos = True
-load_FER_pos = False
+train_RBF_pattern = False
+save_RBF_pattern = False
+load_FR_pathway = True
+save_FR_pos = False
+load_FER_pos = True
 save_FER_pos = False
+save_FER_with_lmk_name = True
 
 #%% declare hyper parameters
 n_iter = 2
@@ -49,12 +51,12 @@ print("-- Config loaded --")
 print()
 
 config["FR_lmk_name"] = ["left_eye", "right_eye", "nose"]
-config["FR_lmk_name"] = []
+# config["FR_lmk_name"] = []
 
 config["FER_lmk_name"] = ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
                  "left_eyelid", "right_eyelid"]
-config["FER_lmk_name"] = ["left_mouth", "right_mouth", "left_eyelid", "right_eyelid"]
+# config["FER_lmk_name"] = ["right_eyelid"]
 # config["FER_lmk_name"] = ["right_eyebrow_int", "right_eyebrow_ext",
 #                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
 #                  "left_eyelid", "right_eyelid"]
@@ -139,20 +141,36 @@ else:
     FER_pos = create_lmk_dataset(train_data[0], v4_model, "FER", config, FER_patterns_list, FER_sigma_list)
 
     if save_FER_pos:
-        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_LMK_pos"), FER_pos)
+        if save_FER_with_lmk_name:
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"],
+                                 "FER_LMK_pos" + "_" + config["FER_lmk_name"][0]), FER_pos)
+        else:
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_LMK_pos"), FER_pos)
 print("shape FER_pos", np.shape(FER_pos))
 print()
 
+#%%
+# plot_sequence(train_data[0], lmks=FER_pos*4, pre_processing='VGG19')
+
+
 #%% learn reference vector
 ref_idx = [0, 3750]
+ref_idx = [0]
 avatar_labels = np.array([0, 1]).astype(int)
-ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=2)
+avatar_labels = np.array([0]).astype(int)
+# ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=2)
+ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=1)
 print("shape ref_vectors", np.shape(ref_vectors))
+
+#%%
+plot_sequence(train_data[0], lmks=FER_pos*4, ref_lmks=ref_vectors*4, pre_processing='VGG19', lmk_size=3)
+print("sequence created")
 
 #%% plot landmarks on NRE_train
 if show_plot:
     extremes_idx = get_morph_extremes_idx()
-    extremes_idx = [0] + extremes_idx[:4] + [3750] + extremes_idx[4:]
+    # extremes_idx = [0] + extremes_idx[:4] + [3750] + extremes_idx[4:]
+    extremes_idx = [0] + extremes_idx[:4]
     print("extremes_idx", extremes_idx)
     NRE_train_img = train_data[0][extremes_idx]
     NRE_lmk_pos = FER_pos[extremes_idx] * 224 / 56
@@ -173,15 +191,22 @@ print(tun_vectors)
 
 #%% Compute projections
 # todo remove face positions from the FER_pos
-NRE_proj = compute_projections(FER_pos, face_ids, ref_vectors, tun_vectors, return_proj_length=True)
+# NRE_proj = compute_projections(FER_pos, face_ids, ref_vectors, tun_vectors, return_proj_length=True)
+NRE_proj = compute_projections(FER_pos[:3750], face_ids[:3750], ref_vectors, tun_vectors,
+                               neutral_threshold=0,
+                               return_proj_length=True)
 print("shape NRE_proj", np.shape(NRE_proj))
 
 #%%
-# plot test human fear
-plt.figure()
-plt.plot(NRE_proj[:150])
-plt.legend(["HA", "HF", "MA", "MF"])
-plt.show()
+for i in range(5, 10):
+    print("shape NRE_proj[:150]", np.shape(NRE_proj[:150]))
+    print("max NRE_proj[:150]", np.amax(NRE_proj[150*i:150*(i+1)], axis=0))
+    # plot test human fear
+    plt.figure()
+    plt.plot(NRE_proj[150*i:150*(i+1)])
+    plt.legend(["N", "HA", "HF", "MA", "MF"])
+    plt.title("seq_{}".format(0))
+    plt.show()
 
 #%%
 from plots_utils.plot_tuning_signatures import plot_tuning_signatures
@@ -222,7 +247,6 @@ def plot_tuning_signatures(data, ref_tuning=None, fig_name=None, save_folder=Non
 plot_tuning_signatures(tun_vectors[1] * 2, fig_size=(2, 2), dpi=200)
 
 #%%
-
 def print_morph_space(data, title=None):
     morph_space_data = np.reshape(data, [25, 150, -1])
     print("shape morph_space_data", np.shape(morph_space_data))
@@ -245,6 +269,30 @@ def print_morph_space(data, title=None):
     axs[0, 1].imshow(amax_ms_grid[..., 2], cmap='hot', interpolation='nearest')
     axs[1, 0].imshow(amax_ms_grid[..., 3], cmap='hot', interpolation='nearest')
     axs[1, 1].imshow(amax_ms_grid[..., 4], cmap='hot', interpolation='nearest')
+    plt.show()
+
+    cat_grid = np.zeros((5, 5, 5))
+    prob_grid = np.zeros((5, 5, 5))
+    for i in range(np.shape(amax_ms_grid)[0]):
+        for j in range(np.shape(amax_ms_grid)[0]):
+            x = amax_ms_grid[i, j]
+            cat_grid[i, j, np.argmax(x)] = 1
+            prob_grid[i, j] = np.exp(x)/sum(np.exp(x))
+
+    # print category grid
+    fig, axs = plt.subplots(2, 2)
+    axs[0, 0].imshow(cat_grid[..., 1], cmap='hot', interpolation='nearest')
+    axs[0, 1].imshow(cat_grid[..., 2], cmap='hot', interpolation='nearest')
+    axs[1, 0].imshow(cat_grid[..., 3], cmap='hot', interpolation='nearest')
+    axs[1, 1].imshow(cat_grid[..., 4], cmap='hot', interpolation='nearest')
+    plt.show()
+
+    # print probability grid
+    fig, axs = plt.subplots(2, 2)
+    axs[0, 0].imshow(prob_grid[..., 1], cmap='hot', interpolation='nearest')
+    axs[0, 1].imshow(prob_grid[..., 2], cmap='hot', interpolation='nearest')
+    axs[1, 0].imshow(prob_grid[..., 3], cmap='hot', interpolation='nearest')
+    axs[1, 1].imshow(prob_grid[..., 4], cmap='hot', interpolation='nearest')
     plt.show()
 
 
