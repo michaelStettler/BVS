@@ -11,7 +11,6 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
 
     activities_dict = []
     n_images = np.shape(preds)[0]
-    print("shape preds", np.shape(preds))
     print("shape patterns", np.shape(patterns))
 
     if lmk_idx is None:
@@ -32,7 +31,7 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
         memory_max_pool_activity = []  # allows to save the previous step
         memory_sigma = sigma  # allows to save the previous step
         while do_continue:
-            print("sigma:", sigma, end='\r')
+            print("sigma: {} (max_sigma {})".format(sigma, max_sigma), end='\r')
             # predict lmk positions
             lmks_dict = predict_RBF_patch_pattern_lmk_pos(preds, patterns, sigma, l,
                                                           batch_size=batch_size,
@@ -98,6 +97,7 @@ def optimize_sigma_by_landmarks_count(preds, patterns, lmk_idx=None, lr_rate=100
 
 def optimize_sigma(images, v4_model, lmk_type, config, patterns, sigma, label_img_idx, init_sigma, lr_rate,
                    is_first=False, max_sigma=None):
+
     # get all latent image (feature extractions) from the labeled images
     preds = []
     for labeled_idx in label_img_idx:

@@ -88,7 +88,7 @@ def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize
 
 
 def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral_threshold=5, matching_t_vects=None,
-                        verbose=False, return_proj_length=False):
+                        verbose=False, return_proj_length=False, return_proj_lmks=False):
     """
 
     :param inputs:
@@ -103,6 +103,7 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
     :return:
     """
     projections = []
+    lmks_projections = []
 
     # normalize by norm of each landmarks
     norm_t = np.linalg.norm(tun_vectors, axis=2)
@@ -118,9 +119,11 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
         # compute relative vector (difference)
         diff = inp - ref_vector
         proj = []
+        lmks_projection = []
         # for each category
         for j in range(len(tun_vectors)):
             proj_length = 0
+            lmk_proj = []
             # for each landmarks
             for k in range(len(ref_vector)):
                 if norm_t[j, k] != 0.0:
@@ -128,16 +131,30 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
                     f = np.power(f, nu)
                 else:
                     f = 0
+
                 proj_length += f
-            # ReLu activation
-            if proj_length < 0:
-                proj_length = 0
+                lmk_proj.append(f)
+                # ReLu activation
+                if proj_length < 0:
+                    proj_length = 0
+
+                # if f < 0:
+                #     f = 0
+                # proj_length += f
+                # lmk_proj.append(f)
+
             proj.append(proj_length)
+            lmks_projection.append(lmk_proj)
+
         projections.append(proj)
+        lmks_projections.append(lmks_projection)
 
     projections = np.array(projections)
+    lmks_projections = np.array(lmks_projections)
+
     # apply neutral threshold
     projections[projections < neutral_threshold] = 0
+    lmks_projections[lmks_projections < neutral_threshold] = 0
 
     if verbose:
         print("projections", np.shape(projections))
@@ -147,7 +164,10 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
         print(np.amax(projections, axis=1))
 
     if return_proj_length:
-        proj_pred = projections
+        if return_proj_lmks:
+            proj_pred = (projections, lmks_projections)
+        else:
+            proj_pred = projections
     else:
         proj_pred = np.argmax(projections, axis=1)
 

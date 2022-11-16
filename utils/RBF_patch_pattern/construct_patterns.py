@@ -153,11 +153,11 @@ def construct_RBF_patterns(images, v4_model, lmk_type, config, lr_rate=100, init
 
         print()
 
-    return patterns, sigma
+    return np.array(patterns), sigma
 
 
 def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
-                   FR_patterns=None, FR_sigma=None, FER_patterns=None, FER_sigma=None, save=True):
+                   FR_patterns=None, FR_sigma=None, FER_patterns=None, FER_sigma=None, save=True, train_idx=None):
     FR_patterns_list = []
     FR_sigma_list = []
     FER_patterns_list = []
@@ -165,6 +165,10 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
 
     patterns = None
     sigma = None
+
+    # if we give idx to train on we do not need multiple iterations
+    if train_idx is not None:
+        n_iter = 1
 
     num_img_per_avatar = int(len(data[0]) / len(config["avatar_types"]))
     avatar_idx = [i * num_img_per_avatar for i in range(len(config["avatar_types"]))]
@@ -189,7 +193,8 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
                                                          loaded_patterns=patterns,
                                                          loaded_sigma=sigma,
                                                          lmk_name=lmk_name,
-                                                         max_sigma=max_sigma)
+                                                         max_sigma=max_sigma,
+                                                         train_idx=train_idx)
 
             print("-- Labeling and optimization finished --")
             print("shape patterns", np.shape(patterns))
@@ -223,7 +228,9 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
                                                      use_only_last=config["use_only_last"],
                                                      loaded_patterns=patterns,
                                                      loaded_sigma=sigma,
-                                                     lmk_name=lmk_name)
+                                                     lmk_name=lmk_name,
+                                                     max_sigma=max_sigma,
+                                                     train_idx=train_idx)
 
         print("-- Labeling and optimization finished --")
         print("shape patterns", np.shape(patterns))
