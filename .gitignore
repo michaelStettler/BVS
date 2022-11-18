@@ -140,5 +140,6 @@ models/saved/
 logs/
 projects/memory_efficiency/.ipynb_checkpoints
 
+*.jpeg
 *.avi
 *.mp4

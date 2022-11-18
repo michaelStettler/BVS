@@ -87,8 +87,8 @@ def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize
     return best_idx, accuracy, cat_img_idx[best_idx]
 
 
-def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral_threshold=5, matching_t_vects=None,
-                        verbose=False, return_proj_length=False, return_proj_lmks=False):
+def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral_threshold=5, norm_type='individual',
+                        matching_t_vects=None, verbose=False, return_proj_length=False, return_proj_lmks=False):
     """
 
     :param inputs:
@@ -106,7 +106,16 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
     lmks_projections = []
 
     # normalize by norm of each landmarks
-    norm_t = np.linalg.norm(tun_vectors, axis=2)
+    if norm_type == 'individual':
+        norm_t = np.linalg.norm(tun_vectors, axis=2)
+    elif norm_type == 'categorical':
+        norm_t = np.linalg.norm(tun_vectors, axis=2)
+        norm_t = np.linalg.norm(norm_t, axis=1)
+        norm_t = np.repeat(np.expand_dims(norm_t, axis=1), np.shape(tun_vectors)[1], axis=1)
+    else:
+        raise NotImplementedError("norm_type {} is not a valid type".format(norm_type))
+    print("shape tun_vectors", np.shape(tun_vectors))
+    print("shape norm_t", np.shape(norm_t))
 
     # for each images
     for i in range(len(inputs)):
