@@ -32,21 +32,31 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 
 #%% declare script variables
 show_plot = False
-load_RBF_pattern = True
-train_RBF_pattern = False
+load_RBF_pattern = False
+train_RBF_pattern = True
 save_RBF_pattern = True
 load_FR_pathway = True
 save_FR_pos = False
-load_FER_pos = True
-save_FER_pos = False
+load_FER_pos = False
+save_FER_pos = True
 save_FER_with_lmk_name = True
-norm_type = 'individual'
-# norm_type = 'categorical'
+load_ref = False
+save_ref = True
+load_tun = False
+save_tun = True
+# norm_type = 'individual'
+norm_type = 'categorical'
+condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
+train_csv = ["/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_orig_train.csv",
+             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_orig_train.csv",
+             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_equi_train.csv",
+             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_equi_train.csv"]
+cond = 2
 
 #%% declare hyper parameters
 n_iter = 2
 max_sigma = None
-max_sigma = 1000
+max_sigma = 3000
 train_idx = None
 # train_idx = [50]
 
@@ -54,6 +64,21 @@ train_idx = None
 config_path = 'BH_01_morph_space_with_NRE_m0001.json'
 # load config
 config = load_config(config_path, path='configs/behavourial')
+
+# edit dictionary for single condition type
+if cond is not None:
+    config["train_csv"] = train_csv[cond]
+    config["condition"] = condition[cond]
+    if "human" in condition[cond]:
+        config["avatar_types"] = ["human"]
+    else:
+        config["avatar_types"] = ["monkey"]
+
+# create directory
+save_path = os.path.join(config["directory"], config["LMK_data_directory"], config["condition"])
+if not os.path.exists(save_path):
+    os.mkdir(save_path)
+
 print("-- Config loaded --")
 print()
 
@@ -63,10 +88,9 @@ config["FR_lmk_name"] = []
 config["FER_lmk_name"] = ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
                  "left_eyelid", "right_eyelid"]
-config["FER_lmk_name"] = ["left_eyelid"]
-# config["FER_lmk_name"] = ["right_eyebrow_int", "right_eyebrow_ext",
-#                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
-#                  "left_eyelid", "right_eyelid"]
+config["FER_lmk_name"] = ["left_eyebrow_ext"]
+# config["FER_lmk_name"] = []
+
 
 #%% import data
 train_data = load_data(config)
@@ -75,7 +99,7 @@ print("len train_data[0]", len(train_data[0]))
 print()
 
 #%% split training for LMK and norm base
-NRE_train = get_NRE_from_morph_space(train_data)
+NRE_train = get_NRE_from_morph_space(train_data, condition=condition[cond])
 LMK_train = train_data  # take all
 
 print("-- Data Split --")
@@ -103,6 +127,12 @@ if load_RBF_pattern:
     print("load LMKs")
     FR_patterns_list, FR_sigma_list, FER_patterns_list, FER_sigma_list = \
         load_RBF_patterns_and_sigma(config, avatar_name=["human", "monkey"])
+    print("len FR_patterns_list[0]", len(FR_patterns_list[0]))
+    print("len FR_patterns_list[1]", len(FR_patterns_list[1]))
+    print("len FER_patterns_list", len(FER_patterns_list))
+    print("len FER_sigma_list", len(FER_sigma_list))
+    print("shape FER_patterns_list", np.shape(FER_patterns_list))
+    print()
 
 if train_RBF_pattern:
     print("create patterns")
@@ -118,48 +148,56 @@ if train_RBF_pattern:
                        save=save_RBF_pattern,
                        train_idx=train_idx)
 
-print("len FR_patterns_list", len(FR_patterns_list))
-print("len FR_patterns_list[0]", len(FR_patterns_list[0]))
-print("len FR_patterns_list[1]", len(FR_patterns_list[1]))
-print("len FER_patterns_list", len(FER_patterns_list))
-print("len FER_sigma_list", len(FER_sigma_list))
-print("shape FER_patterns_list", np.shape(FER_patterns_list))
-print()
+    print("len FR_patterns_list", len(FR_patterns_list))
+    print("len FR_patterns_list[0]", len(FR_patterns_list[0]))
+    print("len FER_patterns_list", len(FER_patterns_list))
+    print("len FER_sigma_list", len(FER_sigma_list))
+    print("shape FER_patterns_list", np.shape(FER_patterns_list))
+    print()
 
 #%% get identity and positions from the FR Pathway
 extremes_idx = get_morph_extremes_idx()
 if load_FR_pathway:
-    FR_pos = np.load(os.path.join(config["directory"], config["LMK_data_directory"], "FR_LMK_pos.npy"))
-    face_ids = np.load(os.path.join(config["directory"], config["LMK_data_directory"], "face_identities.npy"))
-    face_positions = np.load(os.path.join(config["directory"], config["LMK_data_directory"], "face_positions.npy"))
+    FR_pos = np.load(os.path.join(save_path, "FR_LMK_pos.npy"))
+    face_ids = np.load(os.path.join(save_path, "face_identities.npy"))
+    face_positions = np.load(os.path.join(save_path, "face_positions.npy"))
 else:
     FR_pos, face_ids, face_positions = get_identity_and_pos(train_data[0], v4_model, config, FR_patterns_list, FR_sigma_list)
 
     if save_FR_pos:
-        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_LMK_pos"), FR_pos)
-        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "face_positions"), face_positions)
-        np.save(os.path.join(config["directory"], config["LMK_data_directory"], "face_identities"), face_ids)
+        np.save(os.path.join(save_path, "FR_LMK_pos"), FR_pos)
+        np.save(os.path.join(save_path, "face_positions"), face_positions)
+        np.save(os.path.join(save_path, "face_identities"), face_ids)
 print("shape FR_pos", np.shape(FR_pos))
-print("shape face_identities", np.shape(face_ids))
+print("shape face_ids", np.shape(face_ids))
+print("face_ids[0]", face_ids[0])
 print("shape face_positions", np.shape(face_positions))
 print()
+
+#%% transform face_idx to a array of zeros since we have only one condition at time
+face_ids = np.zeros(np.shape(face_ids)).astype(int)
+print("shape face_ids", np.shape(face_ids))
+print("face_ids[0]", face_ids[0])
+
 
 #%% predict LMK pos
 if load_FER_pos:
     print("load FER pos")
-    FER_pos = np.load(os.path.join(config["directory"], config["LMK_data_directory"], "FER_LMK_pos.npy"))
+    if os.path.exists(os.path.join(save_path, "FER_LMK_pos.npy")):
+        FER_pos = np.load(os.path.join(save_path, "FER_LMK_pos.npy"))
+    else:
+        FER_pos = merge_LMK_pos(config)
 else:
     print("create FER pos")
     FER_pos = create_lmk_dataset(train_data[0], v4_model, "FER", config, FER_patterns_list, FER_sigma_list)
 
     if save_FER_pos:
         if save_FER_with_lmk_name:
-            np.save(os.path.join(config["directory"], config["LMK_data_directory"],
-                                 "FER_LMK_pos" + "_" + config["FER_lmk_name"][0]), FER_pos)
+            np.save(os.path.join(save_path, "FER_LMK_pos" + "_" + config["FER_lmk_name"][0]), FER_pos)
 
             FER_pos = merge_LMK_pos(config)
         else:
-            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_LMK_pos"), FER_pos)
+            np.save(os.path.join(save_path, "FER_LMK_pos"), FER_pos)
 print("shape FER_pos", np.shape(FER_pos))
 print()
 
@@ -168,12 +206,18 @@ print()
 
 
 #%% learn reference vector
-ref_idx = [0, 3750]
 ref_idx = [0]
-avatar_labels = np.array([0, 1]).astype(int)
 avatar_labels = np.array([0]).astype(int)
-# ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=2)
-ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=1)
+
+if load_ref:
+    ref_vectors = np.load(os.path.join(save_path, "ref_vectors.npy"))
+else:
+    # ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=2)
+    ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=1)
+
+    if save_ref:
+        np.save(os.path.join(save_path, "ref_vectors"), ref_vectors)
+
 print("shape ref_vectors", np.shape(ref_vectors))
 
 #%%
@@ -198,9 +242,15 @@ if show_plot:
                    pre_processing="VGG19")
 
 #%% learn tuning vectors
-tun_idx = [0] + get_morph_extremes_idx()[:4]
-tun_vectors = learn_tun_vectors(FER_pos[tun_idx], train_data[1][tun_idx], ref_vectors, face_ids[tun_idx], n_cat=5)
-tun_vectors[4, 9, 1] = 0
+tun_idx = [0] + get_morph_extremes_idx(config["condition"])[:4]
+if load_tun:
+    tun_vectors = np.load(os.path.join(save_path, "tun_vectors.npy"))
+else:
+    tun_vectors = learn_tun_vectors(FER_pos[tun_idx], train_data[1][tun_idx], ref_vectors, face_ids[tun_idx], n_cat=5)
+
+    if save_tun:
+        np.save(os.path.join(save_path, "tun_vectors"), tun_vectors)
+
 print("shape tun_vectors", np.shape(tun_vectors))
 print(tun_vectors)
 print()
@@ -208,8 +258,7 @@ print()
 #%% Compute projections
 print("compute projections")
 # todo remove face positions from the FER_pos
-# NRE_proj = compute_projections(FER_pos, face_ids, ref_vectors, tun_vectors, return_proj_length=True)
-(NRE_proj, NRE_proj_lmk) = compute_projections(FER_pos[:3750], face_ids[:3750], ref_vectors, tun_vectors,
+(NRE_proj, NRE_proj_lmk) = compute_projections(FER_pos, face_ids, ref_vectors, tun_vectors,
                                                norm_type=norm_type,
                                                neutral_threshold=0,
                                                return_proj_length=True,
@@ -243,64 +292,85 @@ print("finish creating sequence analysis")
 
 matplotlib.use('macosx')
 
+
 #%%
-def print_morph_space(data, title=None):
-    morph_space_data = np.reshape(data, [25, 150, -1])
-    print("shape morph_space_data", np.shape(morph_space_data))
+def print_morph_space(amax_ms_grid=None, cat_grid=None, prob_grid=None,
+                      title=None, show_plot=True, save=True, save_path=None):
+    if amax_ms_grid is not None:
+        fig, axs = plt.subplots(2, 2)
+        axs[0, 0].imshow(amax_ms_grid[..., 1], cmap='hot', interpolation='nearest')
+        axs[0, 1].imshow(amax_ms_grid[..., 2], cmap='hot', interpolation='nearest')
+        axs[1, 0].imshow(amax_ms_grid[..., 3], cmap='hot', interpolation='nearest')
+        axs[1, 1].imshow(amax_ms_grid[..., 4], cmap='hot', interpolation='nearest')
 
-    # fig, axs = plt.subplots(len(morph_space_data))
-    # for i in range(len(morph_space_data)):
-    #     axs[i].plot(morph_space_data[i])
+        if show_plot:
+            plt.show()
+        if save:
+            if save_path is None:
+                plt.savefig("morph_space_read_out_values_{}.jpeg".format(norm_type))
+            else:
+                plt.savefig(os.path.join(save_path, "morph_space_read_out_values_{}.jpeg".format(norm_type)))
 
-    # get max values for each video and category
-    amax_ms = np.amax(morph_space_data, axis=1)
-    print("shape amax_ms", np.shape(amax_ms))
-    print(amax_ms)
+    if cat_grid is not None:
+        # print category grid
+        fig, axs = plt.subplots(2, 2)
+        axs[0, 0].imshow(cat_grid[..., 1], cmap='hot', interpolation='nearest')
+        axs[0, 1].imshow(cat_grid[..., 2], cmap='hot', interpolation='nearest')
+        axs[1, 0].imshow(cat_grid[..., 3], cmap='hot', interpolation='nearest')
+        axs[1, 1].imshow(cat_grid[..., 4], cmap='hot', interpolation='nearest')
 
-    # make into grid
-    amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
-    print("shape amax_ms_grid", np.shape(amax_ms_grid))
-
-    fig, axs = plt.subplots(2, 2)
-    axs[0, 0].imshow(amax_ms_grid[..., 1], cmap='hot', interpolation='nearest')
-    axs[0, 1].imshow(amax_ms_grid[..., 2], cmap='hot', interpolation='nearest')
-    axs[1, 0].imshow(amax_ms_grid[..., 3], cmap='hot', interpolation='nearest')
-    axs[1, 1].imshow(amax_ms_grid[..., 4], cmap='hot', interpolation='nearest')
-
-    if show_plot:
-        plt.show()
-    plt.savefig("morph_space_read_out_values_{}.jpeg".format(norm_type))
-
-    cat_grid = np.zeros((5, 5, 5))
-    prob_grid = np.zeros((5, 5, 5))
-    for i in range(np.shape(amax_ms_grid)[0]):
-        for j in range(np.shape(amax_ms_grid)[0]):
-            x = amax_ms_grid[i, j]
-            cat_grid[i, j, np.argmax(x)] = 1
-            prob_grid[i, j] = np.exp(x)/sum(np.exp(x))
-
-    # print category grid
-    fig, axs = plt.subplots(2, 2)
-    axs[0, 0].imshow(cat_grid[..., 1], cmap='hot', interpolation='nearest')
-    axs[0, 1].imshow(cat_grid[..., 2], cmap='hot', interpolation='nearest')
-    axs[1, 0].imshow(cat_grid[..., 3], cmap='hot', interpolation='nearest')
-    axs[1, 1].imshow(cat_grid[..., 4], cmap='hot', interpolation='nearest')
-
-    if show_plot:
-        plt.show()
-    plt.savefig("morph_space_categories_values_{}.jpeg".format(norm_type))
+        if show_plot:
+            plt.show()
+        if save:
+            if save_path is None:
+                plt.savefig("morph_space_categories_values_{}.jpeg".format(norm_type))
+            else:
+                plt.savefig(os.path.join(save_path, "morph_space_categories_values_{}.jpeg".format(norm_type)))
 
     # print probability grid
-    fig, axs = plt.subplots(2, 2)
-    axs[0, 0].imshow(prob_grid[..., 1], cmap='hot', interpolation='nearest')
-    axs[0, 1].imshow(prob_grid[..., 2], cmap='hot', interpolation='nearest')
-    axs[1, 0].imshow(prob_grid[..., 3], cmap='hot', interpolation='nearest')
-    axs[1, 1].imshow(prob_grid[..., 4], cmap='hot', interpolation='nearest')
+    if cat_grid is not None:
+        fig, axs = plt.subplots(2, 2)
+        axs[0, 0].imshow(prob_grid[..., 1], cmap='hot', interpolation='nearest')
+        axs[0, 1].imshow(prob_grid[..., 2], cmap='hot', interpolation='nearest')
+        axs[1, 0].imshow(prob_grid[..., 3], cmap='hot', interpolation='nearest')
+        axs[1, 1].imshow(prob_grid[..., 4], cmap='hot', interpolation='nearest')
 
-    if show_plot:
-        plt.show()
-    plt.savefig("morph_space_probabilities_values_{}.jpeg".format(norm_type))
+        if show_plot:
+            plt.show()
+        if save:
+            if save_path is None:
+                plt.savefig("morph_space_probabilities_values_{}.jpeg".format(norm_type))
+            else:
+                plt.savefig(os.path.join(save_path, "morph_space_probabilities_values_{}.jpeg".format(norm_type)))
+
+morph_space_data = np.reshape(NRE_proj[:3750], [25, 150, -1])
+print("shape morph_space_data", np.shape(morph_space_data))
+
+# fig, axs = plt.subplots(len(morph_space_data))
+# for i in range(len(morph_space_data)):
+#     axs[i].plot(morph_space_data[i])
+
+# get max values for each video and category
+amax_ms = np.amax(morph_space_data, axis=1)
+print("shape amax_ms", np.shape(amax_ms))
+print(amax_ms)
+
+# make into grid
+amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
+print("shape amax_ms_grid", np.shape(amax_ms_grid))
+
+cat_grid = np.zeros((5, 5, 5))
+prob_grid = np.zeros((5, 5, 5))
+for i in range(np.shape(amax_ms_grid)[0]):
+    for j in range(np.shape(amax_ms_grid)[0]):
+        x = amax_ms_grid[i, j]
+        cat_grid[i, j, np.argmax(x)] = 1
+        prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
+
+np.save(os.path.join(save_path, "amax_ms_grid_{}".format(norm_type)), amax_ms_grid)
+np.save(os.path.join(save_path, "cat_grid_{}".format(norm_type)), cat_grid)
+np.save(os.path.join(save_path, "prob_grid_{}".format(norm_type)), prob_grid)
 
 
-print_morph_space(NRE_proj[:3750], title="Human")
+print_morph_space(amax_ms_grid, cat_grid, prob_grid, show_plot=True, title="Human")
 

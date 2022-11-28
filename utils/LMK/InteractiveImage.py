@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -41,6 +42,8 @@ class InteractiveImage:
             plt.close()
         elif event.key == 'escape':
             plt.close()
+        elif event.key == 'q':
+            sys.exit()
 
     def connect(self):
         """Connect to all the events we need."""

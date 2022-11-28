@@ -65,7 +65,7 @@ def transform_morph_space_list2space(data):
     return space
 
 
-def get_morph_extremes_idx():
+def get_morph_extremes_idx(condition=None):
     """
     idx: sorted (old)
 
@@ -84,16 +84,27 @@ def get_morph_extremes_idx():
     """
 
     # return [3048, 62, 3652, 651, 6798, 3798, 7405, 4387]
-    return [48, 662, 3052, 3651, 3798, 4398, 6805, 7387]
+    if condition is None:
+        return [48, 662, 3052, 3651, 3798, 4398, 6805, 7387]
+    elif condition == "human_orig":
+        return [48, 662, 3052, 3651]
+    elif condition == "monkey_orig":
+        return [48, 648, 3055, 3637]
+    elif condition == "human_equi":
+        return [45, 640, 3056, 3648]
+    elif condition == "monkey_equi":
+        return [50, 650, 3056, 3656]
+    else:
+        raise NotImplementedError("condition {} is not valid".format(condition))
 
 
-def get_NRE_from_morph_space(data):
+def get_NRE_from_morph_space(data, condition=None):
     """
     return only the extremes from each avatar and category
     
     """
 
-    extremes_idx = get_morph_extremes_idx()
+    extremes_idx = get_morph_extremes_idx(condition=condition)
     filtered_data = data[0][extremes_idx]
     filtered_label = data[1][extremes_idx]
 

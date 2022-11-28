@@ -19,7 +19,7 @@ def merge_LMK_pos(config, from_all_lmk=True):
         lmk_names = config["FER_lmk_name"]
 
     for fer_name in lmk_names:
-        fer_path = os.path.join(config["directory"], config["LMK_data_directory"], "FER_LMK_pos" + "_" + fer_name + ".npy")
+        fer_path = os.path.join(config["directory"], config["LMK_data_directory"], config["condition"], "FER_LMK_pos" + "_" + fer_name + ".npy")
         FER_name_pos = np.load(fer_path)
 
         if len(np.shape(FER_pos)) == 0:

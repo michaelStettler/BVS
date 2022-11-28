@@ -4,7 +4,6 @@ import cv2
 import tqdm
 
 import matplotlib
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
@@ -101,6 +100,7 @@ def get_graph(data, frame, fig_size=(4, 1), dpi=200):
 
 def plot_signature_proj_analysis(data, lmks, ref_vectors, tun_vectors, proj, config, lmk_proj=None,
                                  pre_processing=None, video_name=None, path=None, lmk_size=3, img_seq_ratio=4):
+    matplotlib.use('agg')
 
     if pre_processing == 'VGG19':
         data_copy = []
@@ -176,3 +176,5 @@ def plot_signature_proj_analysis(data, lmks, ref_vectors, tun_vectors, proj, con
 
     cv2.destroyAllWindows()
     video.release()
+
+    matplotlib.use('macosx')

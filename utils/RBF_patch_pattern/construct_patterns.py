@@ -182,6 +182,7 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
             if FR_patterns is not None:
                 patterns = FR_patterns[a][l]
                 sigma = FR_sigma[a][l]
+                print("len pre_loaded patterns:", len(patterns))
 
             print("avatar: {}, lmk_name: {}, sigma: {}".format(avatar, lmk_name, sigma))
             for i in range(n_iter):
@@ -204,8 +205,8 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
             FR_sig_list.append(sigma)
 
             if save:
-                np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_patterns_{}".format(avatar, lmk_name)), patterns)
-                np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FR_{}_sigma_{}".format(avatar, lmk_name)), sigma)
+                np.save(os.path.join(config["directory"], config["LMK_data_directory"], config["condition"], "FR_{}_patterns_{}".format(avatar, lmk_name)), patterns)
+                np.save(os.path.join(config["directory"], config["LMK_data_directory"], config["condition"], "FR_{}_sigma_{}".format(avatar, lmk_name)), sigma)
 
             patterns = None
             sigma = None
