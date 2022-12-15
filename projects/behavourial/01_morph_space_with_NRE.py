@@ -32,20 +32,21 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 
 #%% declare script variables
 show_plot = False
-load_RBF_pattern = False
-train_RBF_pattern = True
-save_RBF_pattern = True
+load_RBF_pattern = True
+train_RBF_pattern = False
+save_RBF_pattern = False
 load_FR_pathway = True
 save_FR_pos = False
-load_FER_pos = False
-save_FER_pos = True
+load_FER_pos = True
+save_FER_pos = False
 save_FER_with_lmk_name = True
-load_ref = False
-save_ref = True
-load_tun = False
-save_tun = True
+load_ref = True
+save_ref = False
+load_tun = True
+save_tun = False
 # norm_type = 'individual'
 norm_type = 'categorical'
+# occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
 train_csv = ["/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_orig_train.csv",
              "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_orig_train.csv",
@@ -88,7 +89,7 @@ config["FR_lmk_name"] = []
 config["FER_lmk_name"] = ["left_eyebrow_ext", "left_eyebrow_int", "right_eyebrow_int", "right_eyebrow_ext",
                  "left_mouth", "top_mouth", "right_mouth", "down_mouth",
                  "left_eyelid", "right_eyelid"]
-config["FER_lmk_name"] = ["left_eyebrow_ext"]
+config["FER_lmk_name"] = ["right_eyelid"]
 # config["FER_lmk_name"] = []
 
 

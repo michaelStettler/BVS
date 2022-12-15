@@ -241,8 +241,8 @@ def create_RBF_LMK(config, data, v4_model, n_iter=2, max_sigma=None,
         FER_sigma_list.append(sigma)
 
         if save:
-            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_patterns_{}".format(lmk_name)), patterns)
-            np.save(os.path.join(config["directory"], config["LMK_data_directory"], "FER_sigma_{}".format(lmk_name)), sigma)
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], config["condition"], "FER_patterns_{}".format(lmk_name)), patterns)
+            np.save(os.path.join(config["directory"], config["LMK_data_directory"], config["condition"], "FER_sigma_{}".format(lmk_name)), sigma)
 
         patterns = None
         sigma = None
