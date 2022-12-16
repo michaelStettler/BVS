@@ -139,10 +139,14 @@ def plot_signature_proj_analysis(data, lmks, ref_vectors, tun_vectors, proj, con
 
     # set conditions
     conditions = config["condition_names"]
-    if len(conditions) !=4:
+    if len(conditions) == 3:
+        x_pos = [0, 0, 1]
+        y_pos = [0, 1, 0]
+    elif len(conditions) == 4:
+        x_pos = [0, 0, 1, 1]
+        y_pos = [0, 1, 0, 1]
+    else:
         raise NotImplementedError("Function is not working for other than 4 conditions yet!")
-    x_pos = [0, 0, 1, 1]
-    y_pos = [0, 1, 0, 1]
 
     # construct movie
     for i, image in tqdm.tqdm(enumerate(data)):

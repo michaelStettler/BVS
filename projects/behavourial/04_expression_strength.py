@@ -203,7 +203,7 @@ print("shape ref_vectors", np.shape(ref_vectors))
 
 #%% plot landmarks on NRE_train
 if show_plot:
-    extremes_idx = get_expr_extremes_idx()
+    extremes_idx = get_expr_extreme_idx()
     # extremes_idx = [0] + extremes_idx[:4] + [3750] + extremes_idx[4:]
     extremes_idx = [0] + extremes_idx[:4]
     print("extremes_idx", extremes_idx)
@@ -219,11 +219,12 @@ if show_plot:
                    pre_processing="VGG19")
 
 #%% learn tuning vectors
-tun_idx = [0] + get_morph_extreme_idx(config["condition"])[:4]
+tun_idx = [0] + get_expr_extreme_idx()
 if load_tun:
     tun_vectors = np.load(os.path.join(save_path, "tun_vectors.npy"))
 else:
-    tun_vectors = learn_tun_vectors(FER_pos[tun_idx], train_data[1][tun_idx], ref_vectors, face_ids[tun_idx], n_cat=5)
+    tun_vectors = learn_tun_vectors(FER_pos[tun_idx], train_data[1][tun_idx], ref_vectors, face_ids[tun_idx],
+                                    n_cat=config["n_category"])
 
     if save_tun:
         np.save(os.path.join(save_path, "tun_vectors"), tun_vectors)
@@ -255,8 +256,8 @@ print()
 #     plt.show()
 
 #%% plot sequence analysis
-indexes = [np.arange(150), np.arange(750, 900), np.arange(3600, 3750)]
-video_names = ["HA_Angry_1.0_Human_1.0.mp4", "HA_Angry_1.0_Human_0.75.mp4", "HA_Angry_0.0_Human_0.0.mp4"]
+indexes = [np.arange(120), np.arange(120, 240), np.arange(240, 360)]
+video_names = ["Fear.mp4", "Lipsmack.mp4", "Threat.mp4"]
 
 for index, video_name in zip(indexes, video_names):
     plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
