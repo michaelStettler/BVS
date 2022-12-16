@@ -98,7 +98,7 @@ def get_morph_extremes_idx(condition=None):
         raise NotImplementedError("condition {} is not valid".format(condition))
 
 
-def get_NRE_from_morph_space(data, condition=None):
+def get_extrm_frame_from_morph_space(data, condition=None):
     """
     return only the extremes from each avatar and category
     

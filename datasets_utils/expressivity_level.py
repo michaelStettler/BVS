@@ -30,8 +30,25 @@ def segment_sequence(data, seq_start_idx, seq_length):
 
     return seg_data
 
-
-
-
 def remove_neutral_frames(data, neutral_idx):
     print("todo remove neutral frames")
+
+
+def get_expr_extreme_idx():
+    """
+    fear 03_Fear_1.0_4_lightSamples3.0050.jpeg: 50
+    lipsmack 03_LipSmacking_1.0_4_lightSamples3.0073.jpeg: 193
+    threat 03_Threat_1.0_4_lightSamples3.0067.jpeg: 307
+
+    :return:
+    """
+    return [50, 193, 307]
+
+
+def get_extreme_frame_from_expr_strength(data):
+    extremes_idx = get_expr_extreme_idx()
+    filtered_data = data[0][extremes_idx]
+    filtered_label = data[1][extremes_idx]
+
+    return [filtered_data, filtered_label]
+

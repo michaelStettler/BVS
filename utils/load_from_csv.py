@@ -33,6 +33,10 @@ def load_from_csv(df, config, x_col="image_path"):
         if im is None:
             raise ValueError("Image is None, control given path: {}".format(im_path))
 
+        if config.get("crop") is not None:
+            crop_idx = config["crop"]
+            im = im[crop_idx[0]:crop_idx[1], crop_idx[2]:crop_idx[3]]
+
         im = cv2.resize(im, target_size)
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
