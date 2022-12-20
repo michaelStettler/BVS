@@ -48,10 +48,10 @@ save_tun = False
 norm_type = 'categorical'
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-train_csv = ["/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_orig_train.csv",
-             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_orig_train.csv",
-             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_equi_train.csv",
-             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_equi_train.csv"]
+train_csv = ["/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_orig.csv",
+             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_orig.csv",
+             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_equi.csv",
+             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_equi.csv"]
 cond = 2
 
 #%% declare hyper parameters

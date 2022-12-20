@@ -39,10 +39,12 @@ save_FR_pos = False
 load_FER_pos = True
 save_FER_pos = False
 save_FER_with_lmk_name = False
-load_ref = False
-save_ref = True
-load_tun = False
+load_ref = True
+save_ref = False
+load_tun = True
 save_tun = True
+load_test_lmk_pos = True
+save_test_lmk_pos = False
 # norm_type = 'individual'
 norm_type = 'categorical'
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
@@ -244,28 +246,109 @@ print("compute projections")
 print("shape NRE_proj", np.shape(NRE_proj))
 print()
 
-# #%% plot categorization over sequence
-# for i in range(5, 10):
-#     print("shape NRE_proj[:150]", np.shape(NRE_proj[:150]))
-#     print("max NRE_proj[:150]", np.amax(NRE_proj[150*i:150*(i+1)], axis=0))
-#     # plot test human fear
-#     plt.figure()
-#     plt.plot(NRE_proj[150*i:150*(i+1)])
-#     plt.legend(["N", "HA", "HF", "MA", "MF"])
-#     plt.title("seq_{}".format(0))
-#     plt.show()
+#%% plot projections for each sequence
+if show_plot:
+    for i in range(config["n_category"] - 1):  # don't plot neutral
+        seq_idx = i * 120
+        print("shape NRE_proj[:120]", np.shape(NRE_proj[seq_idx:seq_idx+120]))
+        print("max NRE_proj[:120]", np.amax(NRE_proj[seq_idx:seq_idx+120], axis=0))
+        # plot test human fear
+        plt.figure()
+        plt.plot(NRE_proj[seq_idx:seq_idx+120])
+        plt.legend(["N", "Fear", "Lipsmack", "Threat"])
+        plt.title("seq_{}".format(0))
+        plt.show()
 
 #%% plot sequence analysis
-indexes = [np.arange(120), np.arange(120, 240), np.arange(240, 360)]
-video_names = ["Fear.mp4", "Lipsmack.mp4", "Threat.mp4"]
+if show_plot:
+    indexes = [np.arange(120), np.arange(120, 240), np.arange(240, 360)]
+    video_names = ["Fear.mp4", "Lipsmack.mp4", "Threat.mp4"]
 
-for index, video_name in zip(indexes, video_names):
-    plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
-                                 NRE_proj[index], config,
-                                 video_name=video_name,
-                                 lmk_proj=NRE_proj_lmk[index],
-                                 pre_processing='VGG19',
-                                 lmk_size=3)
-print("finish creating sequence analysis")
+    for index, video_name in zip(indexes, video_names):
+        print("shape train_data[0][index]", np.shape(train_data[0][index]))
+        plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
+                                     NRE_proj[index], config,
+                                     video_name=video_name,
+                                     lmk_proj=NRE_proj_lmk[index],
+                                     pre_processing='VGG19',
+                                     lmk_size=3)
+    print("finish creating sequence analysis")
 
-matplotlib.use('macosx')
+    matplotlib.use('macosx')
+
+#%% Load all dataset for predictions
+print("----------------------------------")
+print("-----------  TEST  ---------------")
+test_data = load_data(config, train=False)
+print("len test_data[0]", len(test_data[0]))
+
+if load_test_lmk_pos:
+    FER_test_pos = np.load(os.path.join(save_path, "FER_LMK_test_pos.npy"))
+else:
+    print("create FER pos")
+    FER_test_pos = create_lmk_dataset(test_data[0], v4_model, "FER", config, FER_patterns_list, FER_sigma_list)
+
+    if save_test_lmk_pos:
+        np.save(os.path.join(save_path, "FER_LMK_test_pos"), FER_test_pos)
+print("shape FER_test_pos", np.shape(FER_test_pos))
+
+# %% Compute projections
+print("compute projections")
+test_face_ids = np.zeros(len(test_data[0])).astype(int)  # just do this because there's only 1 monkey avatar...
+(NRE_test_proj, NRE_proj_test_lmk) = compute_projections(FER_test_pos, test_face_ids, ref_vectors, tun_vectors,
+                                                         norm_type=norm_type,
+                                                         neutral_threshold=0,
+                                                         return_proj_length=True,
+                                                         return_proj_lmks=True)
+print("shape NRE_test_proj", np.shape(NRE_test_proj))
+print()
+
+#%% plot sequences plot
+if show_plot:
+    fig, axs = plt.subplots(3)
+    colors = np.array([(0, 0, 255), (0, 191, 0), (237, 0, 0)]) / 255
+    linewidths = [0.5, 1.0, 1.5, 2.0]
+    fig.suptitle('NRE Predictions for expression strength level')
+    for i in range(3):
+        for j in range(4):  # don't plot neutral
+            seq_idx = (i * 4 + j) * 120
+
+            axs[i].plot(NRE_test_proj[seq_idx:seq_idx + 120, i+1], color=colors[i], linewidth=linewidths[j])
+            if i == 0:
+                axs[i].legend(["25", "50", "75", "100"])
+    plt.show()
+    # plt.savefig("NRE_projections")
+
+#%% bar plot
+fig, axs = plt.subplots(1, 3)
+colors = np.array([(0, 0, 255), (0, 191, 0), (237, 0, 0)]) / 255
+titles = ["Fear", "Lipsmack", "threat"]
+# fig.suptitle('NRE Predictions for expression strength level')
+for i in range(3):
+    heights = []
+    for j in range(4):  # don't plot neutral
+        seq_idx = (i * 4 + j) * 120
+        seq = [NRE_test_proj[seq_idx:seq_idx + 120, i+1]]
+        heights.append(np.amax(seq))
+
+    x = [0, 1, 2, 3]
+    y = heights/np.amax(heights)
+    z = np.polyfit(x, y, 1)
+    p = np.poly1d(z)
+
+    axs[i].bar(x, y, color=colors[i])
+    axs[i].set_xticks(np.arange(4), ['25', '50', '75', '100'])
+    axs[i].set_title(titles[i], color=colors[i])
+    axs[i].plot(x, p(x), color='black', linewidth=2)
+
+    axs[i].spines['top'].set_visible(False)
+    axs[i].spines['right'].set_visible(False)
+    if i > 0:
+        axs[i].spines['left'].set_visible(False)
+        axs[i].get_yaxis().set_ticks([])
+    # axs[i].spines['bottom'].set_visible(False)
+plt.show()
+# plt.savefig("NRE_bar_expr_level")
+
+
+

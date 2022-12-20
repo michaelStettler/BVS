@@ -6,7 +6,7 @@
   "n_category": 4,
   "ref_category": 0,
   "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/train.csv",
-  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/test.csv",
+  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/monkey_full.csv",
   "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels",
   "LMK_data_directory": "saved_lmks_pos",
   "condition": "monkey",
