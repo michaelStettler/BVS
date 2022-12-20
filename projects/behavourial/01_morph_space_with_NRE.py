@@ -31,8 +31,13 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 """
 
 #%% declare script variables
-windows_path = 'D:/Dataset/MorphingSpace'
-# mac_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
+computer = 'windows'
+if 'windows' in computer:
+    computer_path = 'D:/Dataset/MorphingSpace'
+    computer_letter = 'w'
+elif 'mac' in computer:
+    computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
+    computer_letter = 'm'
 
 show_plot = False
 load_RBF_pattern = True
@@ -51,11 +56,11 @@ save_tun = False
 norm_type = 'categorical'
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-train_csv = [os.path.join(windows_path, "morphing_space_human_orig.csv"),
-             os.path.join(windows_path, "morphing_space_monkey_orig.csv"),
-             os.path.join(windows_path, "morphing_space_human_equi.csv"),
-             os.path.join(windows_path, "morphing_space_monkey_equi.csv")]
-cond = 2
+train_csv = [os.path.join(computer_path, "morphing_space_human_orig.csv"),
+             os.path.join(computer_path, "morphing_space_monkey_orig.csv"),
+             os.path.join(computer_path, "morphing_space_human_equi.csv"),
+             os.path.join(computer_path, "morphing_space_monkey_equi.csv")]
+cond = 0
 
 #%% declare hyper parameters
 n_iter = 2
@@ -65,7 +70,7 @@ train_idx = None
 # train_idx = [50]
 
 #%% import config
-config_path = 'BH_01_morph_space_with_NRE_m0001.json'
+config_path = 'BH_01_morph_space_with_NRE_{}0001.json'.format(computer_letter)
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
@@ -79,7 +84,10 @@ if cond is not None:
         config["avatar_types"] = ["monkey"]
 
 # create directory
-save_path = os.path.join(config["directory"], config["LMK_data_directory"], config["condition"])
+save_path = os.path.join(config["directory"], config["LMK_data_directory"])
+if not os.path.exists(save_path):
+    os.mkdir(save_path)
+save_path = os.path.join(save_path, config["condition"])
 if not os.path.exists(save_path):
     os.mkdir(save_path)
 
