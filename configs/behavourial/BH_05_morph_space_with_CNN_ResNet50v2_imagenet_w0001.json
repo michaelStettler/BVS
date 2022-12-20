@@ -1,12 +1,12 @@
 {
-  "config_name": "BH_05_morph_space+with_CNN_resNetv2_imagenet_w0001",
-  "project": "ResNetv2_imagenet",
+  "config_name": "BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001",
+  "project": "ResNet50v2_imagenet",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
   "directory": "D:/Dataset/MorphingSpace",
-  "save_directory": "D:/Dataset/MorphingSpace/saved_model",
+  "load_directory": "D:/Dataset/MorphingSpace/saved_model",
+  "save_directory": "D:/Dataset/MorphingSpace/output",
   "input_shape": [224, 224, 3],
-  "extraction_model": "resnet50v2",
   "model_name": "ResNet50V2_atomic-glade-56"
 }

@@ -1,6 +1,6 @@
 {
-  "config_name": "BH_03_CNN_training_ResNetv2_m0001",
-  "project": "ResNetv2_imagenet",
+  "config_name": "BH_03_CNN_training_VGG19_w0001",
+  "project": "VGG19_imagenet",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
@@ -10,12 +10,13 @@
   "test_csv": "D:/Dataset/MorphingSpace/morphing_space_human_orig_val.csv",
   "directory": "D:/Dataset/MorphingSpace",
   "input_shape": [224, 224, 3],
-  "extraction_model": "ResNet50V2",
+  "extraction_model": "VGG19",
   "include_top": false,
   "weights": "imagenet",
-  "base_learning_rate": 0.001,
+  "base_learning_rate": 0.00005,
   "momentum": 0.9,
   "decay_rate": 0.9,
+  "decay_steps": 10,
   "initial_epochs": 45,
   "batch_size": 64
 }

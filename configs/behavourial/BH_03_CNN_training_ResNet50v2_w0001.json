@@ -1,18 +1,21 @@
 {
   "config_name": "BH_03_CNN_training_ResNetv2_m0001",
+  "project": "ResNet50v2_imagenet",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
   "n_category": 5,
   "ref_category": 0,
-  "train_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_orig_train.csv",
-  "test_csv": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space.csv",
-  "directory": "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace",
+  "train_csv": "D:/Dataset/MorphingSpace/morphing_space_human_orig_train.csv",
+  "test_csv": "D:/Dataset/MorphingSpace/morphing_space_human_orig_val.csv",
+  "directory": "D:/Dataset/MorphingSpace",
   "input_shape": [224, 224, 3],
   "extraction_model": "ResNet50V2",
   "include_top": false,
   "weights": "imagenet",
-  "base_learning_rate": 0.01,
+  "base_learning_rate": 0.001,
   "momentum": 0.9,
-  "initial_epochs": 10
+  "decay_rate": 0.9,
+  "initial_epochs": 45,
+  "batch_size": 64
 }
