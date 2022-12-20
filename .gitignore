@@ -139,6 +139,7 @@ logs/
 models/saved/
 logs/
 projects/memory_efficiency/.ipynb_checkpoints
+wandb/
 
 *.jpeg
 *.avi
