@@ -31,6 +31,9 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 """
 
 #%% declare script variables
+windows_path = 'D:/Dataset/MorphingSpace'
+# mac_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
+
 show_plot = False
 load_RBF_pattern = True
 train_RBF_pattern = False
@@ -48,10 +51,10 @@ save_tun = False
 norm_type = 'categorical'
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-train_csv = ["/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_orig.csv",
-             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_orig.csv",
-             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_human_equi.csv",
-             "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace/morphing_space_monkey_equi.csv"]
+train_csv = [os.path.join(windows_path, "morphing_space_human_orig.csv"),
+             os.path.join(windows_path, "morphing_space_monkey_orig.csv"),
+             os.path.join(windows_path, "morphing_space_human_equi.csv"),
+             os.path.join(windows_path, "morphing_space_monkey_equi.csv")]
 cond = 2
 
 #%% declare hyper parameters
