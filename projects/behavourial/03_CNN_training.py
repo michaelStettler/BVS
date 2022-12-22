@@ -30,93 +30,94 @@ from wandb.keras import WandbMetricsLogger
 sweep_config = {
     'method': 'grid',
     'metric': {
-        'name': 'val_loss',  # val_accuracy?
-        'goal': 'minimize'  # maximize?
+        'metric': {'goal': 'maximize', 'name': 'val_acc'},
     },
     'parameters': {
         'lr': {'values': [0.0001, 0.00001]},
-        'epoch': {'value': 40}
+        'epoch': {'values': [40, 45, 50]},
+        'decay_step': {'values': [200, 20, 15, 10]},
+        'decay_rate': {'values': [1.0, 0.95, 0.9, 0.85]},
+        'momentum': {'value': 0.9},
+        'batch_size': {'value': 64}
     }
 
 }
 pprint.pprint(sweep_config)
 
 # create sweep id
-sweep_id = wandb.sweep(sweep_config, config["project"])
-
-#%% import data
-train_data = load_data(config, get_raw=True)
-val_data = load_data(config, get_raw=True, train=False)
-n_train = len(train_data[0])
-n_val = len(val_data[0])
-n_steps = n_train/config["batch_size"]
-train_dataset = tf.data.Dataset.from_tensor_slices((train_data[0], train_data[1]))
-train_dataset = train_dataset.shuffle(600).batch(config["batch_size"])
-val_dataset = tf.data.Dataset.from_tensor_slices((val_data[0], val_data[1]))
-val_dataset = val_dataset.shuffle(600).batch(config["batch_size"])
-print("-- Data loaded --")
-print("n_train", n_train)
-print("n_val", n_val)
-print("n_steps", n_steps)
-print()
+project_name = config["project"]
+sweep_id = wandb.sweep(sweep_config, entity="BVS", project=project_name)
 
 
-def train(config):
-    run = wandb.init(config=config)
-    with run:
-        config = wandb.config
+def main():
+    run = wandb.init(entity="BVS", project=project_name)
+    # config = wandb.config
 
-        #%% create model
-        # declare layers
-        data_augmentation = tf.keras.Sequential([
-          tf.keras.layers.RandomFlip('horizontal'),
-          tf.keras.layers.RandomRotation(0.2),
-        ])
-        if "ResNet" in config["project"]:
-            preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
-            base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=config["weights"])
-        elif "VGG19" in config["project"]:
-            preprocess_input = tf.keras.applications.vgg19.preprocess_input
-            base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=config["weights"])
-        global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-        prediction_layer = tf.keras.layers.Dense(config["n_category"], activation='relu')
+    train_data = load_data(config, get_raw=True)
+    val_data = load_data(config, get_raw=True, train=False)
+    n_train = len(train_data[0])
+    n_val = len(val_data[0])
+    n_steps = n_train / wandb.config.batch_size
+    train_dataset = tf.data.Dataset.from_tensor_slices((train_data[0], train_data[1]))
+    train_dataset = train_dataset.shuffle(600).batch(wandb.config.batch_size)
+    val_dataset = tf.data.Dataset.from_tensor_slices((val_data[0], val_data[1]))
+    val_dataset = val_dataset.shuffle(600).batch(wandb.config.batch_size)
+    print("-- Data loaded --")
+    print("n_train", n_train)
+    print("n_val", n_val)
+    print("n_steps", n_steps)
+    print()
 
-        # apply transfer learning to base model
-        inputs = tf.keras.Input(shape=config["input_shape"])
-        x = data_augmentation(inputs)
-        x = preprocess_input(x)
-        x = base_model(x, training=False)
-        x = global_average_layer(x)
-        outputs = prediction_layer(x)
-        model = tf.keras.Model(inputs, outputs)
+    #%% create model
+    # declare layers
+    data_augmentation = tf.keras.Sequential([
+      tf.keras.layers.RandomFlip('horizontal'),
+      tf.keras.layers.RandomRotation(0.2),
+    ])
+    if "ResNet" in config["project"]:
+        preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
+        base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=config["weights"])
+    elif "VGG19" in config["project"]:
+        preprocess_input = tf.keras.applications.vgg19.preprocess_input
+        base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=config["weights"])
+    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+    prediction_layer = tf.keras.layers.Dense(config["n_category"], activation='relu')
 
-        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(config.lr,
-                                                                     decay_steps=config["decay_steps"]*n_steps,
-                                                                     decay_rate=config['decay_rate'],
-                                                                     staircase=True)
+    # apply transfer learning to base model
+    inputs = tf.keras.Input(shape=config["input_shape"])
+    x = data_augmentation(inputs)
+    x = preprocess_input(x)
+    x = base_model(x, training=False)
+    x = global_average_layer(x)
+    outputs = prediction_layer(x)
+    model = tf.keras.Model(inputs, outputs)
 
-        model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=config["momentum"]),
-                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                      metrics=["accuracy"])
-        model.summary()
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(wandb.config.lr,
+                                                                 decay_steps=wandb.config.decay_step*n_steps,
+                                                                 decay_rate=wandb.config.decay_rate,
+                                                                 staircase=True)
 
-        #%% Train de model
-        log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=wandb.config.momentum),
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  metrics=["accuracy"])
+    model.summary()
 
-        model.fit(train_dataset,
-                  epochs=config["initial_epochs"],
-                  batch_size=config["batch_size"],
-                  validation_data=val_dataset,
-                  callbacks=[tensorboard_callback, WandbMetricsLogger()])
-        callbacks = [WandbCallback()]
+    #%% Train de model
+    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-        save_path = os.path.join(config["directory"], "saved_model")
-        if not os.path.isdir(save_path):
-            os.mkdir(save_path)
-        # run.save()  # need to call this before being able to get the name
-        # model.save(os.path.join(save_path, config["extraction_model"] + "_" + wandb.run.name))
-        model.save(os.path.join(save_path, config["extraction_model"] + "_" + run.name))
+    model.fit(train_dataset,
+              epochs=wandb.config.epoch,
+              batch_size=wandb.config.batch_size,
+              validation_data=val_dataset,
+              callbacks=[tensorboard_callback, WandbMetricsLogger()])
+    callbacks = [WandbCallback()]
+
+    save_path = os.path.join(config["directory"], "saved_model")
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+    # model.save(os.path.join(save_path, config["extraction_model"] + "_" + wandb.run.name))
+    model.save(os.path.join(save_path, config["extraction_model"] + "_" + run.name))
 
 
-wandb.agent(sweep_id, train)
+wandb.agent(sweep_id, function=main)
