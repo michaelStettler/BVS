@@ -138,8 +138,9 @@ prob_grid = np.zeros((5, 5, 5))
 for i in range(np.shape(amax_ms_grid)[0]):
     for j in range(np.shape(amax_ms_grid)[0]):
         x = amax_ms_grid[i, j]
-        # need to factor out Neutral
+        # need to factor out Neutral (mask neutral)
         x[0] = 0
+        x[0] = float('-inf')  # -> transformers uses -inf as mask
         cat_grid[i, j, np.argmax(x)] = 1
         #prob_grid[i, j, 1:] = np.exp(x[1:]) / sum(np.exp(x[1:]))
         prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
