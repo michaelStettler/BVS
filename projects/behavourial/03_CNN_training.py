@@ -19,6 +19,7 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 config_path = 'BH_03_CNN_training_ResNet50v2_w0001.json'  # ResNet50v2_imagenet
 config_path = 'BH_03_CNN_training_VGG19_w0001.json'       # VGG19_imagenet
 config_path = 'BH_03_CNN_training_VGG19_w0002.json'       # VGG19_imagenet_conv3_3
+config_path = 'BH_03_CNN_training_VGG19_w0003.json'       # VGG19_imagenet_scratch
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
@@ -88,11 +89,12 @@ def main():
     if config.get('transfer_layer'):
         base_model.training = True
         fine_tune_at = 0
-        for l, layer in enumerate(base_model.layers):
-            if config['transfer_layer'] == layer.name:
-                fine_tune_at = l
-                print(l, "layer", layer.name)
-                print("fine tune at:", fine_tune_at)
+        if config['transfer_layer'] != 'scratch':
+            for l, layer in enumerate(base_model.layers):
+                if config['transfer_layer'] == layer.name:
+                    fine_tune_at = l
+                    print(l, "layer", layer.name)
+                    print("fine tune at:", fine_tune_at)
         for layer in base_model.layers[:fine_tune_at]:
             layer.trainable = False
 
