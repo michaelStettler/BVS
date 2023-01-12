@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
 from matplotlib import cm
 
 viridis = cm.get_cmap('viridis', 12)
@@ -100,65 +101,7 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=
     plt.show()
 
 
-def compute_projections(x, ref_vectors, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
-    """
-
-    :param x: (n_img, n_feat_map, n_dim)
-    :param ref_vectors: (n_feat_map, n_dim)
-    :param tun_vectors: (n_cat, n_feat_map, n_dim)
-    :param nu:
-    :param neutral_threshold:
-    :param verbose:
-    :return:
-    """
-
-    # normalize by norm of each landmark
-    norm_t = np.linalg.norm(tun_vectors, axis=2)  # (n_cat, n_feat_map)
-
-    # vectorized version
-    diff = x - ref_vectors
-    projections = np.dot(diff, np.moveaxis(tun_vectors, 0, -1)) / norm_t  # does not take care of norm_t == 0
-    projections = np.power(projections, nu)
-    projections[projections < 0] = 0
-    projections = projections[..., 0, :]  # remove duplicate from the 3 by 3,
-    # todo: is there not a better way to do the dot product?
-    projections = np.sum(projections, axis=1)  # sum of feature maps
-
-    # apply neutral threshold
-    projections[projections < neutral_threshold] = 0
-
-    return projections
-
-
-def compute_loss(proj: np.array, y: np.array) -> float:
-    """
-
-    :param proj: (n_img, n_cat)
-    :param y: (n_img, )
-    :return:
-    """
-
-    # compute sum of all exp proj
-    # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
-
-    loss = 0
-    for i in range(len(proj)):
-        if y[i] != 0:  # assume neutral == 0
-            # loss += np.exp(proj[i, y[i] - 1]) / sum_proj[i]
-            loss += np.exp(proj[i, y[i] - 1])
-
-    # return loss
-    return loss / len(proj)
-
-
-def optimize_NRE(x: np.array, y, neutral=0, lr=0.1):
-    """
-
-    :param x: (n_pts, n_feature_maps, n_dim)
-    :param y:
-    :param neutral:
-    :return:
-    """
+def compute_tun_vectors(x, y, neutral):
     n_dim = np.shape(x)[-1]
     uniques = np.unique(y)
     n_cat = len(uniques)
@@ -171,7 +114,7 @@ def optimize_NRE(x: np.array, y, neutral=0, lr=0.1):
     print("shape tun_vectors", np.shape(tun_vectors))
 
     # for each expression
-    c = 0
+    c = 0  # can't use enumerate since there's the neutral cat to remove
     for cat in uniques:
         if cat != neutral:
             x_cat = x[y == cat]
@@ -186,21 +129,120 @@ def optimize_NRE(x: np.array, y, neutral=0, lr=0.1):
             tun_vectors[c] = v_cat
             c += 1
 
-    print("tun_vectors", np.shape(tun_vectors))
-    print(tun_vectors)
+    return tf.convert_to_tensor(tun_vectors)
 
-    # get projections
-    projections = compute_projections(x, ref_vectors, tun_vectors)
-    print("projections", np.shape(projections))
 
-    # compute loss
-    loss = compute_loss(projections, y)
-    print("loss", loss)
+def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
+    """
 
-    # move ref vector (do something like)
-    ref_vectors += lr * loss
+    :param x: (n_img, n_feat_map, n_dim)
+    :param ref_vectors: (n_feat_map, n_dim)
+    :param tun_vectors: (n_cat, n_feat_map, n_dim)
+    :param nu:
+    :param neutral_threshold:
+    :param verbose:
+    :return:
+    """
 
-    plot_space(x_train, y_train, ref_vector=ref_vectors[0], tun_vectors=tun_vectors[:, 0])
+    # normalize by norm of each landmark
+    # norm_t = np.linalg.norm(tun_vectors, axis=2)  # (n_cat, n_feat_map)
+
+    # vectorized version
+    # diff = x - ref_vectors
+    # projections = np.dot(diff, np.moveaxis(tun_vectors, 0, -1)) / norm_t  # does not take care of norm_t == 0
+    # projections = np.dot(x, np.moveaxis(tun_vectors, 0, -1)) / norm_t  # does not take care of norm_t == 0
+    # projections = np.power(projections, nu)
+    # projections[projections < 0] = 0
+    # projections = projections[..., 0, :]  # remove duplicate from the 3 by 3,
+    # todo: is there not a better way to do the dot product?
+    # projections = np.sum(projections, axis=1)  # sum of feature maps
+
+    # ALEX's version
+    projections = tf.matmul(x, tf.experimental.numpy.moveaxis(tun_vectors, 0, -1))  # does not take care of norm_t == 0
+    projections = tf.math.pow(projections, nu)
+    projections = tf.reduce_sum(projections, axis=1)  # sum of feature maps
+
+    # # apply neutral threshold
+    # projections[projections < neutral_threshold] = 0
+
+    return projections
+
+
+def compute_loss(proj: tf.Tensor, y: tf.Tensor) -> float:
+    """
+
+    :param proj: (n_img, n_cat)
+    :param y: (n_img, )
+    :return:
+    """
+
+    # compute sum of all exp proj
+    # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
+
+    loss = 0
+    for i in range(len(proj)):
+        if y[i] != 0:  # assume neutral == 0
+            # loss += np.exp(proj[i, y[i] - 1]) / sum_proj[i]
+            loss += tf.exp(proj[i, int(y[i]) - 1])
+
+    return - loss
+
+
+def optimize_NRE(x: np.array, y, neutral=0, lr=0.1, n_epochs=20):
+    """
+
+    :param x: (n_pts, n_feature_maps, n_dim)
+    :param y:
+    :param neutral:
+    :return:
+    """
+
+    # transoform to tensor
+    x = tf.convert_to_tensor(x, dtype=tf.float64)
+    y = tf.convert_to_tensor(y, dtype=tf.float64)
+    print("shape x", x.shape)
+    print("shape y", y.shape)
+
+    n_dim = np.shape(x)[-1]
+    uniques = np.unique(y)
+    n_cat = len(uniques)
+    n_feat_maps = np.shape(x)[1]
+    print("n_dim: {}, n_cat: {}".format(n_dim, n_cat))
+
+    # initialize trainable parameters
+    shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float64)
+    radius = tf.ones(n_feat_maps, dtype=tf.float64) * 0.01
+    print("shape shifts", shifts.shape)
+    print("shape radius", radius.shape)
+
+    for e in range(n_epochs):
+        with tf.GradientTape() as tape:
+            tape.watch(shifts)
+            tape.watch(radius)
+
+        x_shifted = x - shifts
+        tun_vectors = compute_tun_vectors(x_shifted, y, neutral)
+        print("tun_vectors", tun_vectors.shape)
+        print(tun_vectors)
+
+        # get projections
+        projections = compute_projections(x_shifted, tun_vectors)
+        print("projections", projections.shape)
+        print(projections)
+
+        # compute loss
+        loss = compute_loss(projections, y)
+        print("loss", loss)
+
+        # update parameters
+        grad_shifts = tape.gradient(loss, shifts)
+        print("grad_shifts", grad_shifts)
+        shifts = shifts - lr * grad_shifts
+
+        grad_rad = tape.gradient(loss, radius)
+        radius = radius - lr * grad_rad
+
+        plot_space(x_train, y_train, tun_vectors=tun_vectors[:, 0])
 
 
 if __name__ == '__main__':
