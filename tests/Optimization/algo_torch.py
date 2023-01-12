@@ -8,7 +8,7 @@ viridis = cm.get_cmap('viridis', 12)
 np.random.seed(1)
 
 """
-run: python -m tests.algo_torch
+run: python -m tests.Optimization.algo_torch
 """
 
 
@@ -140,11 +140,11 @@ def compute_tun_vectors(x, y, neutral):
     for cat in uniques:
         if cat != neutral:
             x_cat = x[y == cat]
+            print("shape x_cat", x_cat.shape)
             v_cat = torch.zeros((n_feat_maps, n_dim))
             for f in range(n_feat_maps):
-                print(x_cat[:, f, :].shape)
                 u, s, vh = torch.linalg.svd(x_cat[:, f, :])
-                print(v_cat[f, :].shape, vh.shape)
+                print("shape v_cat[f, :] vh", v_cat[f, :].shape, vh.shape)
 
                 # Orient tuning vectors properly
                 x_np = x_cat.detach().numpy()
@@ -246,7 +246,8 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
     radius = torch.full([n_feat_maps], 0.01, dtype=torch.float64 ,requires_grad=True)
     parameters = [shift, radius]
 
-    for i in range(20):
+    # for i in range(20):
+    for i in range(1):
         x_shifted = x - shift
 
         tun_vectors = compute_tun_vectors(x_shifted, y, neutral)
@@ -260,7 +261,7 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
         loss = compute_loss(projections, x, y, radius)
 
         # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], save=True, name=str(i))
-        plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
+        # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
         print("shift", shift)
         print("radius", radius)
         loss.backward()

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from matplotlib import cm
+from datetime import datetime
 
 viridis = cm.get_cmap('viridis', 12)
 
@@ -9,6 +10,7 @@ np.random.seed(1)
 
 """
 run: python -m tests.Optimization.t01_2d_optimization_algo
+tensorboard: tensorboard --logdir logs/func
 """
 
 
@@ -101,35 +103,39 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=
     plt.show()
 
 
-def compute_tun_vectors(x, y, neutral):
+def compute_tun_vectors(x, y, n_cat):
     n_dim = np.shape(x)[-1]
-    uniques = np.unique(y)
-    n_cat = len(uniques)
     n_feat_maps = np.shape(x)[1]
     print("n_dim: {}, n_cat: {}".format(n_dim, n_cat))
 
-    ref_vectors = np.zeros((n_feat_maps, n_dim))
-    print("shape ref_vectors", np.shape(ref_vectors))
-    tun_vectors = np.zeros((n_cat - 1, n_feat_maps, n_dim))
-    print("shape tun_vectors", np.shape(tun_vectors))
-
+    tun_vectors = []
     # for each expression
-    c = 0  # can't use enumerate since there's the neutral cat to remove
-    for cat in uniques:
-        if cat != neutral:
-            x_cat = x[y == cat]
-            v_cat = np.zeros((n_feat_maps, n_dim))
-            for f in range(n_feat_maps):
-                u, s, vh = np.linalg.svd(x_cat[:, f])
-                print("shape u, s, vh", np.shape(u), np.shape(s), np.shape(vh))
-                print("s", s)
-                print("shape vh[0]", np.shape(vh[0]))
-                v_cat[f] = vh[0] + ref_vectors[f]
+    for cat in range(1, n_cat):
+        print("cat", cat)
+        # construct mask to get slice of tensor x per category (in numpy x[y == cat])
+        bool_mask = tf.equal(y, cat)
+        bool_mask = tf.repeat(tf.expand_dims(bool_mask, axis=1), x.shape[1], axis=1)
+        bool_mask = tf.repeat(tf.expand_dims(bool_mask, axis=2), x.shape[2], axis=2)
+        x_cat = tf.gather(x, tf.where(bool_mask))
+        print("shape x_cat", x_cat.shape)
 
-            tun_vectors[c] = v_cat
-            c += 1
+        # declare tuning vect per category
+        # v_cat = tf.zeros((n_feat_maps, n_dim))
+        v_cat = []
+        for f in range(n_feat_maps):
+            u, s, vh = tf.linalg.svd(x_cat[:, f], full_matrices=True)
+            print("shape u, s, vh", np.shape(u), np.shape(s), np.shape(vh))
+            print("shape vh[0]", np.shape(vh[0]))
+            # v_cat[f] = vh[0] + ref_vectors[f]
+            # v_cat.append(vh[0] + ref_vectors[f])
+            v_cat.append(vh[0, 0])
 
-    return tf.convert_to_tensor(tun_vectors)
+        v_cat = tf.convert_to_tensor(v_cat, dtype=tf.float64)
+        print("shape v_cat", v_cat.shape)
+
+        tun_vectors.append(v_cat)
+
+    return tf.convert_to_tensor(tun_vectors, dtype=tf.float64, name="tun_vectors")
 
 
 def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
@@ -158,9 +164,10 @@ def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
     # projections = np.sum(projections, axis=1)  # sum of feature maps
 
     # ALEX's version
-    projections = tf.matmul(x, tf.experimental.numpy.moveaxis(tun_vectors, 0, -1))  # does not take care of norm_t == 0
+    tun_vect = tf.experimental.numpy.moveaxis(tun_vectors, 0, -1)
+    projections = tf.matmul(x, tun_vect)  # does not take care of norm_t == 0
     projections = tf.math.pow(projections, nu)
-    projections = tf.reduce_sum(projections, axis=1)  # sum of feature maps
+    projections = tf.reduce_sum(projections, axis=1, name="projections")  # sum of feature maps
 
     # # apply neutral threshold
     # projections[projections < neutral_threshold] = 0
@@ -168,7 +175,7 @@ def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
     return projections
 
 
-def compute_loss(proj: tf.Tensor, y: tf.Tensor) -> float:
+def compute_loss(proj: tf.Tensor, y: tf.Tensor, n_cat: int) -> float:
     """
 
     :param proj: (n_img, n_cat)
@@ -179,16 +186,16 @@ def compute_loss(proj: tf.Tensor, y: tf.Tensor) -> float:
     # compute sum of all exp proj
     # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
 
-    loss = 0
-    for i in range(len(proj)):
-        if y[i] != 0:  # assume neutral == 0
-            # loss += np.exp(proj[i, y[i] - 1]) / sum_proj[i]
-            loss += tf.exp(proj[i, int(y[i]) - 1])
+    # loss = []
+    # for i in range(1, n_cat):
+    #     loss.append(tf.exp(proj[i, int(y[i]) - 1]))
+    #
+    # print("loss", loss)
+    # return -tf.reduce_sum(loss, name="loss")
+    return proj * proj
 
-    return - loss
-
-
-def optimize_NRE(x: np.array, y, neutral=0, lr=0.1, n_epochs=20):
+# @tf.function  # create a graph (non-eager mode!)
+def optimize_NRE(x: np.array, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
     """
 
     :param x: (n_pts, n_feature_maps, n_dim)
@@ -196,60 +203,53 @@ def optimize_NRE(x: np.array, y, neutral=0, lr=0.1, n_epochs=20):
     :param neutral:
     :return:
     """
-
-    # transoform to tensor
-    x = tf.convert_to_tensor(x, dtype=tf.float64)
-    y = tf.convert_to_tensor(y, dtype=tf.float64)
-    print("shape x", x.shape)
-    print("shape y", y.shape)
-
     n_dim = np.shape(x)[-1]
-    uniques = np.unique(y)
-    n_cat = len(uniques)
     n_feat_maps = np.shape(x)[1]
-    print("n_dim: {}, n_cat: {}".format(n_dim, n_cat))
 
     # initialize trainable parameters
-    shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float64)
-    radius = tf.ones(n_feat_maps, dtype=tf.float64) * 0.01
+    shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float64, name="shifts")
+    radius = tf.ones(n_feat_maps, dtype=tf.float64, name="radius") * 0.01
     print("shape shifts", shifts.shape)
     print("shape radius", radius.shape)
+    projections = tf.constant(5.0)
+    print("shape projections", projections.shape)
 
-    for e in range(n_epochs):
+    for epoch in range(n_epochs):
         with tf.GradientTape() as tape:
+            tape.watch(projections)
             tape.watch(shifts)
             tape.watch(radius)
 
-        x_shifted = x - shifts
-        tun_vectors = compute_tun_vectors(x_shifted, y, neutral)
-        print("tun_vectors", tun_vectors.shape)
-        print(tun_vectors)
+        # x_shifted = tf.subtract(x, shifts, name="x_shifted")
+        # tun_vectors = compute_tun_vectors(x_shifted, y, n_cat)
+        # print("tun_vectors", tun_vectors.shape)
+        # # print(tun_vectors)
+        # #
+        # # # get projections
+        # projections = compute_projections(x_shifted, tun_vectors)
+        # print("projections", projections.shape)
+        # # print(projections)
 
-        # get projections
-        projections = compute_projections(x_shifted, tun_vectors)
-        print("projections", projections.shape)
-        print(projections)
-
-        # compute loss
-        loss = compute_loss(projections, y)
-        print("loss", loss)
+            # compute loss
+            loss = compute_loss(projections, y, n_cat)
+            print("loss", loss)
 
         # update parameters
-        grad_shifts = tape.gradient(loss, shifts)
+        grad_shifts = tape.gradient(loss, projections)
         print("grad_shifts", grad_shifts)
-        shifts = shifts - lr * grad_shifts
-
-        grad_rad = tape.gradient(loss, radius)
-        radius = radius - lr * grad_rad
-
-        plot_space(x_train, y_train, tun_vectors=tun_vectors[:, 0])
+        # shifts = shifts - lr * grad_shifts
+        #
+        # grad_rad = tape.gradient(loss, radius)
+        # radius = radius - lr * grad_rad
+        #
+        # plot_space(x_train, y_train, tun_vectors=tun_vectors[:, 0])
 
 
 if __name__ == '__main__':
     # declare parameters
     n_dim = 2
-    n_cat = 4  # (3 + random)
-    n_points = 5
+    n_cat = 2  # (3 + neutral)
+    n_points = 1
     # generate random data
     x_train, y_train = generate_data_set(n_dim, n_cat, n_points, ref_at_origin=False)
     print("shape x_train", np.shape(x_train))
@@ -257,6 +257,24 @@ if __name__ == '__main__':
 
     # # plot generated data
     # plot_space(x_train, y_train)
+    # transoform to tensor
+    x = tf.convert_to_tensor(x_train, dtype=tf.float64)
+    y = tf.convert_to_tensor(y_train, dtype=tf.int64)
+    print("shape x", x.shape)
+    print("shape y", y.shape)
+
+
+    # create logs and tensorboard
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    logdir = 'logs/func/%s' % stamp
+    writer = tf.summary.create_file_writer(logdir)
 
     # optimize_NRE
-    optimize_NRE(np.expand_dims(x_train, axis=1), y_train)
+    tf.summary.trace_on(graph=True, profiler=True)
+    optimize_NRE(np.expand_dims(x, axis=1), y, n_cat)
+
+    with writer.as_default():
+        tf.summary.trace_export(
+            name="my_func_trace",
+            step=0,
+            profiler_outdir=logdir)
