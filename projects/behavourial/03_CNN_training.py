@@ -29,16 +29,30 @@ from wandb.keras import WandbCallback
 from wandb.keras import WandbMetricsLogger
 
 #%% set sweep config
+# sweep_config = {
+#     'method': 'grid',
+#     'metric': {
+#         'metric': {'goal': 'maximize', 'name': 'val_acc'},
+#     },
+#     'parameters': {
+#         'lr': {'values': [0.001]},  # vgg  0.0001, 0.00001
+#         'epoch': {'values': [40, 45, 50]},
+#         'decay_step': {'values': [200, 20, 15, 10]},
+#         'decay_rate': {'values': [1.0, 0.95, 0.9, 0.85]},
+#         'momentum': {'value': 0.9},
+#         'batch_size': {'value': 64}
+#     }
+# }
 sweep_config = {
     'method': 'grid',
     'metric': {
         'metric': {'goal': 'maximize', 'name': 'val_acc'},
     },
     'parameters': {
-        'lr': {'values': [0.0001, 0.00001]},
-        'epoch': {'values': [40, 45, 50]},
-        'decay_step': {'values': [200, 20, 15, 10]},
-        'decay_rate': {'values': [1.0, 0.95, 0.9, 0.85]},
+        'lr': {'values': [0.0001]},  # vgg  0.0001, 0.00001
+        'epoch': {'values': [1500]},
+        'decay_step': {'values': [2000]},
+        'decay_rate': {'values': [1.0]},
         'momentum': {'value': 0.9},
         'batch_size': {'value': 64}
     }
@@ -76,12 +90,17 @@ def main():
       tf.keras.layers.RandomFlip('horizontal'),
       tf.keras.layers.RandomRotation(0.2),
     ])
+    if config["weights"] == "imagenet":
+        weights = config["weights"]
+    elif config["weights"] == "None":
+        weights = None
+
     if "ResNet" in config["project"]:
         preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
-        base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=config["weights"])
+        base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=weights)
     elif "VGG19" in config["project"]:
         preprocess_input = tf.keras.applications.vgg19.preprocess_input
-        base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=config["weights"])
+        base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=weights)
     global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
     prediction_layer = tf.keras.layers.Dense(config["n_category"], activation='relu')
 
@@ -96,6 +115,7 @@ def main():
                     print(l, "layer", layer.name)
                     print("fine tune at:", fine_tune_at)
         for layer in base_model.layers[:fine_tune_at]:
+            print(f"layer {layer} set to non-trainable")
             layer.trainable = False
 
     else:
