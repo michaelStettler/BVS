@@ -96,10 +96,10 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, radius=None
         # get all positions for this label
         pos = positions[labels == label]
 
-
         # scale tuning vector for plotting
-        max_length = np.max(np.linalg.norm(pos, axis=1))
-        x_direction = pos[np.argmax(np.linalg.norm(pos, axis=1))][0]
+        pos_norm = np.linalg.norm(pos, axis=1)
+        max_length = np.max(pos_norm)
+        x_direction = pos[np.argmax(pos_norm)][0]
 
         if x_direction * tun_vectors[i - 1, 0] < 0:
             sign = -1
@@ -249,6 +249,7 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
     # for i in range(20):
     for i in range(1):
         x_shifted = x - shift
+        print("shape x_shifted", x_shifted.shape)
 
         tun_vectors = compute_tun_vectors(x_shifted, y, neutral)
         print("tun_vectors", tun_vectors.shape)
@@ -261,7 +262,7 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
         loss = compute_loss(projections, x, y, radius)
 
         # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], save=True, name=str(i))
-        # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
+        plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
         print("shift", shift)
         print("radius", radius)
         loss.backward()

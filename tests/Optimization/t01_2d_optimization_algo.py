@@ -61,9 +61,11 @@ def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_l
     return positions, np.array(labels).astype(int)
 
 
-def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=5, max_length=5):
+def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, min_length=5, max_length=5):
     uniques = np.unique(labels)
-    n_cat = len(uniques)
+
+    # plot only first feature map
+    pos_ft = positions[:, 0]
 
     # plot
     cmap = cm.get_cmap('viridis', n_cat)
@@ -76,11 +78,13 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=
             label_name = "reference"
 
         # get all positions for this label
-        pos = positions[labels == label]
+        pos = pos_ft[labels == label]
 
         # scale tuning vector for plotting
-        max_length = np.max(np.linalg.norm(pos, axis=1))
-        x_direction = pos[np.argmax(np.linalg.norm(pos, axis=1))][0]
+        pos_norm = np.linalg.norm(pos, axis=1)
+        max_length = np.max(pos_norm)
+        x_direction = pos[np.argmax(pos_norm)][0]
+
         if x_direction * tun_vectors[i - 1, 0] < 0:
             sign = -1
         else:
@@ -93,7 +97,6 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, min_length=
             plt.plot([ref_vector[0], sign * max_length * tun_vectors[i - 1, 0]], [ref_vector[1], sign * max_length * tun_vectors[i - 1, 1]], color=color)
 
     if ref_vector is not None:
-        print("ref_vector", ref_vector)
         # plot cross
         plt.plot(ref_vector[0], ref_vector[1], 'xk')
 
@@ -186,16 +189,15 @@ def compute_loss(proj: tf.Tensor, y: tf.Tensor, n_cat: int) -> float:
     # compute sum of all exp proj
     # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
 
-    # loss = []
-    # for i in range(1, n_cat):
-    #     loss.append(tf.exp(proj[i, int(y[i]) - 1]))
-    #
-    # print("loss", loss)
-    # return -tf.reduce_sum(loss, name="loss")
-    return proj * proj
+    loss = 0
+    for i in range(1, n_cat):
+        loss += tf.exp(proj[i, int(y[i]) - 1])
+
+    return -loss
+
 
 # @tf.function  # create a graph (non-eager mode!)
-def optimize_NRE(x: np.array, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
+def optimize_NRE(x, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
     """
 
     :param x: (n_pts, n_feature_maps, n_dim)
@@ -211,45 +213,44 @@ def optimize_NRE(x: np.array, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
     radius = tf.ones(n_feat_maps, dtype=tf.float64, name="radius") * 0.01
     print("shape shifts", shifts.shape)
     print("shape radius", radius.shape)
-    projections = tf.constant(5.0)
-    print("shape projections", projections.shape)
 
     for epoch in range(n_epochs):
         with tf.GradientTape() as tape:
-            tape.watch(projections)
             tape.watch(shifts)
             tape.watch(radius)
 
-        # x_shifted = tf.subtract(x, shifts, name="x_shifted")
-        # tun_vectors = compute_tun_vectors(x_shifted, y, n_cat)
-        # print("tun_vectors", tun_vectors.shape)
-        # # print(tun_vectors)
-        # #
-        # # # get projections
-        # projections = compute_projections(x_shifted, tun_vectors)
-        # print("projections", projections.shape)
-        # # print(projections)
+            # get tun vectors
+            x_shifted = tf.subtract(x, shifts, name="x_shifted")
+            tun_vectors = compute_tun_vectors(x_shifted, y, n_cat)
+            print("tun_vectors", tun_vectors.shape)
+            # print(tun_vectors)
+
+            # # get projections
+            projections = compute_projections(x_shifted, tun_vectors)
+            print("projections", projections.shape)
+            # print(projections)
 
             # compute loss
             loss = compute_loss(projections, y, n_cat)
             print("loss", loss)
 
         # update parameters
-        grad_shifts = tape.gradient(loss, projections)
-        print("grad_shifts", grad_shifts)
-        # shifts = shifts - lr * grad_shifts
+        grad_shifts = tape.gradient(loss, x_shifted)
+        print("grad shifts", grad_shifts.shape)
+        shifts = shifts - lr * grad_shifts
         #
         # grad_rad = tape.gradient(loss, radius)
         # radius = radius - lr * grad_rad
         #
-        # plot_space(x_train, y_train, tun_vectors=tun_vectors[:, 0])
+        tun_vect = tun_vectors.numpy()
+        plot_space(x.numpy(), y.numpy(), n_cat, tun_vectors=tun_vect[:, 0])
 
 
 if __name__ == '__main__':
     # declare parameters
     n_dim = 2
-    n_cat = 2  # (3 + neutral)
-    n_points = 1
+    n_cat = 4  # (3 + neutral)
+    n_points = 5
     # generate random data
     x_train, y_train = generate_data_set(n_dim, n_cat, n_points, ref_at_origin=False)
     print("shape x_train", np.shape(x_train))
@@ -257,11 +258,11 @@ if __name__ == '__main__':
 
     # # plot generated data
     # plot_space(x_train, y_train)
-    # transoform to tensor
-    x = tf.convert_to_tensor(x_train, dtype=tf.float64)
-    y = tf.convert_to_tensor(y_train, dtype=tf.int64)
-    print("shape x", x.shape)
-    print("shape y", y.shape)
+    # transform to tensor
+    x_train = tf.convert_to_tensor(x_train, dtype=tf.float64)
+    y_train = tf.convert_to_tensor(y_train, dtype=tf.int64)
+    print("shape x_train", x_train.shape)
+    print("shape y_train", y_train.shape)
 
 
     # create logs and tensorboard
@@ -271,7 +272,7 @@ if __name__ == '__main__':
 
     # optimize_NRE
     tf.summary.trace_on(graph=True, profiler=True)
-    optimize_NRE(np.expand_dims(x, axis=1), y, n_cat)
+    optimize_NRE(tf.expand_dims(x_train, axis=1), y_train, n_cat)
 
     with writer.as_default():
         tf.summary.trace_export(
