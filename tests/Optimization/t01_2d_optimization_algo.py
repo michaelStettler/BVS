@@ -117,24 +117,32 @@ def compute_tun_vectors(x, y, n_cat):
         print("cat", cat)
         # construct mask to get slice of tensor x per category (in numpy x[y == cat])
         bool_mask = tf.equal(y, cat)
-        bool_mask = tf.repeat(tf.expand_dims(bool_mask, axis=1), x.shape[1], axis=1)
-        bool_mask = tf.repeat(tf.expand_dims(bool_mask, axis=2), x.shape[2], axis=2)
-        x_cat = tf.gather(x, tf.where(bool_mask))
-        print("shape x_cat", x_cat.shape)
+        x_cat = tf.gather(x, tf.squeeze(tf.where(bool_mask)))
+        # print("shape x_cat", x_cat.shape)
+        # print(x_cat)
 
         # declare tuning vect per category
         # v_cat = tf.zeros((n_feat_maps, n_dim))
         v_cat = []
         for f in range(n_feat_maps):
-            u, s, vh = tf.linalg.svd(x_cat[:, f], full_matrices=True)
-            print("shape u, s, vh", np.shape(u), np.shape(s), np.shape(vh))
-            print("shape vh[0]", np.shape(vh[0]))
-            # v_cat[f] = vh[0] + ref_vectors[f]
-            # v_cat.append(vh[0] + ref_vectors[f])
-            v_cat.append(vh[0, 0])
+            # svd results not consistent between torch and tf
+            s, u, vh = tf.linalg.svd(x_cat[:, f], full_matrices=False)
+            # print("shape u, s, vh", u.shape, s.shape, vh.shape)
+            # print(vh)
+
+            # Orient tuning vectors properly
+            vh = tf.transpose(vh)
+            x_direction = tf.gather(x_cat[:, 0], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[0]
+            x_direction = x_direction * vh[0, 0]
+            sign = tf.math.sign(x_direction)
+
+            # v_cat.append(vh[0])
+            print("v_cat", vh[0] * sign)
+            v_cat.append(vh[0] * sign)
 
         v_cat = tf.convert_to_tensor(v_cat, dtype=tf.float64)
-        print("shape v_cat", v_cat.shape)
+        # print("shape v_cat", v_cat.shape)
+        print()
 
         tun_vectors.append(v_cat)
 
@@ -178,7 +186,7 @@ def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
     return projections
 
 
-def compute_loss(proj: tf.Tensor, y: tf.Tensor, n_cat: int) -> float:
+def compute_loss(proj: tf.Tensor, y: tf.Tensor, neutral=False) -> float:
     """
 
     :param proj: (n_img, n_cat)
@@ -189,9 +197,14 @@ def compute_loss(proj: tf.Tensor, y: tf.Tensor, n_cat: int) -> float:
     # compute sum of all exp proj
     # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
 
+    if neutral:
+        raise NotImplementedError
+    # treat neutral as own category
     loss = 0
-    for i in range(1, n_cat):
-        loss += tf.exp(proj[i, int(y[i]) - 1])
+    for i in range(proj.shape[0]):
+        enumerator = proj[i, int(y[i])]
+        denominator = tf.reduce_sum(proj[i]) - enumerator
+        loss += enumerator / denominator
 
     return -loss
 
@@ -209,7 +222,7 @@ def optimize_NRE(x, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
     n_feat_maps = np.shape(x)[1]
 
     # initialize trainable parameters
-    shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float64, name="shifts")
+    shifts = tf.ones((n_feat_maps, n_dim), dtype=tf.float64, name="shifts")
     radius = tf.ones(n_feat_maps, dtype=tf.float64, name="radius") * 0.01
     print("shape shifts", shifts.shape)
     print("shape radius", radius.shape)
@@ -221,14 +234,16 @@ def optimize_NRE(x, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
 
             # get tun vectors
             x_shifted = tf.subtract(x, shifts, name="x_shifted")
+            print("shape x_shifted", x_shifted.shape)
+
             tun_vectors = compute_tun_vectors(x_shifted, y, n_cat)
             print("tun_vectors", tun_vectors.shape)
-            # print(tun_vectors)
+            print(tun_vectors)
 
             # # get projections
             projections = compute_projections(x_shifted, tun_vectors)
             print("projections", projections.shape)
-            # print(projections)
+            print(projections)
 
             # compute loss
             loss = compute_loss(projections, y, n_cat)
@@ -243,10 +258,12 @@ def optimize_NRE(x, y, n_cat, neutral=0, lr=0.1, n_epochs=1):
         # radius = radius - lr * grad_rad
         #
         tun_vect = tun_vectors.numpy()
-        plot_space(x.numpy(), y.numpy(), n_cat, tun_vectors=tun_vect[:, 0])
+        # plot_space(x.numpy(), y.numpy(), n_cat, tun_vectors=tun_vect[:, 0])
 
 
 if __name__ == '__main__':
+    profiler = False
+
     # declare parameters
     n_dim = 2
     n_cat = 4  # (3 + neutral)
@@ -256,6 +273,7 @@ if __name__ == '__main__':
     print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
 
+
     # # plot generated data
     # plot_space(x_train, y_train)
     # transform to tensor
@@ -264,18 +282,20 @@ if __name__ == '__main__':
     print("shape x_train", x_train.shape)
     print("shape y_train", y_train.shape)
 
+    if profiler:
+        # create logs and tensorboard
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = 'logs/func/%s' % stamp
+        writer = tf.summary.create_file_writer(logdir)
 
-    # create logs and tensorboard
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    logdir = 'logs/func/%s' % stamp
-    writer = tf.summary.create_file_writer(logdir)
+        tf.summary.trace_on(graph=True, profiler=True)
 
     # optimize_NRE
-    tf.summary.trace_on(graph=True, profiler=True)
     optimize_NRE(tf.expand_dims(x_train, axis=1), y_train, n_cat)
 
-    with writer.as_default():
-        tf.summary.trace_export(
-            name="my_func_trace",
-            step=0,
-            profiler_outdir=logdir)
+    if profiler:
+        with writer.as_default():
+            tf.summary.trace_export(
+                name="my_func_trace",
+                step=0,
+                profiler_outdir=logdir)

@@ -123,8 +123,8 @@ def plot_space(positions, labels, ref_vector=None, tun_vectors=None, radius=None
         plt.savefig(name)
     plt.show()
 
+
 def compute_tun_vectors(x, y, neutral):
-    print(x.shape)
     n_dim = x.shape[-1]
     uniques = torch.unique(y)
     n_cat = len(uniques)
@@ -132,35 +132,39 @@ def compute_tun_vectors(x, y, neutral):
     print("n_dim: {}, n_cat: {}".format(n_dim, n_cat))
 
     ref_vectors = torch.zeros((n_feat_maps, n_dim))
-    print("shape ref_vectors", ref_vectors.shape)
     tun_vectors = torch.zeros((n_cat - 1, n_feat_maps, n_dim), dtype=torch.float64)
-    print("shape tun_vectors", tun_vectors.shape)
     # for each expression
     c = 0
     for cat in uniques:
         if cat != neutral:
             x_cat = x[y == cat]
-            print("shape x_cat", x_cat.shape)
+            # print("shape x_cat", x_cat.shape)
+            # print(x_cat)
             v_cat = torch.zeros((n_feat_maps, n_dim))
             for f in range(n_feat_maps):
                 u, s, vh = torch.linalg.svd(x_cat[:, f, :])
-                print("shape v_cat[f, :] vh", v_cat[f, :].shape, vh.shape)
+                # print("shape u, s, vh", u.shape, s.shape, vh.shape)
+                # print(vh)
 
                 # Orient tuning vectors properly
                 x_np = x_cat.detach().numpy()
                 v_np = vh[0, :].detach().numpy()
                 x_direction = x_np[np.argmax(np.linalg.norm(x_np[:, f, :], axis=-1), axis=0), 0][0]
-                if x_direction * v_np[0] < 0:
+                x_direction = x_direction * v_np[0]
+                if x_direction < 0:
                     sign = -1
                 else:
                     sign = 1
 
+                print("v_cat", vh[0] * sign)
                 v_cat[f, :] = vh[0, :] * sign
             tun_vectors[c] = v_cat
 
             c += 1
+            print()
 
     return tun_vectors
+
 
 def compute_projections(x, tun_vectors, nu=1, neutral_threshold=0) -> np.array:
     """
@@ -217,9 +221,7 @@ def compute_loss(proj: np.array, x, y: np.array, radius: float) -> float:
             prob_neutral = 0
             losses[i] = prob_expression * (1 - prob_neutral)
             # print(prob_expression)
-    print(losses)
     loss = torch.sum(losses)
-    print("loss", loss)
     return - loss
 
 # def compute_neutral_loss(x, y, radius):
@@ -241,9 +243,9 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
     n_feat_maps = x.shape[1]
 
     # Initialize the shift to zero
-    shift = torch.full((n_feat_maps, n_dim), 1, dtype=torch.float64 ,requires_grad=True)
+    shift = torch.full((n_feat_maps, n_dim), 1, dtype=torch.float64, requires_grad=True)
     # Initialize the neutral-radius to zero
-    radius = torch.full([n_feat_maps], 0.01, dtype=torch.float64 ,requires_grad=True)
+    radius = torch.full([n_feat_maps], 0.01, dtype=torch.float64, requires_grad=True)
     parameters = [shift, radius]
 
     # for i in range(20):
@@ -257,12 +259,13 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
 
         # get projections
         projections = compute_projections(x_shifted, tun_vectors)
+        print("projections", projections.shape)
+        print(projections)
 
         # compute loss
         loss = compute_loss(projections, x, y, radius)
+        print("loss", loss)
 
-        # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], save=True, name=str(i))
-        plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
         print("shift", shift)
         print("radius", radius)
         loss.backward()
@@ -276,6 +279,8 @@ def optimize_NRE(x: torch.tensor, y, radius, neutral=0, lr=0.1):
             radius = radius - lr * radius.grad
             radius.requires_grad = True
 
+        # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], save=True, name=str(i))
+        # plot_space(x_shifted, y, tun_vectors=tun_vectors[:, 0], radius=radius)
 
 
 if __name__ == '__main__':
