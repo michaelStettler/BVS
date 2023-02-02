@@ -12,7 +12,7 @@ from matplotlib import cm
 viridis = cm.get_cmap('viridis', 12)
 matplotlib.use('agg')
 
-np.random.seed(1)
+np.random.seed(2)
 
 """
 run: python -m tests.Optimization.t01_2d_optimization_algo
@@ -21,7 +21,7 @@ tensorboard: tensorboard --logdir logs/func
 
 
 def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_length=5, ref_at_origin=True,
-                      n_latent=1, balanced=True, do_plot=False):
+                      n_latent=1, n_ref=1, variance_ratio=1, ref_variance=1, balanced=True, do_plot=False):
     """
 
     :param n_dim:
@@ -31,34 +31,52 @@ def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_l
     :param balanced:
     :return:
     """
-    if ref_at_origin:
-        ref_origin = np.zeros(n_dim)
-    else:
-        ref_origin = np.random.rand(n_dim)
 
     positions = []
 
+    # for each n_latent, construct n_ref distributions
     for i in range(n_latent):
-        # create random positions around the center (ref_origin)
-        ref_pos = np.random.rand(n_points, n_dim) + ref_origin - 0.5
+        ref_positions = []
 
         # create randomly random direction (phi angles)
+        # this is fixed per latent space
         phis = np.random.rand(n_cat - 1) * 2 * np.pi
 
-        # create randomly different length between min and max length
-        lengths = np.random.rand(n_cat - 1) * (max_length - min_length) + min_length
+        for r in range(n_ref):
+            # set the ref
+            if ref_at_origin and n_ref == 1:
+                ref_origin = np.zeros(n_dim)
+            else:
+                ref_origin = (np.random.rand(n_dim) - 0.5) * ref_variance
 
-        # compute xy coordinates for each direction
-        tun_refs = np.array([np.cos(phis), np.sin(phis)]).T * np.expand_dims(lengths, axis=1)
+            # create random positions around the center (ref_origin)
+            ref_pos = np.random.rand(n_points, n_dim) * variance_ratio + ref_origin - 0.5
 
-        # generate clouds of positions for each category (origin centered)
-        tun_pos = np.random.rand(n_cat - 1, n_points, n_dim) - 0.5
+            # create randomly different length between min and max length
+            lengths = np.random.rand(n_cat - 1) * (max_length - min_length) + min_length
 
-        # translate to tuning positions
-        tun_pos += np.repeat(np.expand_dims(tun_refs, axis=1), n_points, axis=1) + ref_origin
+            # compute xy coordinates for each direction
+            tun_refs = np.array([np.cos(phis), np.sin(phis)]).T * np.expand_dims(lengths, axis=1)
+
+            # generate clouds of positions for each category (origin centered)
+            tun_pos = np.random.rand(n_cat - 1, n_points, n_dim) - 0.5
+
+            # translate to tuning positions
+            tun_pos += np.repeat(np.expand_dims(tun_refs, axis=1), n_points, axis=1) + ref_origin
+
+            # create pos
+            position = np.concatenate((ref_pos, np.reshape(tun_pos, (-1, n_dim))), axis=0)
+
+            # append to ref
+            ref_positions.append(position)
+
+        # remove extra dim if only one ref
+        ref_positions = np.squeeze(ref_positions)
+        if ref_positions.ndim == 3:
+            ref_positions = np.reshape(ref_positions, (-1, ref_positions.shape[2]))
 
         # construct dataset
-        positions.append(np.concatenate((ref_pos, np.reshape(tun_pos, (-1, n_dim))), axis=0))
+        positions.append(ref_positions)
 
     # return array as either (n_pts, n_dim) if n_latent ==1, or else as (n_pts, n_latent, n_dim)
     positions = np.array(positions)
@@ -67,21 +85,25 @@ def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_l
 
     # construct label
     labels = []
-    for i in range(len(ref_pos)):
-        labels.append(0)
-    for i in range(n_cat - 1):
-        for j in range(len(tun_pos[i])):
-            labels.append(i + 1)
+    for r in range(n_ref):
+        for i in range(len(ref_pos)):
+            labels.append([0, r])
+        for i in range(n_cat - 1):
+            for j in range(len(tun_pos[i])):
+                labels.append([i + 1, r])
 
     return positions, np.array(labels).astype(int)
 
 
 def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, min_length=5, max_length=5,
-               show=False):
-    uniques = np.unique(labels)
+               shifts=None, show=False):
 
     # retrieve variables
+    n_pts = positions.shape[0]
     n_feat_map = positions.shape[1]
+    n_ref = 1
+    if shifts is not None:
+        n_ref = shifts.shape[0]
 
     # set img size
     n_rows = int(np.sqrt(n_feat_map))
@@ -92,35 +114,48 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
     cmap = cm.get_cmap('viridis', n_cat)
     for ft in range(n_feat_map):
         fig = plt.figure(figsize=(4, 4), dpi=100)  # each subplot is 400x400
-        pos_ft = positions[:, ft]
 
-        for i, color in zip(range(n_cat), cmap(range(n_cat))):
-            label = uniques[i]
+        for r in range(n_ref):
+            # shifts positions
+            ref_idx = np.arange(n_pts)  # construct all index for commmon pipeline
+            if shifts is not None:
+                ref_idx = ref_idx[labels[:, 1] == r]
+                pos_ft = positions[ref_idx, ft] - shifts[r, ft]
+            else:
+                pos_ft = positions[:, ft]
 
-            label_name = "cat {}".format(label)
-            if label == 0:
-                label_name = "reference"
+            # get unique labels
+            uniques = np.unique(labels)
 
-            # get all positions for this label
-            pos = pos_ft[labels == label]
+            for i, color in zip(range(n_cat), cmap(range(n_cat))):
+                label = uniques[i]
 
-            # scale tuning vector for plotting
-            pos_norm = np.linalg.norm(pos, axis=1)
-            max_length = np.max(pos_norm)
-            x_direction = pos[np.argmax(pos_norm)][0]
+                label_name = None
+                if r == 0:
+                    label_name = "cat {}".format(label)
+                    if label == 0:
+                        label_name = "reference"
 
-            sign = np.sign(x_direction * tun_vectors[i, ft, 0])
+                # get all positions for this label
+                pos = pos_ft[labels[ref_idx, 0] == label]
 
-            # plot the positions
-            plt.scatter(pos[:, 0], pos[:, 1], color=color, label=label_name)
+                # scale tuning vector for plotting
+                pos_norm = np.linalg.norm(pos, axis=1)
+                max_length = np.max(pos_norm)
+                x_direction = pos[np.argmax(pos_norm)][0]
 
-            # plot tuning line
-            if tun_vectors is not None and ref_vector is not None:
-                # x_ = [ref_vector[ft, 0], sign * max_length * tun_vectors[i, 0]]
-                x_ = [0, tun_vectors[i, ft, 0]]
-                # y_ = [ref_vector[ft, 1], sign * max_length * tun_vectors[i, 1]]
-                y_ = [0, tun_vectors[i, ft, 1]]
-                plt.plot(x_, y_, color=color)
+                sign = np.sign(x_direction * tun_vectors[i, ft, 0])
+
+                # plot the positions
+                plt.scatter(pos[:, 0], pos[:, 1], color=color, label=label_name)
+
+                # plot tuning line
+                if tun_vectors is not None and ref_vector is not None:
+                    # x_ = [ref_vector[ft, 0], sign * max_length * tun_vectors[i, 0]]
+                    x_ = [0, tun_vectors[i, ft, 0]]
+                    # y_ = [ref_vector[ft, 1], sign * max_length * tun_vectors[i, 1]]
+                    y_ = [0, tun_vectors[i, ft, 1]]
+                    plt.plot(x_, y_, color=color)
 
         # plot cross
         plt.plot(0, 0, 'xk')
@@ -155,20 +190,12 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
     return image.astype(np.uint8)
 
 
-def compute_tun_vectors(x, y, n_cat, neutral_cat=None):
-    n_dim = np.shape(x)[-1]
+def compute_tun_vectors(x, y, n_cat):
     n_feat_maps = np.shape(x)[1]
-    start = 0
 
     tun_vectors = []
-    # add neutral direction if neutral
-    if neutral_cat:
-        start = 1
-        neutral_tuning = np.zeros((n_feat_maps, n_dim))
-        tun_vectors.append(neutral_tuning)
-
     # for each expression
-    for cat in range(start, n_cat):
+    for cat in range(n_cat):
         # construct mask to get slice of tensor x per category (in numpy x[y == cat])
         bool_mask = tf.equal(y, cat)
         x_cat = tf.gather(x, tf.squeeze(tf.where(bool_mask)))
@@ -227,23 +254,29 @@ def compute_projections(x, tun_vectors) -> np.array:
     return projections
 
 
-def compute_loss(proj: tf.Tensor, y: tf.Tensor, neutral_cat=None, eps=1e-3) -> float:
+def compute_distances(x: tf.Tensor, radius: tf.Tensor):
+    """
+    :param x: (n_img, n_feat_map, n_dim)
+    :return
+    """
+    return tf.exp(- radius * tf.norm(x, axis=2))
+
+
+def compute_loss_without_ref(proj: tf.Tensor, y: tf.Tensor):
     """
 
-    :param proj: (n_img, n_cat)
+    :param proj: (n_img, n_ft_maps, n_cat)
     :param y: (n_img, )
     :return:
     """
 
     # compute sum of all exp proj
     # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
-
-    if neutral_cat:
-        raise NotImplementedError
+    n_img = proj.shape[0]
 
     # treat neutral as own category
     loss = 0
-    for i in range(proj.shape[0]):
+    for i in range(n_img):
         enumerator = tf.exp(proj[i, :, int(y[i])])
         denominator = tf.reduce_sum(tf.exp(proj[i]), axis=-1)
         loss += tf.reduce_sum(enumerator / denominator)
@@ -251,8 +284,39 @@ def compute_loss(proj: tf.Tensor, y: tf.Tensor, neutral_cat=None, eps=1e-3) -> f
     return -loss
 
 
+def compute_loss_with_ref(proj: tf.Tensor, y: tf.Tensor, distances: tf.Tensor):
+    """
+
+    :param proj: (n_img, n_ft_maps, n_cat)
+    :param y: (n_img, )
+    :param distances: (n_img, n_ft_maps)
+    :return:
+    """
+
+    # remove first column (ref column)
+    proj = proj[..., 1:]
+
+    # compute sum of all exp proj
+    # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
+    n_img = proj.shape[0]
+
+    # treat neutral as own category
+    loss = 0
+    for i in range(n_img):
+        # ref sample
+        if int(y[i]) == 0:
+            loss += tf.reduce_sum(distances[i])
+        # cat sample
+        else:
+            enumerator = tf.exp(proj[i, :, int(y[i])-1])
+            denominator = tf.reduce_sum(tf.exp(proj[i]), axis=-1)
+            loss += tf.reduce_sum((1 - distances[i]) * enumerator / denominator)
+
+    return -loss
+
+
 # @tf.function  # create a graph (non-eager mode!)
-def optimize_NRE(x, y, n_cat, neutral_cat=None, lr=0.01, n_epochs=20, do_plot=False):
+def optimize_NRE(x, y, n_cat, n_ref=1, init_ref=None, lr=0.01, n_epochs=20, do_plot=False):
     """
 
     :param x: (n_pts, n_feature_maps, n_dim)
@@ -260,13 +324,17 @@ def optimize_NRE(x, y, n_cat, neutral_cat=None, lr=0.01, n_epochs=20, do_plot=Fa
     :param neutral:
     :return:
     """
+    if x.ndim == 2:
+        x = tf.expand_dims(x, axis=1)
+
     n_dim = np.shape(x)[-1]
     n_feat_maps = np.shape(x)[1]
 
     # initialize trainable parameters
-    # shifts = tf.ones((n_feat_maps, n_dim), dtype=tf.float64, name="shifts")
-    shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float64, name="shifts")
-    radius = tf.ones(n_feat_maps, dtype=tf.float64, name="radius") * 0.01
+    shifts = tf.zeros((n_ref, n_feat_maps, n_dim), dtype=tf.float64, name="shifts")
+    if init_ref is not None:
+        shifts = tf.identity(init_ref, name="shifts")
+    radius = tf.ones((n_ref, n_feat_maps), dtype=tf.float64, name="radius")
     print("shape shifts", shifts.shape)
     print("shape radius", radius.shape)
 
@@ -280,40 +348,60 @@ def optimize_NRE(x, y, n_cat, neutral_cat=None, lr=0.01, n_epochs=20, do_plot=Fa
         video = cv2.VideoWriter(os.path.join(path, video_name), fourcc, 30, (n_columns * 400, n_rows * 400))
 
     for epoch in range(n_epochs):
+        loss = 0
         with tf.GradientTape() as tape:
             tape.watch(shifts)
             tape.watch(radius)
+            for r in range(n_ref):
+                # filter data per ref
+                ref_mask = tf.equal(y[:, 1], r)
+                x_filt = tf.gather(x, tf.squeeze(tf.where(ref_mask)))
+                y_filt = tf.gather(y[:, 0], tf.squeeze(tf.where(ref_mask)))
 
-            x_shifted = tf.subtract(x, shifts, name="x_shifted")
-            # print("shape x_shifted", x_shifted.shape)
+                # subtract  shifts to x
+                x_shifted = tf.subtract(x_filt, shifts[r], name="x_shifted")
+                # print("shape x_shifted", x_shifted.shape)
 
-            # get tun vectors
-            tun_vectors = compute_tun_vectors(x_shifted, y, n_cat, neutral_cat=neutral_cat)
-            # print("tun_vectors", tun_vectors.shape)  # working (2, 1, 1) new (2, 1, 2)
-            # print(tun_vectors)
+                # get tun vectors
+                tun_vectors = compute_tun_vectors(x_shifted, y_filt, n_cat)
+                # print("tun_vectors", tun_vectors.shape)  # working (2, 1, 1) new (2, 1, 2)
+                # print(tun_vectors)
 
-            # # get projections
-            projections = compute_projections(x_shifted, tun_vectors)
-            # print("projections", projections.shape)  # working (10, 2) new (2, 1, 2)
-            # print(projections)
+                # # get projections
+                projections = compute_projections(x_shifted, tun_vectors)
+                # print("projections", projections.shape)  # working (10, 2) new (2, 1, 2)
+                # print(projections)
 
-            # compute loss
-            loss = compute_loss(projections, y, neutral_cat=neutral_cat)
-            print(f"{epoch} loss {loss}", end='\r')
+                if n_ref > 1:
+                    distances = compute_distances(x_shifted, radius[r])
+                    # print("distances", distances.shape)
+
+                    # compute loss
+                    loss += compute_loss_with_ref(projections, y_filt, distances)
+                else:
+                    # compute loss
+                    loss += compute_loss_without_ref(projections, y_filt)
+        print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
+
+        # compute gradients
+        grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
+        # print("grad shifts", grad_shifts.shape)
 
         # update parameters
-        grad_shifts = tape.gradient(loss, shifts)
-        # print("grad shifts", grad_shifts.shape)
         shifts = shifts - lr * grad_shifts
+        radius = radius - lr * grad_radius
         # print(f"{epoch} shifts {shifts}")
         # print()
 
         if do_plot:
             tun_vect = tun_vectors.numpy()
-            img = plot_space(x_shifted.numpy(), y.numpy(), n_cat, tun_vectors=tun_vect)
+            img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
 
             # write image
             video.write(img)
+
+    # print last one to keep in the log
+    print(f"{epoch} loss {loss}, radius: {radius}")
 
     if do_plot:
         cv2.destroyAllWindows()
@@ -330,8 +418,15 @@ if __name__ == '__main__':
     neutral_cat = None
     n_points = 5
     n_latent = 3
+    n_ref = 2
     # generate random data
-    x_train, y_train = generate_data_set(n_dim, n_cat, n_points, ref_at_origin=False, n_latent=n_latent)
+    x_train, y_train = generate_data_set(n_dim, n_cat, n_points,
+                                         ref_at_origin=False,
+                                         n_latent=n_latent,
+                                         n_ref=n_ref,
+                                         variance_ratio=0,
+                                         ref_variance=10,
+                                         min_length=1)
     print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
     # x_train = [[0, 2], [3, 1], [3, 2], [-1, -1]]
@@ -343,6 +438,8 @@ if __name__ == '__main__':
     # plot_space(x_train, y_train)
 
     # transform to tensor
+    init_ref = None
+    # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)
     x_train = tf.convert_to_tensor(x_train, dtype=tf.float64)
     y_train = tf.convert_to_tensor(y_train, dtype=tf.int64)
     print("shape x_train", x_train.shape)
@@ -357,13 +454,11 @@ if __name__ == '__main__':
         tf.summary.trace_on(graph=True, profiler=True)
 
     # optimize_NRE
-    if x_train.ndim == 2:
-        x_train = tf.expand_dims(x_train, axis=1)
-
     optimize_NRE(x_train, y_train, n_cat,
+                 n_ref=n_ref,
+                 init_ref=init_ref,
                  lr=0.1,
-                 n_epochs=50,
-                 neutral_cat=neutral_cat,
+                 n_epochs=200,
                  do_plot=do_plot)
 
     if profiler:
