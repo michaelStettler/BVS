@@ -9,13 +9,16 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+from utils.load_config import load_config
+from utils.load_data import load_data
+
 viridis = cm.get_cmap('viridis', 12)
 matplotlib.use('agg')
 
 np.random.seed(2)
 
 """
-run: python -m tests.Optimization.t01_2d_optimization_algo
+run: python -m tests.Optimization.t02_optimization_FERG
 tensorboard: tensorboard --logdir logs/func
 """
 
@@ -430,29 +433,39 @@ if __name__ == '__main__':
     n_entry = n_points * n_cat * n_ref
     print(f"{n_entry} entry created!")
 
-    # generate random data
-    x_train, y_train = generate_data_set(n_dim, n_cat, n_points,
-                                         ref_at_origin=False,
-                                         n_latent=n_latent,
-                                         n_ref=n_ref,
-                                         variance_ratio=0,
-                                         ref_variance=10,
-                                         min_length=1)
-    print("shape x_train", np.shape(x_train))
+    # define configuration
+    config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    # load config
+    config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+    print("-- Config loaded --")
+    print()
+
+    # Load data
+    train_data = load_data(config, get_raw=True)
+    train_label = train_data[1]
+    test_data = load_data(config, train=False, get_raw=True)
+    test_label = test_data[1]
+    print("shape train_data[0]", np.shape(train_data[0]))
+    print("shape test_data[0]", np.shape(test_data[0]))
+
+    # load lmk pos
+    train_data = np.load(config['train_lmk_pos'])
+    test_data = np.load(config['test_lmk_pos'])
+    print("shape train_data", np.shape(train_data))
+    print("shape test_data", np.shape(test_data))
+
+    # load avatar types
+    train_avatar = np.load(config['train_avatar_type'])
+    test_avatar = np.load(config['test_avatar_type'])
+    print("shape train_avatar", np.shape(train_avatar))
+    print("shape test_avatar", np.shape(test_avatar))
+    print("-- Data loaded --")
+    print()
+
+    # create labels as [category, identity]
+    x_train = train_data
+    y_train = [train_label, train_avatar]
     print("shape y_train", np.shape(y_train))
-
-    # shuffle
-    shuffled_idx = np.arange(n_entry)
-    np.random.shuffle(shuffled_idx)
-    x_train = x_train[shuffled_idx]
-    y_train = y_train[shuffled_idx]
-    # x_train = [[0, 2], [3, 1], [3, 2], [-1, -1]]
-    # y_train = [0, 1, 1, 2]
-    # print("shape x_train", np.shape(x_train))
-
-
-    # plot generated data
-    # plot_space(x_train, y_train)
 
     # transform to tensor
     init_ref = None

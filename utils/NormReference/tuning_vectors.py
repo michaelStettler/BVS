@@ -43,9 +43,14 @@ def learn_tun_vectors(lmk_pos, labels, ref_vectors, avatar_labels, n_cat=7, idx_
     return np.array(tun_vectors)
 
 
-def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize, idx_array, n_cat, avatar_type_idx=None):
+def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize, idx_array, n_cat,
+                            avatar_type_idx=None, ref_vectors=None):
+
     # learn neutral pattern
-    ref_vector = learn_ref_vector(lmk_pos, labels, avatar_labels, n_cat)
+    if ref_vectors is not None:
+        ref_vectors = ref_vectors
+    else:
+        ref_vectors = learn_ref_vector(lmk_pos, labels, avatar_labels, n_cat)
 
     print("len lmk_pos", len(lmk_pos))
     # discard all image not from that avatar
@@ -68,10 +73,10 @@ def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize
     for i in tqdm(range(n_img_in_cat)):
         # learn tun vectors
         idx_array[category_to_optimize] = i
-        tun_vectors = learn_tun_vectors(filt_lmk_pos, filt_labels, ref_vector, filt_avatar_labels, idx_array=idx_array)
+        tun_vectors = learn_tun_vectors(filt_lmk_pos, filt_labels, ref_vectors, filt_avatar_labels, idx_array=idx_array)
 
         # compute projections
-        projections_preds = compute_projections(lmk_pos, avatar_labels, ref_vector, tun_vectors,
+        projections_preds = compute_projections(lmk_pos, avatar_labels, ref_vectors, tun_vectors,
                                                 neutral_threshold=5,
                                                 verbose=False)
         # compute accuracy
@@ -114,8 +119,6 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
         norm_t = np.repeat(np.expand_dims(norm_t, axis=1), np.shape(tun_vectors)[1], axis=1)
     else:
         raise NotImplementedError("norm_type {} is not a valid type".format(norm_type))
-    print("shape tun_vectors", np.shape(tun_vectors))
-    print("shape norm_t", np.shape(norm_t))
 
     # for each images
     for i in range(len(inputs)):

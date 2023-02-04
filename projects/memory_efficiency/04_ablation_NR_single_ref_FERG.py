@@ -16,14 +16,14 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
 
 """
-run: python -m projects.memory_efficiency.03a_optimize_NR_from_LMK_on_FERG
+run: python -m projects.memory_efficiency.04_ablation_NR_single_ref_FERG
 
-Optimize the tuning direction over all dataset, no mather the avatar type
+Optimize the tuning direction over all dataset, using only a single ref
 """
 
 avatar_type = None
-avatar_type = 4
-do_optimize = False
+avatar_type = 3
+do_optimize = True
 
 
 #%%
@@ -62,8 +62,12 @@ print()
 
 
 #%%
-# learn neutral patterns
-ref_vectors = learn_ref_vector(train_data, train_label, train_avatar, len(config['avatar_names']))
+# select a ref vector (first from the avatar of interest)
+ref_idx = np.arange(len(train_avatar))
+ref_idx = ref_idx[train_avatar == avatar_type]
+ref_vector = train_data[ref_idx[0]]
+# duplicate ref_vector to match downstream code
+ref_vectors = np.repeat(np.expand_dims(ref_vector, axis=0), 6, axis=0)
 print("shape ref_vectors", np.shape(ref_vectors))
 
 
@@ -113,16 +117,6 @@ for a in range(len(config['avatar_names'])):
 
 #%%
 if do_optimize:
-    """
-        Full (from 73.07 to 90.23): 
-            - 3993  (30100)    
-            - 6957  (42040)  
-            - 418   (3043)   
-            - 6214  (39900)  
-            - 1945  (14713)  
-            - 4406  (28686) 
-    """
-
     # optimize
     idx_array = np.zeros(n_cat).astype(int)
     best_idexes = []
@@ -132,7 +126,8 @@ if do_optimize:
         best_idx, accuracy, best_matching_idx = optimize_tuning_vectors(train_data, train_label, train_avatar,
                                                                         category_to_optimize, idx_array,
                                                                         len(config['avatar_names']),
-                                                                        avatar_type_idx=avatar_type)
+                                                                        avatar_type_idx=avatar_type,
+                                                                        ref_vectors=ref_vectors)
         print("category: {}, best_idx: {}, accuracy: {}".format(cat, best_idx, accuracy))
         print()
         idx_array[cat] = best_idx
@@ -147,19 +142,19 @@ if do_optimize:
 #%%
 # set tuning vector with optimized direction
 if avatar_type is None:
-    idx_array = [0, 3993, 6957, 418, 6214, 1945, 4406]  # NRE-I best
+    idx_array = [0, ]  # NRE-I best
 elif avatar_type == 0:
-    idx_array = [0, 287, 1043, 262, 548, 1353, 169]  # NRE-Jules best
+    idx_array = [0, 69, 351, 270, 784, 666, 0]  # NRE-Jules best
 elif avatar_type == 1:
-    idx_array = [0, 617, 234, 429, 434, 307, 268]  # NRE-malcolm best
+    idx_array = [0, 133, 583, 115, 747, 445, 218]  # NRE-malcolm best
 elif avatar_type == 2:
-    idx_array = [0, 596, 1056, 726, 673, 535, 1071]  # NRE-ray best
+    idx_array = [0, 369, 1138, 586, 293, 64, 745]  # NRE-ray best
 elif avatar_type == 3:
-    idx_array = [0, 624, 390, 581, 471, 207, 518]  # NRE-aia best
+    idx_array = [0, 292, 588, 686, 1324, 412, 967]  # NRE-aia best
 elif avatar_type == 4:
-    idx_array = [0, 517, 315, 877, 868, 20, 1273]  # NRE-bonnie best
+    idx_array = [0, ]  # NRE-bonnie best
 elif avatar_type == 5:
-    idx_array = [0, 131, 855, 51, 354, 584, 532]  # NRE-mery best
+    idx_array = [0, 150, 519, 317, 365, 209, 272]  # NRE-mery best
 # learn tun vectors from one avatar
 opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
                                     n_cat=n_cat,
