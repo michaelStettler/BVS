@@ -464,8 +464,11 @@ if __name__ == '__main__':
 
     # create labels as [category, identity]
     x_train = train_data
-    y_train = [train_label, train_avatar]
+    x_test = test_data
+    y_train = np.array([train_label, train_avatar]).T
+    y_test = np.array([test_label, test_avatar]).T
     print("shape y_train", np.shape(y_train))
+    print("shape y_test", np.shape(y_test))
 
     # transform to tensor
     init_ref = None
@@ -485,7 +488,7 @@ if __name__ == '__main__':
 
     # optimize_NRE
     optimize_NRE(x_train, y_train, n_cat,
-                 batch_size=64,
+                 batch_size=512,
                  n_ref=n_ref,
                  init_ref=init_ref,
                  lr=0.1,

@@ -198,6 +198,12 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
 
 def compute_tun_vectors(x, y, n_cat):
     n_feat_maps = np.shape(x)[1]
+    n_dim = np.shape(x)[-1]
+
+    # if no data comes in
+    if y.ndim == 0:
+        # careful because as y is empty, then x shape changes to ndim = 2
+        return tf.zeros((n_cat, np.shape(x)[0], n_dim), dtype=tf.float64)
 
     tun_vectors = []
     # for each expression
@@ -206,37 +212,42 @@ def compute_tun_vectors(x, y, n_cat):
         bool_mask = tf.equal(y, cat)
         x_cat = tf.gather(x, tf.squeeze(tf.where(bool_mask)))
 
-        # if only one point in the category
-        if len(x_cat.shape) == 2:
-            x_cat = tf.expand_dims(x_cat, axis=0)
+        # only if there's sample of this category in the batch
+        if x_cat.shape[0] != 0:
+            # if only one point in the category
+            if len(x_cat.shape) == 2:
+                x_cat = tf.expand_dims(x_cat, axis=0)
 
-        # declare tuning vect per category
-        # v_cat = tf.zeros((n_feat_maps, n_dim))
-        v_cat = []
-        for f in range(n_feat_maps):
-            # svd results not consistent between torch and tf
-            s, u, vh = tf.linalg.svd(x_cat[:, f], full_matrices=False)
-            # print("shape u, s, vh", u.shape, s.shape, vh.shape)
-            # print(vh)
+            # declare tuning vect per category
+            # v_cat = tf.zeros((n_feat_maps, n_dim))
+            v_cat = []
+            for f in range(n_feat_maps):
+                # svd results not consistent between torch and tf
+                s, u, vh = tf.linalg.svd(x_cat[:, f], full_matrices=False)
+                # print("shape u, s, vh", u.shape, s.shape, vh.shape)
+                # print(vh)
 
-            # Orient tuning vectors properly
-            vh = tf.transpose(vh)
-            x_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[0]
-            y_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[1]
-            x_direction = x_direction * vh[0, 0]
-            y_direction = y_direction * vh[0, 1]
-            if x_direction != 0:
-                sign = tf.math.sign(x_direction)
-            else:
-                sign = tf.math.sign(y_direction)
+                # Orient tuning vectors properly
+                vh = tf.transpose(vh)
+                x_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[0]
+                y_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[1]
+                x_direction = x_direction * vh[0, 0]
+                y_direction = y_direction * vh[0, 1]
+                if x_direction != 0:
+                    sign = tf.math.sign(x_direction)
+                else:
+                    sign = tf.math.sign(y_direction)
 
-            # v_cat.append(vh[0])
-            tun_vect = vh[0] * sign
-            v_cat.append(tun_vect)
+                # v_cat.append(vh[0])
+                tun_vect = vh[0] * sign
+                v_cat.append(tun_vect)
 
-        v_cat = tf.convert_to_tensor(v_cat, dtype=tf.float64)
+            v_cat = tf.convert_to_tensor(v_cat, dtype=tf.float64)
 
-        tun_vectors.append(v_cat)
+            tun_vectors.append(v_cat)
+        # no point in the category
+        else:
+            tun_vectors.append(tf.zeros((n_feat_maps, n_dim), dtype=tf.float64))
 
     return tf.convert_to_tensor(tun_vectors, dtype=tf.float64, name="tun_vectors")
 
@@ -249,6 +260,9 @@ def compute_projections(x, tun_vectors) -> np.array:
     :param nu:
     :return:
     """
+    # case where there's no entry in x
+    if x.ndim == 2:
+        return tf.zeros((0, x.shape[0], x.shape[1]), dtype=tf.float64)
 
     # batch per ft_map (meaning putting ft_map dim in first column)
     x = tf.experimental.numpy.moveaxis(x, 0, 1)
@@ -265,6 +279,8 @@ def compute_distances(x: tf.Tensor, radius: tf.Tensor):
     :param x: (n_img, n_feat_map, n_dim)
     :return
     """
+    if x.ndim == 2:
+        return tf.zeros((0, x.shape[0], x.shape[1]), dtype=tf.float64)
     return tf.exp(- radius * tf.norm(x, axis=2))
 
 
@@ -372,12 +388,12 @@ def optimize_NRE(x, y, n_cat, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_
 
                     # get tun vectors
                     tun_vectors = compute_tun_vectors(x_shifted, y_filt, n_cat)
-                    # print("tun_vectors", tun_vectors.shape)  # working (2, 1, 1) new (2, 1, 2)
+                    # print("tun_vectors", tun_vectors.shape)
                     # print(tun_vectors)
 
                     # # get projections
                     projections = compute_projections(x_shifted, tun_vectors)
-                    # print("projections", projections.shape)  # working (10, 2) new (2, 1, 2)
+                    # print("projections", projections.shape)
                     # print(projections)
 
                     if n_ref > 1:
@@ -472,7 +488,7 @@ if __name__ == '__main__':
 
     # optimize_NRE
     optimize_NRE(x_train, y_train, n_cat,
-                 batch_size=64,
+                 batch_size=10,
                  n_ref=n_ref,
                  init_ref=init_ref,
                  lr=0.1,
