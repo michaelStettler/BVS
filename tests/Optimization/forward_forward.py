@@ -4,7 +4,60 @@ example taken from: https://keras.io/examples/vision/forwardforward/
 run: python -m tests.Optimization.forward_forward
 """
 
-# get librairies
+"""
+Title: Using the Forward-Forward Algorithm for Image Classification
+Author: [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
+Date created: 2023/01/08
+Last modified: 2023/01/08
+Description: Training a Dense-layer model using the Forward-Forward algorithm.
+Accelerator: GPU
+"""
+
+"""
+## Introduction
+The following example explores how to use the Forward-Forward algorithm to perform
+training instead of the traditionally-used method of backpropagation, as proposed by
+Hinton in
+[The Forward-Forward Algorithm: Some Preliminary Investigations](https://www.cs.toronto.edu/~hinton/FFA13.pdf)
+(2022).
+The concept was inspired by the understanding behind
+[Boltzmann Machines](http://www.cs.toronto.edu/~fritz/absps/dbm.pdf). Backpropagation
+involves calculating the difference between actual and predicted output via a cost
+function to adjust network weights. On the other hand, the FF Algorithm suggests the
+analogy of neurons which get "excited" based on looking at a certain recognized
+combination of an image and its correct corresponding label.
+This method takes certain inspiration from the biological learning process that occurs in
+the cortex. A significant advantage that this method brings is the fact that
+backpropagation through the network does not need to be performed anymore, and that
+weight updates are local to the layer itself.
+As this is yet still an experimental method, it does not yield state-of-the-art results.
+But with proper tuning, it is supposed to come close to the same.
+Through this example, we will examine a process that allows us to implement the
+Forward-Forward algorithm within the layers themselves, instead of the traditional method
+of relying on the global loss functions and optimizers.
+The tutorial is structured as follows:
+- Perform necessary imports
+- Load the [MNIST dataset](http://yann.lecun.com/exdb/mnist/)
+- Visualize Random samples from the MNIST dataset
+- Define a `FFDense` Layer to override `call` and implement a custom `forwardforward`
+method which performs weight updates.
+- Define a `FFNetwork` Layer to override `train_step`, `predict` and implement 2 custom
+functions for per-sample prediction and overlaying labels
+- Convert MNIST from `NumPy` arrays to `tf.data.Dataset`
+- Fit the network
+- Visualize results
+- Perform inference on test samples
+As this example requires the customization of certain core functions with
+`keras.layers.Layer` and `keras.models.Model`, refer to the following resources for
+a primer on how to do so:
+- [Customizing what happens in `model.fit()`](https://www.tensorflow.org/guide/keras/customizing_what_happens_in_fit)
+- [Making new Layers and Models via subclassing](https://www.tensorflow.org/guide/keras/custom_layers_and_models)
+"""
+
+"""
+## Setup imports
+"""
+
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
@@ -13,7 +66,15 @@ from sklearn.metrics import accuracy_score
 import random
 from tensorflow.compiler.tf2xla.python import xla
 
-# get MNIST
+"""
+## Load the dataset and visualize the data
+We use the `keras.datasets.mnist.load_data()` utility to directly pull the MNIST dataset
+in the form of `NumPy` arrays. We then arrange it in the form of the train and test
+splits.
+Following loading the dataset, we select 4 random samples from within the training set
+and visualize them using `matplotlib.pyplot`.
+"""
+
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
 print("4 Random Training samples and labels")
@@ -35,8 +96,33 @@ for idx, item in enumerate(imgs):
     plt.title(f"Label : {label}")
 plt.show()
 
+"""
+## Define `FFDense` custom layer
+In this custom layer, we have a base `keras.layers.Dense` object which acts as the
+base `Dense` layer within. Since weight updates will happen within the layer itself, we
+add an `keras.optimizers.Optimizer` object that is accepted from the user. Here, we
+use `Adam` as our optimizer with a rather higher learning rate of `0.03`.
+Following the algorithm's specifics, we must set a `threshold` parameter that will be
+used to make the positive-negative decision in each prediction. This is set to a default
+of 2.0.
+As the epochs are localized to the layer itself, we also set a `num_epochs` parameter
+(defaults to 50).
+We override the `call` method in order to perform a normalization over the complete
+input space followed by running it through the base `Dense` layer as would happen in a
+normal `Dense` layer call.
+We implement the Forward-Forward algorithm which accepts 2 kinds of input tensors, each
+representing the positive and negative samples respectively. We write a custom training
+loop here with the use of `tf.GradientTape()`, within which we calculate a loss per
+sample by taking the distance of the prediction from the threshold to understand the
+error and taking its mean to get a `mean_loss` metric.
+With the help of `tf.GradientTape()` we calculate the gradient updates for the trainable
+base `Dense` layer and apply them using the layer's local optimizer.
+Finally, we return the `call` result as the `Dense` results of the positive and negative
+samples while also returning the last `mean_loss` metric and all the loss values over a
+certain all-epoch run.
+"""
 
-# declare dense layer
+
 class FFDense(keras.layers.Layer):
     """
     A custom ForwardForward-enabled Dense layer. It has an implementation of the
@@ -45,17 +131,17 @@ class FFDense(keras.layers.Layer):
     """
 
     def __init__(
-        self,
-        units,
-        optimizer,
-        loss_metric,
-        num_epochs=50,
-        use_bias=True,
-        kernel_initializer="glorot_uniform",
-        bias_initializer="zeros",
-        kernel_regularizer=None,
-        bias_regularizer=None,
-        **kwargs,
+            self,
+            units,
+            optimizer,
+            loss_metric,
+            num_epochs=50,
+            use_bias=True,
+            kernel_initializer="glorot_uniform",
+            bias_initializer="zeros",
+            kernel_regularizer=None,
+            bias_regularizer=None,
+            **kwargs,
     ):
         super().__init__(**kwargs)
         self.dense = keras.layers.Dense(
@@ -116,9 +202,28 @@ class FFDense(keras.layers.Layer):
         )
 
 
+"""
+## Define the `FFNetwork` Custom Model
+With our custom layer defined, we also need to override the `train_step` method and
+define a custom `keras.models.Model` that works with our `FFDense` layer.
+For this algorithm, we must 'embed' the labels onto the original image. To do so, we
+exploit the structure of MNIST images where the top-left 10 pixels are always zeros. We
+use that as a label space in order to visually one-hot-encode the labels within the image
+itself. This action is performed by the `overlay_y_on_x` function.
+We break down the prediction function with a per-sample prediction function which is then
+called over the entire test set by the overriden `predict()` function. The prediction is
+performed here with the help of measuring the `excitation` of the neurons per layer for
+each image. This is then summed over all layers to calculate a network-wide 'goodness
+score'. The label with the highest 'goodness score' is then chosen as the sample
+prediction.
+The `train_step` function is overriden to act as the main controlling loop for running
+training on each layer as per the number of epochs per layer.
+"""
+
+
 class FFNetwork(keras.Model):
     """
-    A [`keras.Model`](/api/models/model#model-class) that supports a `FFDense` network creation. This model
+    A `keras.Model` that supports a `FFDense` network creation. This model
     can work for any kind of classification task. It has an internal
     implementation with some details specific to the MNIST dataset which can be
     changed as per the use-case.
@@ -131,7 +236,7 @@ class FFNetwork(keras.Model):
     # Loss is tracked using `loss_var` and `loss_count` variables.
 
     def __init__(
-        self, dims, layer_optimizer=keras.optimizers.Adam(learning_rate=0.03), **kwargs
+            self, dims, layer_optimizer=keras.optimizers.Adam(learning_rate=0.03), **kwargs
     ):
         super().__init__(**kwargs)
         self.layer_optimizer = layer_optimizer
@@ -220,17 +325,23 @@ class FFNetwork(keras.Model):
 
         for idx, layer in enumerate(self.layers):
             if isinstance(layer, FFDense):
-                print(f"Training layer {idx+1} now : ")
+                print(f"Training layer {idx + 1} now : ")
                 h_pos, h_neg, loss = layer.forward_forward(h_pos, h_neg)
                 self.loss_var.assign_add(loss)
                 self.loss_count.assign_add(1.0)
             else:
-                print(f"Passing layer {idx+1} now : ")
+                print(f"Passing layer {idx + 1} now : ")
                 x = layer(x)
         mean_res = tf.math.divide(self.loss_var, self.loss_count)
         return {"FinalLoss": mean_res}
 
-# convert MNIST
+
+"""
+## Convert MNIST `NumPy` arrays to `tf.data.Dataset`
+We now perform some preliminary processing on the `NumPy` arrays and then convert them
+into the `tf.data.Dataset` format which allows for optimized loading.
+"""
+
 x_train = x_train.astype(float) / 255
 x_test = x_test.astype(float) / 255
 y_train = y_train.astype(int)
@@ -242,8 +353,13 @@ test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 train_dataset = train_dataset.batch(60000)
 test_dataset = test_dataset.batch(10000)
 
+"""
+## Fit the network and visualize results
+Having performed all previous set-up, we are now going to run `model.fit()` and run 250
+model epochs, which will perform 50*250 epochs on each layer. We get to see the plotted loss
+curve as each layer is trained.
+"""
 
-# Fit network
 model = FFNetwork(dims=[784, 500, 500])
 
 model.compile(
@@ -256,15 +372,38 @@ model.compile(
 epochs = 250
 history = model.fit(train_dataset, epochs=epochs)
 
-# perform inference and testing
+"""
+## Perform inference and testing
+Having trained the model to a large extent, we now see how it performs on the
+test set. We calculate the Accuracy Score to understand the results closely.
+"""
+
 preds = model.predict(tf.convert_to_tensor(x_test))
 
 preds = preds.reshape((preds.shape[0], preds.shape[1]))
 
 results = accuracy_score(preds, y_test)
 
-print(f"Test Accuracy score : {results*100}%")
+print(f"Test Accuracy score : {results * 100}%")
 
 plt.plot(range(len(history.history["FinalLoss"])), history.history["FinalLoss"])
 plt.title("Loss over training")
 plt.show()
+
+"""
+## Conclusion
+This example has hereby demonstrated how the Forward-Forward algorithm works using
+the TensorFlow and Keras packages. While the investigation results presented by Prof. Hinton
+in their paper are currently still limited to smaller models and datasets like MNIST and
+Fashion-MNIST, subsequent results on larger models like LLMs are expected in future
+papers.
+Through the paper, Prof. Hinton has reported results of 1.36% test accuracy error with a
+2000-units, 4 hidden-layer, fully-connected network run over 60 epochs (while mentioning
+that backpropagation takes only 20 epochs to achieve similar performance). Another run of
+doubling the learning rate and training for 40 epochs yields a slightly worse error rate
+of 1.46%
+The current example does not yield state-of-the-art results. But with proper tuning of
+the Learning Rate, model architecture (number of units in `Dense` layers, kernel
+activations, initializations, regularization etc.), the results can be improved
+to match the claims of the paper.
+"""
