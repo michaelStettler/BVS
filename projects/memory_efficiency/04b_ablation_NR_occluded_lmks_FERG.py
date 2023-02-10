@@ -23,7 +23,7 @@ Optimize the tuning direction over all dataset, using only part of the lmks
 
 # avatar_type = None
 avatar_type = 2
-do_optimize = True
+do_optimize = False
 conditions = ["eyes", "mouth", "left", "right"]
 cond = 2
 if conditions[cond] == "eyes":
@@ -159,7 +159,7 @@ if do_optimize:
 # set tuning vector with optimized direction
 if conditions[cond] == "eyes":
     if avatar_type is None:
-        idx_array = [0, ]  # NRE-I best
+        idx_array = [0, 591, 1972, 2676, 3818, 282, 4413]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 236, 103, 285, 853, 668, 67]  # NRE-Jules best
     elif avatar_type == 1:
@@ -197,7 +197,7 @@ elif conditions[cond] == "left":
     elif avatar_type == 1:
         idx_array = [0, 371, 702, 483, 574, 766, 3]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, ]  # NRE-ray best
+        idx_array = [0, 121, 734, 836, 306, 556, 423]  # NRE-ray best
     elif avatar_type == 3:
         idx_array = [0, 763, 1157, 8, 471, 316, 317]  # NRE-aia best
     elif avatar_type == 4:
