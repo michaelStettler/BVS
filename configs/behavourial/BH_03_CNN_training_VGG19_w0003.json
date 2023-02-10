@@ -13,11 +13,12 @@
   "extraction_model": "VGG19",
   "include_top": false,
   "weights": "None",
-  "base_learning_rate": 0.00005,
+  "base_learning_rate": 0.0002,
   "momentum": 0.9,
-  "decay_rate": 0.9,
+  "decay_rate": 0.96,
   "decay_steps": 10,
   "initial_epochs": 45,
   "batch_size": 64,
-  "transfer_layer": "scratch"
+  "transfer_layer": "scratch",
+  "l2_regularization": 0.01
 }

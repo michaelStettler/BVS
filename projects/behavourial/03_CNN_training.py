@@ -49,12 +49,13 @@ sweep_config = {
         'metric': {'goal': 'maximize', 'name': 'val_acc'},
     },
     'parameters': {
-        'lr': {'values': [0.0001]},  # vgg  0.0001, 0.00001
-        'epoch': {'values': [1500]},
-        'decay_step': {'values': [2000]},
-        'decay_rate': {'values': [1.0]},
+        'lr': {'values': [0.001, 0.0002, 0.0001]},
+        'epoch': {'values': [1200]},
+        'decay_step': {'values': [1200]},
+        'decay_rate': {'values': [0.96]},
         'momentum': {'value': 0.9},
-        'batch_size': {'value': 64}
+        'batch_size': {'value': 64},
+        'l2': {'values': [0.001, 0.01, 0.1]},
     }
 
 }
@@ -75,9 +76,9 @@ def main():
     n_val = len(val_data[0])
     n_steps = n_train / wandb.config.batch_size
     train_dataset = tf.data.Dataset.from_tensor_slices((train_data[0], train_data[1]))
-    train_dataset = train_dataset.shuffle(600).batch(wandb.config.batch_size)
+    train_dataset = train_dataset.shuffle(600, reshuffle_each_iteration=True).batch(wandb.config.batch_size)
     val_dataset = tf.data.Dataset.from_tensor_slices((val_data[0], val_data[1]))
-    val_dataset = val_dataset.shuffle(600).batch(wandb.config.batch_size)
+    val_dataset = val_dataset.shuffle(600, reshuffle_each_iteration=True).batch(wandb.config.batch_size)
     print("-- Data loaded --")
     print("n_train", n_train)
     print("n_val", n_val)
@@ -102,6 +103,7 @@ def main():
         preprocess_input = tf.keras.applications.vgg19.preprocess_input
         base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=weights)
     global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+    fc = tf.keras.layers.Dense(512, activation='relu')
     prediction_layer = tf.keras.layers.Dense(config["n_category"], activation='relu')
 
     # apply transfer learning to base model
@@ -124,10 +126,18 @@ def main():
     inputs = tf.keras.Input(shape=config["input_shape"])
     x = data_augmentation(inputs)
     x = preprocess_input(x)
-    x = base_model(x, training=False)
+    x = base_model(x)
     x = global_average_layer(x)
+    # add a fully connected layer for VGGto correlate better with original implementation
+    if "VGG" in config["project"] and not config["include_top"]:
+        x = fc(x)
     outputs = prediction_layer(x)
     model = tf.keras.Model(inputs, outputs)
+
+    if config.get('l2_regularization'):
+        for layer in model.layers:
+            if isinstance(layer, tf.keras.layers.Conv2D) or isinstance(layer, tf.keras.layers.Dense):
+                layer.kernel_regularizer = tf.keras.regularizers.l2(wandb.config.l2)
 
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(wandb.config.lr,
                                                                  decay_steps=wandb.config.decay_step*n_steps,

@@ -1,0 +1,15 @@
+{
+  "config_name": "NR_03_FERG_m0001",
+  "train_data": "FERG",
+  "n_category": 7,
+  "avatar_names": ["jules", "malcolm", "ray", "aia", "bonnie", "mery"],
+  "train_csv": "D:/Dataset/FERG_DB_256/FERG_DB_train.csv",
+  "test_csv": "D:/Dataset/FERG_DB_256/FERG_DB_test.csv",
+  "train_lmk_pos": "D:/Dataset/FERG_DB_256/FERG_DB_LMK_pos.npy",
+  "test_lmk_pos": "D:/Dataset/FERG_DB_256/test_FERG_DB_LMK_pos.npy",
+  "train_avatar_type": "D:/Dataset/FERG_DB_256/FERG_DB_avatar_type.npy",
+  "test_avatar_type": "D:/Dataset/FERG_DB_256/test_FERG_DB_avatar_type.npy",
+  "input_shape": [224, 224, 3],
+  "directory": "D:/Dataset/FERG_DB_256",
+  "extraction_model": "VGG19"
+}
