@@ -144,4 +144,8 @@ wandb/
 *.jpeg
 *.avi
 *.mp4
+*.tar
+*.pth
+*.jpg
 /projects/facial_shape_expression_recognition_transfer/model_benchmarking/pretrained_weights/EfficientFace_Trained_on_AffectNet8.pth.tar
+/projects/facial_shape_expression_recognition_transfer/model_benchmarking/pretrained_weights/DAN_Trained_on_AffectNet7.pth
