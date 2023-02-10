@@ -17,8 +17,8 @@ def load_from_csv(df, config, x_col="image_path"):
     target_size = tuple(input_shape[:-1])
 
     #  declare x and y
-    x = np.zeros((num_data, im_size[0], im_size[1], im_size[2]))
-    y = np.zeros(num_data)
+    x = np.zeros((num_data, im_size[0], im_size[1], im_size[2]), dtype=np.float16)
+    y = np.zeros(num_data, dtype=np.float16)
 
     # load images from dataframe
     directory = config['directory']

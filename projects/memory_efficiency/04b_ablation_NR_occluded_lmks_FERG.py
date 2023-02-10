@@ -38,9 +38,9 @@ elif conditions[cond] == "right":
 
 #%%
 # define configuration
-config_file = 'NR_03_FERG_from_LMK_m0001.json'
+config_file = 'NR_03_FERG_from_LMK_w0001.json'
 # load config
-config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
 print("-- Config loaded --")
 if avatar_type is not None:
     print(f"avatar_name: {config['avatar_names'][avatar_type]}, condition: {conditions[cond]}")
@@ -199,27 +199,27 @@ elif conditions[cond] == "left":
     elif avatar_type == 2:
         idx_array = [0, ]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, ]  # NRE-aia best
+        idx_array = [0, 763, 1157, 8, 471, 316, 317]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, ]  # NRE-bonnie best
+        idx_array = [0, 95, 321, 877, 1247, 305, 614]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, ]  # NRE-mery best
+        idx_array = [0, 748, 141, 651, 407, 26, 326]  # NRE-mery best
 
 elif conditions[cond] == "right":
     if avatar_type is None:
         idx_array = [0, ]  # NRE-I best
     elif avatar_type == 0:
-        idx_array = [0, ]  # NRE-Jules best
+        idx_array = [0, 188, 286, 68, 1022, 521, 357]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, ]  # NRE-malcolm best
+        idx_array = [0, 25, 698, 120, 638, 548, 618]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, ]  # NRE-ray best
+        idx_array = [0, 369, 637, 578, 500, 443, 742]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, ]  # NRE-aia best
+        idx_array = [0, 915, 315, 128, 940, 633, 383]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, ]  # NRE-bonnie best
+        idx_array = [0, 459, 1006, 412, 631, 220, 572]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, ]  # NRE-mery best
+        idx_array = [0, 386, 224, 313, 439, 388, 173]  # NRE-mery best
 
 # learn tun vectors from one avatar
 opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
