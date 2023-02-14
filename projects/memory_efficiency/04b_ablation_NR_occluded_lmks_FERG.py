@@ -175,7 +175,7 @@ if conditions[cond] == "eyes":
 
 elif conditions[cond] == "mouth":
     if avatar_type is None:
-        idx_array = [0, ]  # NRE-I best
+        idx_array = [0, 1121, 5498, 3305, 4216, 4802, 4734]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 570, 237, 684, 1210, 570, 665]  # NRE-Jules best
     elif avatar_type == 1:
