@@ -191,7 +191,7 @@ elif conditions[cond] == "mouth":
 
 elif conditions[cond] == "left":
     if avatar_type is None:
-        idx_array = [0, ]  # NRE-I best
+        idx_array = [0, 3670, 5812, 379, 6725, 247, 5777]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 363, 95, 326, 1439, 1086, 518]  # NRE-Jules best
     elif avatar_type == 1:
@@ -207,7 +207,7 @@ elif conditions[cond] == "left":
 
 elif conditions[cond] == "right":
     if avatar_type is None:
-        idx_array = [0, ]  # NRE-I best
+        idx_array = [0, 4750, 757, 844, 5555, 1420, 2981]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 188, 286, 68, 1022, 521, 357]  # NRE-Jules best
     elif avatar_type == 1:
