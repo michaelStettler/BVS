@@ -6,7 +6,7 @@ import tqdm
 
 import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
+#mp_drawing_styles = mp.solutions.drawing_styles
 mp_face_mesh = mp.solutions.face_mesh
 
 from utils.load_config import load_config
@@ -22,9 +22,9 @@ np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
 #%%
 # define configuration
-config_file = 'NR_03_FERG_from_LMK_m0001.json'
+config_file = 'NR_03_FERG_from_LMK_w0001.json'
 # load config
-config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
 print("-- Config loaded --")
 print()
 
@@ -40,15 +40,13 @@ print("shape test_data[0]", np.shape(test_data[0]))
 #%%
 # predict LMK
 def predict_lmk(data):
-    annotated_images = []
     landmarks = []
-    drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
     with mp_face_mesh.FaceMesh(
             static_image_mode=True,
             max_num_faces=1,
             refine_landmarks=True,
             min_detection_confidence=0.5) as face_mesh:
-        for idx, img in enumerate(data):
+        for idx, img in tqdm.tqdm(enumerate(data)):
             # convert numpy to fit pipeline as uint8
             image = np.array(img).astype(np.uint8)
 
@@ -57,40 +55,25 @@ def predict_lmk(data):
             results = face_mesh.process(image)
 
             # Print and draw face mesh landmarks on the image.
-            if not results.multi_face_landmarks:
-                continue
-            annotated_image = image.copy()
+            # if not results.multi_face_landmarks:
+            #     continue
+            lmks = []
             for face_landmarks in results.multi_face_landmarks:
-                mp_drawing.draw_landmarks(
-                    image=annotated_image,
-                    landmark_list=face_landmarks,
-                    connections=mp_face_mesh.FACEMESH_TESSELATION,
-                    landmark_drawing_spec=None,
-                    connection_drawing_spec=mp_drawing_styles
-                    .get_default_face_mesh_tesselation_style())
-                mp_drawing.draw_landmarks(
-                    image=annotated_image,
-                    landmark_list=face_landmarks,
-                    connections=mp_face_mesh.FACEMESH_CONTOURS,
-                    landmark_drawing_spec=None,
-                    connection_drawing_spec=mp_drawing_styles
-                    .get_default_face_mesh_contours_style())
-                mp_drawing.draw_landmarks(
-                    image=annotated_image,
-                    landmark_list=face_landmarks,
-                    connections=mp_face_mesh.FACEMESH_IRISES,
-                    landmark_drawing_spec=None,
-                    connection_drawing_spec=mp_drawing_styles
-                    .get_default_face_mesh_iris_connections_style())
-            # cv2.imwrite('/tmp/annotated_image' + str(idx) + '.png', annotated_image)
-            annotated_images.append(annotated_image)
-            landmarks.append(face_landmarks)
+                for lmk in face_landmarks.landmark:
+                    lmks.append([lmk.x, lmk.y])
+            lmks = np.array(lmks, dtype=np.float16)
+
+            if lmks.shape != (478, 2):
+                lmks = np.zeros((478, 2), dtype=np.float16)
+
+            landmarks.append(lmks)
 
     return np.array(landmarks, dtype=np.float16)
 
 
 # predict lmk
 train_lmk = predict_lmk(train_data[0])
+print("shape train_lmk", np.shape(train_lmk))
 test_lmk = predict_lmk(test_data[0])
 
 #%%
