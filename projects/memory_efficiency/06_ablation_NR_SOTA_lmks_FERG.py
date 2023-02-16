@@ -41,11 +41,13 @@ else:
 print()
 
 if conditions[cond] == 'FAN':
-    config['train_lmk_pos'] = 'D:/Dataset/FERG_DB_256/FAN_train_LMK.npy'
-    config['test_lmk_pos'] = 'D:/Dataset/FERG_DB_256/FAN_test_LMK.npy'
+    n_lmk = 34
 elif conditions[cond] == 'MediaPipe':
-    config['train_lmk_pos'] = 'D:/Dataset/FERG_DB_256/MediaPipe_train_LMK.npy'
-    config['test_lmk_pos'] = 'D:/Dataset/FERG_DB_256/MediaPipe_test_LMK.npy'
+    n_lmk = 36
+
+
+config['train_lmk_pos'] = f"{config['directory']}/{conditions[cond]}_train_LMK_{n_lmk}.npy"
+config['test_lmk_pos'] = f"{config['directory']}/{conditions[cond]}_test_LMK{n_lmk}.npy"
 
 # declare variables
 n_cat = 7
@@ -62,9 +64,6 @@ print("shape test_data[0]", np.shape(test_data[0]))
 # load lmk pos
 train_data = np.load(config['train_lmk_pos'])
 test_data = np.load(config['test_lmk_pos'])
-if conditions[cond] == 'FAN':
-    train_data = np.squeeze(train_data)
-    test_data = np.squeeze(test_data)
 print("shape train_data", np.shape(train_data))
 print("shape test_data", np.shape(test_data))
 
