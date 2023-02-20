@@ -41,13 +41,13 @@ else:
 print()
 
 if conditions[cond] == 'FAN':
-    n_lmk = 34
+    n_lmk = 22
 elif conditions[cond] == 'MediaPipe':
-    n_lmk = 36
+    n_lmk = 25
 
 
 config['train_lmk_pos'] = f"{config['directory']}/{conditions[cond]}_train_LMK_{n_lmk}.npy"
-config['test_lmk_pos'] = f"{config['directory']}/{conditions[cond]}_test_LMK{n_lmk}.npy"
+config['test_lmk_pos'] = f"{config['directory']}/{conditions[cond]}_test_LMK_{n_lmk}.npy"
 
 # declare variables
 n_cat = 7
@@ -155,33 +155,33 @@ if conditions[cond] == "FAN":
     if avatar_type is None:
         idx_array = [0, ]  # NRE-I best
     elif avatar_type == 0:
-        idx_array = [0, ]  # NRE-Jules best
+        idx_array = [0, 29, 209, 465, 553, 0, 846]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, ]  # NRE-malcolm best
+        idx_array = [0, 654, 545, 530, 121, 791, 484]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, ]  # NRE-ray best
+        idx_array = [0, 437, 27, 6, 446, 213, 455]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, ]  # NRE-aia best
+        idx_array = [0, 218, 295, 636, 31, 489, 682]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, ]  # NRE-bonnie best
+        idx_array = [0, 966]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, ]  # NRE-mery best
+        idx_array = [0, 686, 888, 46, 564, 531, 315]  # NRE-mery best
 
 elif conditions[cond] == "MediPipe":
     if avatar_type is None:
         idx_array = [0, ]  # NRE-I best
     elif avatar_type == 0:
-        idx_array = [0, ]  # NRE-Jules best
+        idx_array = [0, 440, 1078]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, ]  # NRE-malcolm best
+        idx_array = [0, 758, 45, 36, 0, 492, 547]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, ]  # NRE-ray best
+        idx_array = [0, 504, 602, 367, 562, 585, 611]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, ]  # NRE-aia best
+        idx_array = [0, 910]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, ]  # NRE-bonnie best
+        idx_array = [0, 889]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, ]  # NRE-mery best
+        idx_array = [0, 521, 396, 220, 415, 511, 283]  # NRE-mery best
 
 # learn tun vectors from one avatar
 opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
