@@ -22,10 +22,10 @@ Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
 # avatar_type = None
-avatar_type = 0
+avatar_type = 5
 do_optimize = False
 conditions = ["FAN", "MediaPipe"]
-cond = 0
+cond = 1
 
 
 #%%
@@ -169,7 +169,7 @@ if conditions[cond] == "FAN":
     elif avatar_type == 5:
         idx_array = [0, 686, 888, 46, 564, 531, 315]  # NRE-mery best
 
-elif conditions[cond] == "MediPipe":
+elif conditions[cond] == "MediaPipe":
     if avatar_type is None:
         idx_array = [0, ]  # NRE-I best
     elif avatar_type == 0:
