@@ -13,16 +13,16 @@ run: python -m projects.memory_efficiency.05a_reduce_SOTA_LMK
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=150)
 
-cond = 0
+cond = 1
 draw = False
 conditions = ["FAN", "MediaPipe"]
 red_idx = [
-    [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59],  # FAN
-    [33, 163, 145, 154, 133, 161, 159, 157,  # right eye
-     263, 390, 374, 381, 362, 388, 386, 384,  # left eye
-     46, 53, 52, 65, 55,  # right eyebrow
-     276, 283, 282, 295, 285,  # left eyebrow
-     61, 91, 84, 314, 321, 291, 40, 37, 267, 270  # mouth
+    [17, 19, 21, 22, 24, 26, 37, 38, 40, 41, 43, 44, 46, 47, 48, 50, 51, 52, 54, 56, 57, 58],  # FAN
+    [163, 145, 154, 161, 159, 157,  # right eye
+     390, 374, 381, 388, 386, 384,  # left eye
+     46, 52, 55,  # right eyebrow
+     276, 282, 285,  # left eyebrow
+     61, 181, 17, 405, 39, 0, 269  # mouth
      ]  # MediaPipe
 ]
 n_lmk = len(red_idx[cond])
@@ -45,19 +45,23 @@ config['test_lmk_pos'] = f"{config['directory']}/{conditions[cond]}_test_LMK.npy
 # load lmk pos
 train_data = np.load(config['train_lmk_pos'])
 test_data = np.load(config['test_lmk_pos'])
-if conditions[cond] == 'FAN':
+
+if conditions[cond] == "FAN":
     train_data = np.squeeze(train_data)
     test_data = np.squeeze(test_data)
+    train_data = train_data.astype(int)
+    test_data = test_data.astype(int)
+elif conditions[cond] == "MediaPipe":
+    train_data = np.round(train_data * 224).astype(int)
+    test_data = np.round(test_data * 224).astype(int)
+
 print("shape train_data", np.shape(train_data))
 print("shape test_data", np.shape(test_data))
 
 #%%
 # draw landmark
 if draw:
-    if conditions[cond] == "FAN":
-        lmk0 = train_data[0].astype(int)
-    elif conditions[cond] == "MediaPipe":
-        lmk0 = np.round(train_data[0] * 224).astype(int)
+    lmk0 = train_data[0]
     print("shape lmk0", lmk0.shape)
     print("min max 0", np.min(lmk0[:, 0]), np.max(lmk0[:, 0]))
     print("min max 1", np.min(lmk0[:, 1]), np.max(lmk0[:, 1]))

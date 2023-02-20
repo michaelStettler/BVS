@@ -21,11 +21,13 @@ run: python -m projects.memory_efficiency.04b_ablation_NR_occluded_lmks_FERG
 Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
+computer = "mac"
+# computer = "windows"
 # avatar_type = None
-avatar_type = 2
+avatar_type = 5
 do_optimize = False
 conditions = ["eyes", "mouth", "left", "right"]
-cond = 2
+cond = 3
 if conditions[cond] == "eyes":
     visible_lmks = [0, 1, 2, 3, 8, 9]  # only eyes
 elif conditions[cond] == "mouth":
@@ -37,10 +39,14 @@ elif conditions[cond] == "right":
 
 
 #%%
-# define configuration
-config_file = 'NR_03_FERG_from_LMK_w0001.json'
-# load config
-config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+# define configuration and load config
+if computer == 'mac':
+    config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+elif computer == 'windows':
+    config_file = 'NR_03_FERG_from_LMK_w0001.json'
+    config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+
 print("-- Config loaded --")
 if avatar_type is not None:
     print(f"avatar_name: {config['avatar_names'][avatar_type]}, condition: {conditions[cond]}")

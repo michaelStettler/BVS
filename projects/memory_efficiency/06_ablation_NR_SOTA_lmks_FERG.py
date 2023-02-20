@@ -22,17 +22,19 @@ Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
 # avatar_type = None
-avatar_type = 5
-do_optimize = True
+avatar_type = 0
+do_optimize = False
 conditions = ["FAN", "MediaPipe"]
-cond = 1
+cond = 0
 
 
 #%%
 # define configuration
-config_file = 'NR_03_FERG_from_LMK_w0001.json'
+# config_file = 'NR_03_FERG_from_LMK_w0001.json'
+config_file = 'NR_03_FERG_from_LMK_m0001.json'
 # load config
-config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+# config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
 print("-- Config loaded --")
 if avatar_type is not None:
     print(f"avatar_name: {config['avatar_names'][avatar_type]}, condition: {conditions[cond]}")
