@@ -165,7 +165,7 @@ if conditions[cond] == "FAN":
     elif avatar_type == 3:
         idx_array = [0, 218, 295, 636, 31, 489, 682]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, 966]  # NRE-bonnie best
+        idx_array = [0, 966, 341, 230, 868, 853, 12]  # NRE-bonnie best
     elif avatar_type == 5:
         idx_array = [0, 686, 888, 46, 564, 531, 315]  # NRE-mery best
 
@@ -173,15 +173,15 @@ elif conditions[cond] == "MediaPipe":
     if avatar_type is None:
         idx_array = [0, ]  # NRE-I best
     elif avatar_type == 0:
-        idx_array = [0, 440, 1078]  # NRE-Jules best
+        idx_array = [0, 440, 1078, 917, 134, 85, 297]  # NRE-Jules best
     elif avatar_type == 1:
         idx_array = [0, 758, 45, 36, 0, 492, 547]  # NRE-malcolm best
     elif avatar_type == 2:
         idx_array = [0, 504, 602, 367, 562, 585, 611]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, 910]  # NRE-aia best
+        idx_array = [0, 910, 850, 1050, 813, 436, 359]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, 889]  # NRE-bonnie best
+        idx_array = [0, 889, 969, 304, 679, 680, 67]  # NRE-bonnie best
     elif avatar_type == 5:
         idx_array = [0, 521, 396, 220, 415, 511, 283]  # NRE-mery best
 
