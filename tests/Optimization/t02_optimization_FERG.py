@@ -29,178 +29,14 @@ def batch(x, y, n=32):
         yield x[ndx:min(ndx + n, l)], y[ndx:min(ndx + n, l)]
 
 
-def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_length=5, ref_at_origin=True,
-                      n_latent=1, n_ref=1, variance_ratio=1, ref_variance=1, balanced=True, do_plot=False):
-    """
-
-    :param n_dim:
-    :param n_cat:
-    :param n_points: n_points per category
-    :param ref_at_0:
-    :param balanced:
-    :return:
-    """
-
-    positions = []
-
-    # for each n_latent, construct n_ref distributions
-    for i in range(n_latent):
-        ref_positions = []
-
-        # create randomly random direction (phi angles)
-        # this is fixed per latent space
-        phis = np.random.rand(n_cat - 1) * 2 * np.pi
-
-        for r in range(n_ref):
-            # set the ref
-            if ref_at_origin and n_ref == 1:
-                ref_origin = np.zeros(n_dim)
-            else:
-                ref_origin = (np.random.rand(n_dim) - 0.5) * ref_variance
-
-            # create random positions around the center (ref_origin)
-            ref_pos = np.random.rand(n_points, n_dim) * variance_ratio + ref_origin - 0.5
-
-            # create randomly different length between min and max length
-            lengths = np.random.rand(n_cat - 1) * (max_length - min_length) + min_length
-
-            # compute xy coordinates for each direction
-            tun_refs = np.array([np.cos(phis), np.sin(phis)]).T * np.expand_dims(lengths, axis=1)
-
-            # generate clouds of positions for each category (origin centered)
-            tun_pos = np.random.rand(n_cat - 1, n_points, n_dim) - 0.5
-
-            # translate to tuning positions
-            tun_pos += np.repeat(np.expand_dims(tun_refs, axis=1), n_points, axis=1) + ref_origin
-
-            # create pos
-            position = np.concatenate((ref_pos, np.reshape(tun_pos, (-1, n_dim))), axis=0)
-
-            # append to ref
-            ref_positions.append(position)
-
-        # remove extra dim if only one ref
-        ref_positions = np.squeeze(ref_positions)
-        if ref_positions.ndim == 3:
-            ref_positions = np.reshape(ref_positions, (-1, ref_positions.shape[2]))
-
-        # construct dataset
-        positions.append(ref_positions)
-
-    # return array as either (n_pts, n_dim) if n_latent ==1, or else as (n_pts, n_latent, n_dim)
-    positions = np.array(positions)
-    positions = np.moveaxis(positions, 0, 1)
-    positions = np.squeeze(positions)
-
-    # construct label
-    labels = []
-    for r in range(n_ref):
-        for i in range(len(ref_pos)):
-            labels.append([0, r])
-        for i in range(n_cat - 1):
-            for j in range(len(tun_pos[i])):
-                labels.append([i + 1, r])
-
-    return positions, np.array(labels).astype(int)
-
-
-def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, min_length=5, max_length=5,
-               shifts=None, show=False):
-
-    # retrieve variables
-    n_pts = positions.shape[0]
-    n_feat_map = positions.shape[1]
-    n_ref = 1
-    if shifts is not None:
-        n_ref = shifts.shape[0]
-
-    # set img size
-    n_rows = int(np.sqrt(n_feat_map))
-    n_columns = np.ceil(n_feat_map / n_rows).astype(int)
-    image = np.zeros((n_rows*400, n_columns*400, 3))
-
-    # plot
-    cmap = cm.get_cmap('viridis', n_cat)
-    for ft in range(n_feat_map):
-        fig = plt.figure(figsize=(4, 4), dpi=100)  # each subplot is 400x400
-
-        for r in range(n_ref):
-            # shifts positions
-            ref_idx = np.arange(n_pts)  # construct all index for commmon pipeline
-            if shifts is not None:
-                ref_idx = ref_idx[labels[:, 1] == r]
-                pos_ft = positions[ref_idx, ft] - shifts[r, ft]
-            else:
-                pos_ft = positions[:, ft]
-
-            # get unique labels
-            uniques = np.unique(labels)
-
-            for i, color in zip(range(n_cat), cmap(range(n_cat))):
-                label = uniques[i]
-
-                label_name = None
-                if r == 0:
-                    label_name = "cat {}".format(label)
-                    if label == 0:
-                        label_name = "reference"
-
-                # get all positions for this label
-                pos = pos_ft[labels[ref_idx, 0] == label]
-
-                # scale tuning vector for plotting
-                pos_norm = np.linalg.norm(pos, axis=1)
-                max_length = np.max(pos_norm)
-                x_direction = pos[np.argmax(pos_norm)][0]
-
-                sign = np.sign(x_direction * tun_vectors[i, ft, 0])
-
-                # plot the positions
-                plt.scatter(pos[:, 0], pos[:, 1], color=color, label=label_name)
-
-                # plot tuning line
-                if tun_vectors is not None and ref_vector is not None:
-                    # x_ = [ref_vector[ft, 0], sign * max_length * tun_vectors[i, 0]]
-                    x_ = [0, tun_vectors[i, ft, 0]]
-                    # y_ = [ref_vector[ft, 1], sign * max_length * tun_vectors[i, 1]]
-                    y_ = [0, tun_vectors[i, ft, 1]]
-                    plt.plot(x_, y_, color=color)
-
-        # plot cross
-        plt.plot(0, 0, 'xk')
-        # plt.plot(ref_vector[ft, 1], ref_vector[ft, 0], 'xk')
-
-        if ft == 0:
-            plt.legend()
-        # plt.axis([-min_length, max_length, -min_length, max_length])
-        plt.axis([-10, 10, -10, 10])
-
-        if show:
-            plt.show()
-
-        # transform figure to numpy array
-        fig.canvas.draw()
-        fig.tight_layout(pad=0)
-
-        # compute row/col number
-        n_col = ft % n_columns
-        n_row = ft % n_rows
-
-        # transform figure to numpy and append it in the correct place
-        figure = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        figure = figure.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        image[n_row*400:(n_row+1)*400, n_col*400:(n_col+1)*400] = figure
-
-        # clear figure
-        plt.cla()
-        plt.clf()
-        plt.close()
-
-    return image.astype(np.uint8)
-
-
 def compute_tun_vectors(x, y, n_cat):
     n_feat_maps = np.shape(x)[1]
+    n_dim = np.shape(x)[-1]
+
+    # if no data comes in
+    if y.ndim == 0:
+        # careful because as y is empty, then x shape changes to ndim = 2
+        return tf.zeros((n_cat, np.shape(x)[0], n_dim), dtype=tf.float64)
 
     tun_vectors = []
     # for each expression
@@ -209,37 +45,42 @@ def compute_tun_vectors(x, y, n_cat):
         bool_mask = tf.equal(y, cat)
         x_cat = tf.gather(x, tf.squeeze(tf.where(bool_mask)))
 
-        # if only one point in the category
-        if len(x_cat.shape) == 2:
-            x_cat = tf.expand_dims(x_cat, axis=0)
+        # only if there's sample of this category in the batch
+        if x_cat.shape[0] != 0:
+            # if only one point in the category
+            if len(x_cat.shape) == 2:
+                x_cat = tf.expand_dims(x_cat, axis=0)
 
-        # declare tuning vect per category
-        # v_cat = tf.zeros((n_feat_maps, n_dim))
-        v_cat = []
-        for f in range(n_feat_maps):
-            # svd results not consistent between torch and tf
-            s, u, vh = tf.linalg.svd(x_cat[:, f], full_matrices=False)
-            # print("shape u, s, vh", u.shape, s.shape, vh.shape)
-            # print(vh)
+            # declare tuning vect per category
+            # v_cat = tf.zeros((n_feat_maps, n_dim))
+            v_cat = []
+            for f in range(n_feat_maps):
+                # svd results not consistent between torch and tf
+                s, u, vh = tf.linalg.svd(x_cat[:, f], full_matrices=False)
+                # print("shape u, s, vh", u.shape, s.shape, vh.shape)
+                # print(vh)
 
-            # Orient tuning vectors properly
-            vh = tf.transpose(vh)
-            x_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[0]
-            y_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[1]
-            x_direction = x_direction * vh[0, 0]
-            y_direction = y_direction * vh[0, 1]
-            if x_direction != 0:
-                sign = tf.math.sign(x_direction)
-            else:
-                sign = tf.math.sign(y_direction)
+                # Orient tuning vectors properly
+                vh = tf.transpose(vh)
+                x_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[0]
+                y_direction = tf.gather(x_cat[:, f], tf.math.argmax(tf.norm(x_cat[:, f], axis=-1)))[1]
+                x_direction = x_direction * vh[0, 0]
+                y_direction = y_direction * vh[0, 1]
+                if x_direction != 0:
+                    sign = tf.math.sign(x_direction)
+                else:
+                    sign = tf.math.sign(y_direction)
 
-            # v_cat.append(vh[0])
-            tun_vect = vh[0] * sign
-            v_cat.append(tun_vect)
+                # v_cat.append(vh[0])
+                tun_vect = vh[0] * sign
+                v_cat.append(tun_vect)
 
-        v_cat = tf.convert_to_tensor(v_cat, dtype=tf.float64)
+            v_cat = tf.convert_to_tensor(v_cat, dtype=tf.float64)
 
-        tun_vectors.append(v_cat)
+            tun_vectors.append(v_cat)
+        # no point in the category
+        else:
+            tun_vectors.append(tf.zeros((n_feat_maps, n_dim), dtype=tf.float64))
 
     return tf.convert_to_tensor(tun_vectors, dtype=tf.float64, name="tun_vectors")
 
@@ -252,6 +93,9 @@ def compute_projections(x, tun_vectors) -> np.array:
     :param nu:
     :return:
     """
+    # case where there's no entry in x
+    if x.ndim == 2:
+        return tf.zeros((0, x.shape[0], x.shape[1]), dtype=tf.float64)
 
     # batch per ft_map (meaning putting ft_map dim in first column)
     x = tf.experimental.numpy.moveaxis(x, 0, 1)
@@ -268,6 +112,8 @@ def compute_distances(x: tf.Tensor, radius: tf.Tensor):
     :param x: (n_img, n_feat_map, n_dim)
     :return
     """
+    if x.ndim == 2:
+        return tf.zeros((0, x.shape[0], x.shape[1]), dtype=tf.float64)
     return tf.exp(- radius * tf.norm(x, axis=2))
 
 
@@ -357,8 +203,9 @@ def optimize_NRE(x, y, n_cat, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_
         video = cv2.VideoWriter(os.path.join(path, video_name), fourcc, 30, (n_columns * 400, n_rows * 400))
 
     for epoch in range(n_epochs):
+        it = 0
         for x_batch, y_batch in batch(x, y, n=batch_size):
-            print("shape x_batch", x_batch.shape, "shape y_batch", y_batch.shape)
+            #print("shape x_batch", x_batch.shape, "shape y_batch", y_batch.shape)
             loss = 0
             with tf.GradientTape() as tape:
                 tape.watch(shifts)
@@ -375,12 +222,12 @@ def optimize_NRE(x, y, n_cat, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_
 
                     # get tun vectors
                     tun_vectors = compute_tun_vectors(x_shifted, y_filt, n_cat)
-                    # print("tun_vectors", tun_vectors.shape)  # working (2, 1, 1) new (2, 1, 2)
+                    # print("tun_vectors", tun_vectors.shape)
                     # print(tun_vectors)
 
                     # # get projections
                     projections = compute_projections(x_shifted, tun_vectors)
-                    # print("projections", projections.shape)  # working (10, 2) new (2, 1, 2)
+                    # print("projections", projections.shape)
                     # print(projections)
 
                     if n_ref > 1:
@@ -392,7 +239,8 @@ def optimize_NRE(x, y, n_cat, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_
                     else:
                         # compute loss
                         loss += compute_loss_without_ref(projections, y_filt)
-            print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
+            # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
+            print(f"{epoch}, it: {it}, loss {loss}", end='\r')
 
             # compute gradients
             grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
@@ -406,17 +254,23 @@ def optimize_NRE(x, y, n_cat, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_
 
             if do_plot:
                 tun_vect = tun_vectors.numpy()
-                img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
+                # img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
+                img = plot_space(x_batch.numpy(), y_batch.numpy(), n_cat,
+                                 shifts=shifts.numpy(),
+                                 tun_vectors=tun_vect)
 
                 # write image
                 video.write(img)
 
-        # print last one to keep in the log
-        print(f"{epoch} loss {loss}, radius: {radius}")
+            # increase iteration
+            it += 1
 
-        if do_plot:
-            cv2.destroyAllWindows()
-            video.release()
+    if do_plot:
+        cv2.destroyAllWindows()
+        video.release()
+
+    # print last one to keep in the log
+    print(f"{epoch} it: {it}, loss {loss}, radius: {radius}")
 
 
 if __name__ == '__main__':

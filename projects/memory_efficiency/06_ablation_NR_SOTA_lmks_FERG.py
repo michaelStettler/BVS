@@ -22,7 +22,7 @@ Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
 # avatar_type = None
-avatar_type = 5
+avatar_type = 3
 do_optimize = False
 conditions = ["FAN", "MediaPipe"]
 cond = 1
