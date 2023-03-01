@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_length=5, ref_at_origin=True,
+def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_length=7, ref_at_origin=True,
                       n_latent=1, n_ref=1, variance_ratio=1, ref_variance=1, balanced=True):
     """
 
@@ -12,6 +12,9 @@ def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_l
     :param balanced:
     :return:
     """
+
+    if max_length < min_length:
+        max_length = min_length
 
     positions = []
 

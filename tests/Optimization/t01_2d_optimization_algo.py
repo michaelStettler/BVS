@@ -22,7 +22,7 @@ tensorboard: tensorboard --logdir logs/func
 if __name__ == '__main__':
     profiler = False
     do_plot = True
-    shuffle = False
+    shuffle = True
 
     # declare parameters
     use_ref = True
@@ -30,13 +30,13 @@ if __name__ == '__main__':
     n_cat = 4
     neutral_cat = None
     n_points = 5
-    n_latent = 3
+    n_latent = 10
     n_ref = 2
     n_entry = n_points * n_cat * n_ref
-    batch_size = 40
-    n_epochs = 200
+    batch_size = 20
+    n_epochs = 2
     lr = 0.1
-    alpha_ref = 20
+    alpha_ref = 1
     print(f"{n_entry} entry created!")
 
     # generate random data
@@ -44,9 +44,9 @@ if __name__ == '__main__':
                                          ref_at_origin=False,
                                          n_latent=n_latent,
                                          n_ref=n_ref,
-                                         variance_ratio=2,
-                                         ref_variance=15,
-                                         min_length=3)
+                                         variance_ratio=4,  # spread the clusters
+                                         ref_variance=15,  # spread the ref domain clusters
+                                         min_length=6)  # how far away from ref at minimum
     print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
 
@@ -66,6 +66,15 @@ if __name__ == '__main__':
 
     # transform to tensor
     init_ref = None
+    init_ref = []
+    for r in range(n_ref):
+        ref_pts = x_train[y_train[:, 1] == r]  # take every pts from the ref of interest
+        ref_label = y_train[y_train[:, 1] == r]
+        neutral_ref_pts = ref_pts[ref_label[:, 0] == 0]  # take only the neutral cat (ref)
+        init_ref.append(neutral_ref_pts[0] + np.random.rand(n_latent, n_dim) * 0.01)  # initialize to first neutral pose
+    init_ref = tf.convert_to_tensor(init_ref, tf.float32)
+    print("init_ref", init_ref.shape)
+
     # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float32)
     x_train = tf.convert_to_tensor(x_train, dtype=tf.float32)
     y_train = tf.convert_to_tensor(y_train, dtype=tf.int32)
@@ -88,7 +97,8 @@ if __name__ == '__main__':
                  lr=lr,
                  alpha_ref=alpha_ref,
                  n_epochs=n_epochs,
-                 do_plot=do_plot)
+                 do_plot=do_plot,
+                 plot_alpha=0.5)
 
     if profiler:
         with writer.as_default():

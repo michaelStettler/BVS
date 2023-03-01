@@ -6,7 +6,9 @@ viridis = cm.get_cmap('viridis', 12)
 
 
 def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, min_length=5, max_length=5,
-               shifts=None, show=False, ref_pos=None, ref_labels=None):
+               shifts=None, show=False, ref_pos=None, ref_labels=None, alpha=1):
+
+    marker_vectors = ['o', '^', 's', 'p', '*', 'D', 'v', '<', '>']
 
     # retrieve variables
     n_pts = positions.shape[0]
@@ -27,7 +29,7 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
 
         for r in range(n_ref):
             # shifts positions
-            ref_idx = np.arange(n_pts)  # construct all index for commmon pipeline
+            ref_idx = np.arange(n_pts)  # construct all index for common pipeline
             if shifts is not None:
                 ref_idx = ref_idx[labels[:, 1] == r]
                 pos_ft = positions[ref_idx, ft] - shifts[r, ft]
@@ -62,7 +64,11 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
                     sign = np.sign(x_direction * tun_vectors[i, ft, 0])
 
                     # plot the positions
-                    plt.scatter(pos[:, 0], pos[:, 1], color=color, label=label_name)
+                    plt.scatter(pos[:, 0], pos[:, 1],
+                                color=color,
+                                label=label_name,
+                                marker=marker_vectors[r],
+                                alpha=alpha)
 
                     # plot tuning line
                     if tun_vectors is not None and ref_vector is not None:
@@ -95,7 +101,7 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
 
         # compute row/col number
         n_col = ft % n_columns
-        n_row = ft % n_rows
+        n_row = ft // n_columns
 
         # transform figure to numpy and append it in the correct place
         figure = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)

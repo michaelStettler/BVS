@@ -78,7 +78,7 @@ def compute_distance(x: tf.Tensor, radius: tf.Tensor):
 
 # @tf.function  # create a graph (non-eager mode!)
 def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_epochs=20,
-                 alpha_ref=1, do_plot=False):
+                 alpha_ref=1, do_plot=False, plot_alpha=1, plot_name="NRE_optimizer"):
     """
 
     :param x: (n_pts, n_feature_maps, n_dim)
@@ -94,13 +94,14 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     shifts = tf.zeros((n_ref, n_feat_maps, n_dim), dtype=tf.float32, name="shifts")
     if init_ref is not None:
         shifts = tf.identity(init_ref, name="shifts")
+    print("shape shifts", shifts.shape)
     radius = tf.ones((n_ref, n_feat_maps), dtype=tf.float32, name="radius")
     print("shape radius", radius.shape)
 
     # declare sequence parameters
     if do_plot:
         path = ""
-        video_name = "NRE_loss_training.mp4"
+        video_name = f"{plot_name}.mp4"
         n_rows = int(np.sqrt(n_feat_maps))
         n_columns = np.ceil(n_feat_maps / n_rows).astype(int)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -181,18 +182,19 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # print(f"{epoch} shifts {shifts}")
             # print()
 
-            if do_plot:
-                tun_vect = tun_vectors.numpy()
-                # img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
-                img = plot_space(x_batch.numpy(), y_batch.numpy(), n_cat,
-                                 shifts=shifts.numpy(),
-                                 tun_vectors=tun_vect)
-
-                # write image
-                video.write(img)
-
             # increase iteration
             it += 1
+
+        if do_plot:
+            tun_vect = tun_vectors.numpy()
+            # img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
+            img = plot_space(x.numpy(), y.numpy(), n_cat,
+                             shifts=shifts.numpy(),
+                             tun_vectors=tun_vect,
+                             alpha=plot_alpha)
+
+            # write image
+            video.write(img)
 
     if do_plot:
         cv2.destroyAllWindows()
