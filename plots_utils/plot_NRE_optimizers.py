@@ -5,7 +5,7 @@ from matplotlib import cm
 viridis = cm.get_cmap('viridis', 12)
 
 
-def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, min_length=5, max_length=5,
+def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, min_axis=15, max_axis=15,
                shifts=None, show=False, ref_pos=None, ref_labels=None, alpha=1):
 
     marker_vectors = ['o', '^', 's', 'p', '*', 'D', 'v', '<', '>']
@@ -80,7 +80,7 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
 
                 if ref_pos is not None:
                     r_pos = pos_ft[ref_labels[ref_idx, 0] == label]
-                    plt.scatter(r_pos[:, 0], r_pos[:, 1], color=color, label=label_name, alpha=0.2)
+                    plt.scatter(r_pos[:, 0], r_pos[:, 1], color=color, label=label_name)
 
 
         # plot cross
@@ -89,8 +89,8 @@ def plot_space(positions, labels, n_cat, ref_vector=[0, 0], tun_vectors=None, mi
 
         if ft == 0:
             plt.legend()
-        # plt.axis([-min_length, max_length, -min_length, max_length])
-        plt.axis([-10, 10, -10, 10])
+        plt.axis([-min_axis, max_axis, -min_axis, max_axis])
+        # plt.axis([-10, 10, -10, 10])
 
         if show:
             plt.show()

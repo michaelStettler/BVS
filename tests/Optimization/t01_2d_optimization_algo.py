@@ -29,12 +29,12 @@ if __name__ == '__main__':
     n_dim = 2
     n_cat = 4
     neutral_cat = None
-    n_points = 5
-    n_latent = 10
-    n_ref = 2
+    n_points = 10
+    n_latent = 3
+    n_ref = 3
     n_entry = n_points * n_cat * n_ref
-    batch_size = 20
-    n_epochs = 2
+    batch_size = 32
+    n_epochs = 20
     lr = 0.1
     alpha_ref = 1
     print(f"{n_entry} entry created!")
@@ -44,9 +44,11 @@ if __name__ == '__main__':
                                          ref_at_origin=False,
                                          n_latent=n_latent,
                                          n_ref=n_ref,
-                                         variance_ratio=4,  # spread the clusters
+                                         variance_ratio=5,  # spread the clusters
                                          ref_variance=15,  # spread the ref domain clusters
-                                         min_length=6)  # how far away from ref at minimum
+                                         length_variance=5,  # variance from same cluster on different ref
+                                         min_length=6,
+                                         max_length=9)  # how far away from ref at minimum
     print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
 
@@ -98,7 +100,9 @@ if __name__ == '__main__':
                  alpha_ref=alpha_ref,
                  n_epochs=n_epochs,
                  do_plot=do_plot,
-                 plot_alpha=0.5)
+                 plot_alpha=0.3,
+                 min_plot_axis=25,
+                 max_plot_axis=25)
 
     if profiler:
         with writer.as_default():

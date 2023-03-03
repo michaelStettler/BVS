@@ -1,8 +1,8 @@
 import numpy as np
 
 
-def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_length=7, ref_at_origin=True,
-                      n_latent=1, n_ref=1, variance_ratio=1, ref_variance=1, balanced=True):
+def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_length=7, length_variance=1,
+                      ref_at_origin=True, n_latent=1, n_ref=1, variance_ratio=1, ref_variance=1, balanced=True):
     """
 
     :param n_dim:
@@ -37,13 +37,13 @@ def generate_data_set(n_dim: int, n_cat: int, n_points: int, min_length=2, max_l
             ref_pos = np.random.rand(n_points, n_dim) * variance_ratio + ref_origin
 
             # create randomly different length between min and max length
-            lengths = np.random.rand(n_cat - 1) * (max_length - min_length) + min_length
+            lengths = np.random.rand(n_cat - 1) * (max_length - min_length) * length_variance + min_length
 
             # compute xy coordinates for each direction
             tun_refs = np.array([np.cos(phis), np.sin(phis)]).T * np.expand_dims(lengths, axis=1)
 
             # generate clouds of positions for each category (origin centered)
-            tun_pos = np.random.rand(n_cat - 1, n_points, n_dim) - 0.5
+            tun_pos = (np.random.rand(n_cat - 1, n_points, n_dim) - 0.5) * variance_ratio
 
             # translate to tuning positions
             tun_pos += np.repeat(np.expand_dims(tun_refs, axis=1), n_points, axis=1) + ref_origin

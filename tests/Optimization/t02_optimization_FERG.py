@@ -30,9 +30,10 @@ if __name__ == '__main__':
     n_dim = 2
     n_cat = 7
     neutral_cat = None
-    n_latent = 10
-    n_ref = 6
+    n_latent = 10  # == n_lmk
+    n_ref = 6  # == n_cat
     lr = 0.1
+    alpha_ref = 10
     batch_size = 512
     n_epochs = 10
     crop_size = 2048
@@ -119,6 +120,7 @@ if __name__ == '__main__':
                  n_ref=n_ref,
                  init_ref=init_ref,
                  lr=lr,
+                 alpha_ref=alpha_ref,
                  n_epochs=n_epochs,
                  do_plot=do_plot,
                  plot_alpha=plot_alpha,

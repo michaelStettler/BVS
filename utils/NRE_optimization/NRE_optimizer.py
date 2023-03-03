@@ -78,7 +78,8 @@ def compute_distance(x: tf.Tensor, radius: tf.Tensor):
 
 # @tf.function  # create a graph (non-eager mode!)
 def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_epochs=20,
-                 alpha_ref=1, do_plot=False, plot_alpha=1, plot_name="NRE_optimizer"):
+                 alpha_ref=1, do_plot=False, plot_alpha=1, plot_name="NRE_optimizer", min_plot_axis=15,
+                 max_plot_axis=15):
     """
 
     :param x: (n_pts, n_feature_maps, n_dim)
@@ -109,6 +110,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
     for epoch in range(n_epochs):
         it = 0
+        predictions = []
         for x_batch, y_batch in batch(x, y, n=batch_size):
             batch_shifts = tf.zeros((x_batch.shape[0], n_feat_maps, n_dim), dtype=tf.float32, name="batch_shifts")
             batch_radius = tf.zeros((x_batch.shape[0], n_feat_maps), dtype=tf.float32, name="batch_radius")
@@ -167,6 +169,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
             # compute accuracy
             y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
+            predictions.append(y_pred)
             acc = accuracy_score(y_batch[:, 0], y_pred)
 
             # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
@@ -191,7 +194,9 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             img = plot_space(x.numpy(), y.numpy(), n_cat,
                              shifts=shifts.numpy(),
                              tun_vectors=tun_vect,
-                             alpha=plot_alpha)
+                             alpha=plot_alpha,
+                             min_axis=min_plot_axis,
+                             max_axis=max_plot_axis)
 
             # write image
             video.write(img)
@@ -205,5 +210,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     print(f"radius; {radius}")
     # print("predictions")
     # print(predictions)
-    print("y_pred")
+    print("y_pred", np.shape(y_pred))
     print(y_pred)
+
+    return np.reshape(predictions, (-1))
