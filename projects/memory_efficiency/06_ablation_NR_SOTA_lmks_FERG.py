@@ -155,7 +155,7 @@ if do_optimize:
 # set tuning vector with optimized direction
 if conditions[cond] == "FAN":
     if avatar_type is None:
-        idx_array = [0, ]  # NRE-I best
+        idx_array = [0, 3760, 126, 62, 1697, 2750, 1155]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 29, 209, 465, 553, 0, 846]  # NRE-Jules best
     elif avatar_type == 1:
@@ -171,7 +171,7 @@ if conditions[cond] == "FAN":
 
 elif conditions[cond] == "MediaPipe":
     if avatar_type is None:
-        idx_array = [0, ]  # NRE-I best
+        idx_array = [0, 2735, 3926, 3868, 6101, 6730]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 440, 1078, 917, 134, 85, 297]  # NRE-Jules best
     elif avatar_type == 1:
