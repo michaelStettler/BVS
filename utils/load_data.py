@@ -12,7 +12,7 @@ from utils.image_utils import pad_image
 from utils.load_from_csv import load_from_csv
 
 
-def load_data(config, train=True, sort_by=None, get_raw=False):
+def load_data(config, train=True, sort_by=None, get_raw=False, get_only_label=False):
     if config['train_data'] == 'test':
         print("[DATA] Generate random training data")
         np.random.seed(0)
@@ -48,7 +48,7 @@ def load_data(config, train=True, sort_by=None, get_raw=False):
         data = _load_KDEF(config, train, get_raw=get_raw)
 
     elif config['train_data'] == 'FERG':  # bfs = basic face shape
-        data = _load_FERG(config, train, get_raw=get_raw)
+        data = _load_FERG(config, train, get_raw=get_raw, get_only_label=get_only_label)
 
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
@@ -478,7 +478,7 @@ def _load_KDEF(config, train, get_raw=False):
     return data
 
 
-def _load_FERG(config, train, get_raw=False):
+def _load_FERG(config, train, get_raw=False, get_only_label=False):
     """
     helper function to load the FERG dataset
     """
@@ -489,7 +489,7 @@ def _load_FERG(config, train, get_raw=False):
         df = pd.read_csv(config['test_csv'], index_col=0)
 
     # load each image from the csv file
-    data = load_from_csv(df, config)
+    data = load_from_csv(df, config, get_only_label=get_only_label)
 
     if get_raw:
         data[0] = data[0]

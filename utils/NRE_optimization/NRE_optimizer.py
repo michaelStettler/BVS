@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 from utils.NRE_optimization.NRE_vectors import compute_tun_vectors
 from utils.NRE_optimization.NRE_loss import compute_loss_with_ref
 from utils.NRE_optimization.NRE_loss import compute_loss_without_ref
+from utils.NRE_optimization.NRE_loss import compute_loss_with_ref2
 from plots_utils.plot_NRE_optimizers import plot_space
 
 
@@ -36,9 +37,9 @@ def compute_NRE_preds(projections, radius, use_ref=False):
         projections[..., 0] = np.repeat(np.expand_dims(ref_proj, axis=1), projections.shape[1], axis=1)
 
     # add projections per feature maps
-    projections = np.sum(projections, axis=1)
+    predictions = np.sum(projections, axis=1)
 
-    return projections
+    return predictions
 
 
 
@@ -96,7 +97,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     if init_ref is not None:
         shifts = tf.identity(init_ref, name="shifts")
     print("shape shifts", shifts.shape)
-    radius = tf.ones((n_ref, n_feat_maps), dtype=tf.float32, name="radius")
+    radius = tf.ones(1, dtype=tf.float32, name="radius")
     print("shape radius", radius.shape)
 
     # declare sequence parameters
@@ -113,7 +114,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
         predictions = []
         for x_batch, y_batch in batch(x, y, n=batch_size):
             batch_shifts = tf.zeros((x_batch.shape[0], n_feat_maps, n_dim), dtype=tf.float32, name="batch_shifts")
-            batch_radius = tf.zeros((x_batch.shape[0], n_feat_maps), dtype=tf.float32, name="batch_radius")
+            # batch_radius = tf.zeros((x_batch.shape[0], n_feat_maps), dtype=tf.float32, name="batch_radius")
             #print("shape x_batch", x_batch.shape, "shape y_batch", y_batch.shape)
             loss = 0
 
@@ -132,17 +133,17 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
                     # construct updates values
                     rep_shifts = tf.repeat(tf.expand_dims(shifts[r], axis=0), x_batch.shape[0], axis=0, name="rep_shifts")
-                    rep_radius = tf.repeat(tf.expand_dims(radius[r], axis=0), x_batch.shape[0], axis=0, name="rep_radius")
+                    # rep_radius = tf.repeat(tf.expand_dims(radius[r], axis=0), x_batch.shape[0], axis=0, name="rep_radius")
                     shifts_updates = tf.gather(rep_shifts, tf.squeeze(indices))
-                    radius_updates = tf.gather(rep_radius, tf.squeeze(indices))
+                    # radius_updates = tf.gather(rep_radius, tf.squeeze(indices))
 
                     # assign value like: batch_shifts[indices] = shifts[indices]
                     batch_shifts = tf.tensor_scatter_nd_update(batch_shifts, indices, shifts_updates)
-                    batch_radius = tf.tensor_scatter_nd_update(batch_radius, indices, radius_updates)
+                    # batch_radius = tf.tensor_scatter_nd_update(batch_radius, indices, radius_updates)
 
                 # subtract  shifts to x
                 x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
-                # print("shape x_shifted", x_shifted.shape)
+                print("shape x_shifted", x_shifted.shape)
                 # print(x_shifted)
 
                 # get tun vectors
@@ -156,13 +157,14 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                 # print(projections)
 
                 # compute preds
-                batch_preds = compute_NRE_preds(projections.numpy(), batch_radius.numpy(), use_ref=use_ref)
+                batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
 
                 if use_ref:
-                    sig_distance = compute_distance(x_shifted, batch_radius)
+                    # sig_distance = compute_distance(x_shifted, batch_radius)
 
                     # compute loss
-                    loss += compute_loss_with_ref(projections, y_batch[:, 0], sig_distance, alpha_ref=alpha_ref)
+                    # loss += compute_loss_with_ref(projections, y_batch[:, 0], sig_distance, alpha_ref=alpha_ref)
+                    loss += compute_loss_with_ref2(x_shifted, projections, y_batch[:, 0], radius, alpha_ref=alpha_ref)
                 else:
                     # compute loss
                     loss += compute_loss_without_ref(projections, y_batch[:, 0])
@@ -211,6 +213,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     # print("predictions")
     # print(predictions)
     print("y_pred", np.shape(y_pred))
-    print(y_pred)
+    # print(y_pred)
 
     return np.reshape(predictions, (-1))

@@ -33,11 +33,12 @@ if __name__ == '__main__':
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
     lr = 0.1
-    alpha_ref = 10
+    alpha_ref = 1  # strength of the ref cat in the loss function
     batch_size = 512
-    n_epochs = 10
-    crop_size = 2048
+    n_epochs = 20
+    crop_size = 500
     plot_alpha = 0.1
+    use_only_one_cat = None
 
     # define configuration
     config_file = 'NR_03_FERG_from_LMK_m0001.json'
@@ -47,9 +48,9 @@ if __name__ == '__main__':
     print()
 
     # Load data
-    train_data = load_data(config, get_raw=True)
+    train_data = load_data(config, get_raw=True, get_only_label=True)
     train_label = train_data[1]
-    test_data = load_data(config, train=False, get_raw=True)
+    test_data = load_data(config, train=False, get_raw=True, get_only_label=True)
     test_label = test_data[1]
     print("shape train_data[0]", np.shape(train_data[0]))
     print("shape test_data[0]", np.shape(test_data[0]))
@@ -67,6 +68,22 @@ if __name__ == '__main__':
     print("shape test_avatar", np.shape(test_avatar))
     print("-- Data loaded --")
     print()
+
+    # get only the data from the cat of ref
+    if use_only_one_cat is not None:
+        n_ref = 1
+        cat_idx = np.arange(len(train_avatar))[train_avatar == use_only_one_cat]
+        train_avatar = train_avatar[cat_idx]
+        train_label = train_label[cat_idx]
+        train_data = train_data[cat_idx]
+        cat_idx = np.arange(len(test_avatar))[test_avatar == use_only_one_cat]
+        test_avatar = test_avatar[cat_idx]
+        test_data = test_data[cat_idx]
+        test_label = test_label[cat_idx]
+        print("shape train_data", np.shape(train_data))
+        print("shape test_data", np.shape(test_data))
+        print("len train_avatar", len(train_avatar))
+        print("len test_avatar", len(test_avatar))
 
     # create labels as [category, identity]
     x_train = train_data
@@ -99,6 +116,9 @@ if __name__ == '__main__':
     init_ref = None
     init_ref = []
     for r in range(n_ref):
+        # get only the one cat of ref
+        if use_only_one_cat is not None:
+            r = use_only_one_cat
         ref_pts = x_train[y_train[:, 1] == r]  # take every pts from the ref of interest
         ref_label = y_train[y_train[:, 1] == r]
         neutral_ref_pts = ref_pts[ref_label[:, 0] == 0]  # take only the neutral cat (ref)

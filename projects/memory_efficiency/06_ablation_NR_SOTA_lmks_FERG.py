@@ -22,7 +22,7 @@ Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
 # avatar_type = None
-avatar_type = 3
+avatar_type = None
 do_optimize = False
 conditions = ["FAN", "MediaPipe"]
 cond = 1
@@ -171,7 +171,7 @@ if conditions[cond] == "FAN":
 
 elif conditions[cond] == "MediaPipe":
     if avatar_type is None:
-        idx_array = [0, 2735, 3926, 3868, 6101, 6730]  # NRE-I best
+        idx_array = [0, 2735, 3926, 3868, 6101, 2785, 2701]  # NRE-I best
     elif avatar_type == 0:
         idx_array = [0, 440, 1078, 917, 134, 85, 297]  # NRE-Jules best
     elif avatar_type == 1:
