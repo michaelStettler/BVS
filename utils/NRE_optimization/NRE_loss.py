@@ -54,12 +54,19 @@ def compute_loss_with_ref(proj: tf.Tensor, y: tf.Tensor, distance: tf.Tensor, al
     return loss
 
 
-def prob_neutral(x, radius):
-    d =
-    return 1 - (1 / 1 + tf.exp(-d))
+def prob_neutral(x, rho):
+    d = tf.reduce_sum(tf.norm(x, axis=2), axis=1)
+    return 1 - (1 / 1 + tf.exp(-(d + rho)))
 
 
-def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, radius: float, alpha_ref=1):
+def prob_expression(proj, p_neut):
+    exp = tf.exp(proj)
+    sum_exp = tf.reduce_sum(exp, axis=1)
+    soft = exp / tf.expand_dims(sum_exp, axis=1)
+    return (1 - tf.expand_dims(p_neut, axis=1)) * soft
+
+
+def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: float, alpha_ref=1):
     """
 
     :param x: (n_img, n_ft_maps, n_dim)
@@ -69,12 +76,14 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, radius: 
     :return:
     """
 
-    print("shape x", x.shape)
-    print("shape proj", proj.shape)
-    print("shape radius", radius.shape)
-    print()
-
-
     proj = tf.reduce_sum(proj, axis=1)
+    proj = proj[:, 1:]
 
-    return 0
+    p_neut = prob_neutral(x, rho)
+    p_expr = prob_expression(proj, p_neut)
+    prob = tf.concat((tf.expand_dims(p_neut, axis=1), p_expr), axis=-1)
+
+    scce = tf.keras.losses.SparseCategoricalCrossentropy()
+    loss = scce(y, prob)
+
+    return loss

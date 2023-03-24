@@ -143,7 +143,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
                 # subtract  shifts to x
                 x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
-                print("shape x_shifted", x_shifted.shape)
+                # print("shape x_shifted", x_shifted.shape)
                 # print(x_shifted)
 
                 # get tun vectors
@@ -165,6 +165,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                     # compute loss
                     # loss += compute_loss_with_ref(projections, y_batch[:, 0], sig_distance, alpha_ref=alpha_ref)
                     loss += compute_loss_with_ref2(x_shifted, projections, y_batch[:, 0], radius, alpha_ref=alpha_ref)
+
                 else:
                     # compute loss
                     loss += compute_loss_without_ref(projections, y_batch[:, 0])
