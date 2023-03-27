@@ -66,7 +66,7 @@ def prob_expression(proj, p_neut):
     return (1 - tf.expand_dims(p_neut, axis=1)) * soft
 
 
-def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: float, alpha_ref=1):
+def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: float, alpha_ref=1, n_cat=7):
     """
 
     :param x: (n_img, n_ft_maps, n_dim)
@@ -83,7 +83,31 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
     p_expr = prob_expression(proj, p_neut)
     prob = tf.concat((tf.expand_dims(p_neut, axis=1), p_expr), axis=-1)
 
-    scce = tf.keras.losses.SparseCategoricalCrossentropy()
-    loss = scce(y, prob)
+    # use dicrete labels
+    # scce = tf.keras.losses.SparseCategoricalCrossentropy()
+    # loss = scce(y, prob)
+
+    # use one hot since we want the sample weight
+    sw = tf.ones_like(prob)
+    print("shape sw", sw.shape)
+
+    # create indices for the first column of each matrix
+    indices = tf.stack([tf.range(sw.shape[0]), tf.zeros((sw.shape[0]), dtype=tf.int32)], axis=1)
+    print("shape indices", indices.shape)
+
+    shifts_updates = tf.ones(sw.shape[0]) * alpha_ref
+    print("shape shifts", shifts_updates.shape)
+
+    # update weights
+    sw = tf.tensor_scatter_nd_update(sw, indices, shifts_updates)
+    print("shape sw updated", sw.shape)
+
+    cce = tf.keras.losses.CategoricalCrossentropy()
+    print("shape y", y.shape)
+    print("shape prob", prob.shape)
+    y_hot = tf.one_hot(y, n_cat)
+    print("shape y_hot", y_hot.shape)
+    loss = cce(y_hot, prob, sample_weight=sw)
+    print("shape loss", loss.shape)
 
     return loss
