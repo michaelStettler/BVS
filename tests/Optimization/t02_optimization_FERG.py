@@ -34,7 +34,7 @@ if __name__ == '__main__':
     lr = 1
     alpha_ref = 1  # strength of the ref cat in the loss function
     batch_size = 512
-    n_epochs = 200
+    n_epochs = 34
     crop_size = 2048
     plot_alpha = 0.1
     use_only_one_cat = None

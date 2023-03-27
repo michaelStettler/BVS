@@ -103,6 +103,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     # print("shape t_shifts", t_shifts.shape)
     radius = tf.ones(1, dtype=tf.float32, name="radius")
     print("shape radius", radius.shape)
+    best_acc = 0
 
     # declare sequence parameters
     if do_plot:
@@ -186,9 +187,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
             print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
-            if acc > 0.902:
-                break
-
             # compute gradients
             grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
             # grad_shifts, grad_radius, grad_t_shifts = tape.gradient(loss, [shifts, radius, t_shifts])
@@ -217,19 +215,31 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # write image
             video.write(img)
 
+        predictions = np.reshape(predictions, (-1))
+        epoch_acc = accuracy_score(y[:, 0], predictions)
+        if epoch_acc > best_acc:
+            best_acc = epoch_acc
+
+        print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
+        print(f"{epoch}, loss {loss}, epoch_acc={epoch_acc}")
+        if epoch_acc < best_acc - 0.01:
+            print()
+            print("Reached better accuracy!")
+            print("diff:", best_acc - epoch_acc)
+            break
+
     if do_plot:
         cv2.destroyAllWindows()
         video.release()
 
     # print last one to keep in the log
-    print(f"{epoch} it: {it}, loss {loss}, train_acc={acc}")
+    print(f"{epoch} it: {it}, loss {loss}, train_acc={best_acc}")
     print(f"radius; {radius}")
     # print("predictions")
     # print(predictions)
     print("y_pred", np.shape(y_pred))
     # print(y_pred)
 
-    predictions = np.reshape(predictions, (-1))
     return predictions, {'references': shifts, 'radius': radius, 'tun_vectors': tun_vectors}
 
 
