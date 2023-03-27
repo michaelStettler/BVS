@@ -105,6 +105,10 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     print("shape radius", radius.shape)
     best_acc = 0
 
+    best_ref = None
+    best_radius = None
+    best_tuning = None
+
     # declare sequence parameters
     if do_plot:
         path = ""
@@ -185,7 +189,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             acc = accuracy_score(y_batch[:, 0], y_pred)
 
             # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
-            print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
+            print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
             # compute gradients
             grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
@@ -219,9 +223,12 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
         epoch_acc = accuracy_score(y[:, 0], predictions)
         if epoch_acc > best_acc:
             best_acc = epoch_acc
+            best_ref = shifts
+            best_radius = radius
+            best_tuning = tun_vectors
 
-        print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
-        print(f"{epoch}, loss {loss}, epoch_acc={epoch_acc}")
+        print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
+        print(f"epoch: {epoch}, loss {loss}, epoch_acc={epoch_acc}")
         if epoch_acc < best_acc - 0.01:
             print()
             print("Reached better accuracy!")
@@ -240,7 +247,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     print("y_pred", np.shape(y_pred))
     # print(y_pred)
 
-    return predictions, {'references': shifts, 'radius': radius, 'tun_vectors': tun_vectors}
+    return predictions, {'references': best_ref, 'radius': best_radius, 'tun_vectors': best_tuning}
 
 
 def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
