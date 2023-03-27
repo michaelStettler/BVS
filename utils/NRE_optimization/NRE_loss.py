@@ -66,7 +66,7 @@ def prob_expression(proj, p_neut):
     return (1 - tf.expand_dims(p_neut, axis=1)) * soft
 
 
-def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: float, alpha_ref=2, n_cat=7):
+def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: float, alpha_ref=6, n_cat=7):
     """
 
     :param x: (n_img, n_ft_maps, n_dim)
