@@ -40,9 +40,11 @@ if __name__ == '__main__':
     use_only_one_cat = None
 
     # define configuration
-    config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    # config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    config_file = 'NR_03_FERG_alex.json'
     # load config
-    config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+    # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+    config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
     print("-- Config loaded --")
     print()
 

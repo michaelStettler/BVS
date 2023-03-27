@@ -27,13 +27,11 @@ model.eval()
 
 # Loop over the types
 types = ['human', 'cartoon', 'monkey']
-for type in types:
+total_correct, n_stimuli = 0, 0
+for i, type in enumerate(types):
     bfs = BFS(path=join(base_path, type))
     for X, y in bfs.test_loader:
-        print(model(X)[0].shape)
         out = torch.argmax(model(X)[0], axis=1)
-    for i in range(len(y)):
-        print(y[i], out[i])
 
     # Convert labels
     converted_labels = []
@@ -41,6 +39,12 @@ for type in types:
         label = str(out[i].item())
         converted_labels.append(label_conversion[label])
 
+    # Type accuracy
     converted_labels = torch.tensor(converted_labels)
     correct = torch.argwhere(converted_labels == y)
     print('Accuracy for', type, ':', len(correct) / len(y))
+
+    # Total accuracy
+    total_correct += len(correct)
+    n_stimuli += len(y)
+print('Total Accuracy:', total_correct / n_stimuli)
