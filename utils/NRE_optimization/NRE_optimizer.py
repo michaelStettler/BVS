@@ -94,9 +94,11 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
     # initialize trainable parameters
     shifts = tf.zeros((n_ref, n_feat_maps, n_dim), dtype=tf.float32, name="shifts")
+    t_shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float32, name="t_shifts")
     if init_ref is not None:
         shifts = tf.identity(init_ref, name="shifts")
     print("shape shifts", shifts.shape)
+    print("shape t_shifts", t_shifts.shape)
     radius = tf.ones(1, dtype=tf.float32, name="radius")
     print("shape radius", radius.shape)
 
@@ -120,6 +122,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
             with tf.GradientTape() as tape:
                 tape.watch(shifts)
+                tape.watch(t_shifts)
                 tape.watch(radius)
 
                 # set batch_shifts and batch_radius to match the category according to their label (y[, 1])
@@ -147,7 +150,9 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                 # print(x_shifted)
 
                 # get tun vectors
-                tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
+                if epoch == 0 and it == 0:
+                    tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
+                tun_vectors += t_shifts
                 # print("tun_vectors", tun_vectors.shape)
                 # print(tun_vectors)
 
@@ -176,15 +181,17 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             acc = accuracy_score(y_batch[:, 0], y_pred)
 
             # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
-            print(f"{epoch}, it: {it}, loss={loss:.2f}, train_acc={acc:.2f}", end='\r')
+            print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
             # compute gradients
-            grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
+            # grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
+            grad_shifts, grad_radius, grad_t_shifts = tape.gradient(loss, [shifts, radius, t_shifts])
             # print("grad shifts", grad_shifts.shape)
 
             # update parameters
             shifts = shifts - lr * grad_shifts
             radius = radius - lr * grad_radius
+            t_shifts = t_shifts - lr * grad_t_shifts
             # print(f"{epoch} shifts {shifts}")
             # print()
 

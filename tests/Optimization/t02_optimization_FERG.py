@@ -14,8 +14,6 @@ from utils.NRE_optimization.NRE_optimizer import optimize_NRE
 viridis = cm.get_cmap('viridis', 12)
 matplotlib.use('agg')
 
-np.random.seed(2)
-
 """
 run: python -m tests.Optimization.t02_optimization_FERG
 tensorboard: tensorboard --logdir logs/func
@@ -35,8 +33,8 @@ if __name__ == '__main__':
     lr = 1
     alpha_ref = 1  # strength of the ref cat in the loss function
     batch_size = 512
-    n_epochs = 80
-    crop_size = 2000
+    n_epochs = 1000
+    crop_size = 256
     plot_alpha = 0.1
     use_only_one_cat = None
 
