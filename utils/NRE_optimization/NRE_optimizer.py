@@ -187,6 +187,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
             if acc > 0.902:
+                print("bigger accuracy! Break")
                 break
 
             # compute gradients
