@@ -10,6 +10,7 @@ from matplotlib import cm
 from utils.load_config import load_config
 from utils.load_data import load_data
 from utils.NRE_optimization.NRE_optimizer import optimize_NRE
+from utils.NRE_optimization.NRE_optimizer import estimate_NRE
 
 viridis = cm.get_cmap('viridis', 12)
 matplotlib.use('agg')
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     lr = 1
     alpha_ref = 1  # strength of the ref cat in the loss function
     batch_size = 512
-    n_epochs = 1000
+    n_epochs = 200
     crop_size = 256
     plot_alpha = 0.1
     use_only_one_cat = None
@@ -93,14 +94,10 @@ if __name__ == '__main__':
 
     if crop_size is not None:
         x_train = x_train[:crop_size]
-        x_test = x_test[:crop_size]
         y_train = y_train[:crop_size]
-        y_test = y_test[:crop_size]
         print("after crop:")
         print("shape x_train", np.shape(x_train))
-        print("shape x_test", np.shape(x_test))
         print("shape y_train", np.shape(y_train))
-        print("shape y_test", np.shape(y_test))
 
 
     # transform to tensor
@@ -133,16 +130,29 @@ if __name__ == '__main__':
         tf.summary.trace_on(graph=True, profiler=True)
 
     # optimize_NRE
-    optimize_NRE(x_train, y_train, n_cat,
-                 batch_size=batch_size,
-                 n_ref=n_ref,
-                 init_ref=init_ref,
-                 lr=lr,
-                 alpha_ref=alpha_ref,
-                 n_epochs=n_epochs,
-                 do_plot=do_plot,
-                 plot_alpha=plot_alpha,
-                 plot_name="NRE_FERG_optimizer")
+    pred, params = optimize_NRE(x_train, y_train, n_cat,
+                                batch_size=batch_size,
+                                n_ref=n_ref,
+                                init_ref=init_ref,
+                                lr=lr,
+                                alpha_ref=alpha_ref,
+                                n_epochs=n_epochs,
+                                do_plot=do_plot,
+                                plot_alpha=plot_alpha,
+                                plot_name="NRE_FERG_optimizer")
+
+    y_pred = estimate_NRE(x_train, y_train, params,
+                          batch_size=batch_size,
+                          n_ref=n_ref)
+
+    # test accuracy
+    x_test = tf.convert_to_tensor(x_test, dtype=tf.float32)
+    y_test = tf.convert_to_tensor(y_test, dtype=tf.int32)
+    test_pred = estimate_NRE(x_test, y_test, params,
+                             batch_size=batch_size,
+                             n_ref=n_ref)
+
+
 
     if profiler:
         with writer.as_default():

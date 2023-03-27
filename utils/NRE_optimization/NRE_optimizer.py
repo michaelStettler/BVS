@@ -4,6 +4,8 @@ import tensorflow as tf
 import numpy as np
 import cv2
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
 from utils.NRE_optimization.NRE_vectors import compute_tun_vectors
 from utils.NRE_optimization.NRE_loss import compute_loss_with_ref
@@ -94,11 +96,11 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
     # initialize trainable parameters
     shifts = tf.zeros((n_ref, n_feat_maps, n_dim), dtype=tf.float32, name="shifts")
-    t_shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float32, name="t_shifts")
     if init_ref is not None:
         shifts = tf.identity(init_ref, name="shifts")
     print("shape shifts", shifts.shape)
-    print("shape t_shifts", t_shifts.shape)
+    # t_shifts = tf.zeros((n_feat_maps, n_dim), dtype=tf.float32, name="t_shifts")
+    # print("shape t_shifts", t_shifts.shape)
     radius = tf.ones(1, dtype=tf.float32, name="radius")
     print("shape radius", radius.shape)
 
@@ -122,7 +124,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
             with tf.GradientTape() as tape:
                 tape.watch(shifts)
-                tape.watch(t_shifts)
+                # tape.watch(t_shifts)
                 tape.watch(radius)
 
                 # set batch_shifts and batch_radius to match the category according to their label (y[, 1])
@@ -135,14 +137,12 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                     indices = tf.where(ref_mask)
 
                     # construct updates values
-                    rep_shifts = tf.repeat(tf.expand_dims(shifts[r], axis=0), x_batch.shape[0], axis=0, name="rep_shifts")
-                    # rep_radius = tf.repeat(tf.expand_dims(radius[r], axis=0), x_batch.shape[0], axis=0, name="rep_radius")
+                    rep_shifts = tf.repeat(tf.expand_dims(shifts[r], axis=0), x_batch.shape[0],
+                                           axis=0, name="rep_shifts")
                     shifts_updates = tf.gather(rep_shifts, tf.squeeze(indices))
-                    # radius_updates = tf.gather(rep_radius, tf.squeeze(indices))
 
                     # assign value like: batch_shifts[indices] = shifts[indices]
                     batch_shifts = tf.tensor_scatter_nd_update(batch_shifts, indices, shifts_updates)
-                    # batch_radius = tf.tensor_scatter_nd_update(batch_radius, indices, radius_updates)
 
                 # subtract  shifts to x
                 x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
@@ -150,9 +150,12 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                 # print(x_shifted)
 
                 # get tun vectors
-                if epoch == 0 and it == 0:
-                    tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
-                tun_vectors += t_shifts
+                tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
+
+                # if epoch == 0 and it == 0:
+                #     tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
+                # tun_vectors += t_shifts
+
                 # print("tun_vectors", tun_vectors.shape)
                 # print(tun_vectors)
 
@@ -183,15 +186,18 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
             print(f"{epoch}, it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
+            if acc > 0.902:
+                break
+
             # compute gradients
-            # grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
-            grad_shifts, grad_radius, grad_t_shifts = tape.gradient(loss, [shifts, radius, t_shifts])
+            grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
+            # grad_shifts, grad_radius, grad_t_shifts = tape.gradient(loss, [shifts, radius, t_shifts])
             # print("grad shifts", grad_shifts.shape)
 
             # update parameters
             shifts = shifts - lr * grad_shifts
             radius = radius - lr * grad_radius
-            t_shifts = t_shifts - lr * grad_t_shifts
+            # t_shifts = t_shifts - lr * grad_t_shifts
             # print(f"{epoch} shifts {shifts}")
             # print()
 
@@ -223,4 +229,60 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     print("y_pred", np.shape(y_pred))
     # print(y_pred)
 
-    return np.reshape(predictions, (-1))
+    predictions = np.reshape(predictions, (-1))
+    return predictions, {'references': shifts, 'radius': radius, 'tun_vectors': tun_vectors}
+
+
+def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
+
+    refs = params['references']
+    radius = params['radius']
+    tun_vectors = params['tun_vectors']
+
+    n_dim = tf.shape(x)[-1]
+    n_feat_maps = tf.shape(x)[1]
+
+    predictions = np.array([])
+    for x_batch, y_batch in batch(x, y, n=batch_size):
+        batch_shifts = tf.zeros((x_batch.shape[0], n_feat_maps, n_dim), dtype=tf.float32, name="batch_shifts")
+
+        for r in range(n_ref):
+            # print("epoch:", epoch, "batch it:", it, "n_ref", r)
+            # filter data per ref
+            ref_mask = tf.equal(y_batch[:, 1], r)
+
+            # get indices of mask
+            indices = tf.where(ref_mask)
+
+            # construct updates values
+            rep_shifts = tf.repeat(tf.expand_dims(refs[r], axis=0), x_batch.shape[0], axis=0, name="rep_shifts")
+            shifts_updates = tf.gather(rep_shifts, tf.squeeze(indices))
+
+            # assign value like: batch_shifts[indices] = shifts[indices]
+            batch_shifts = tf.tensor_scatter_nd_update(batch_shifts, indices, shifts_updates)
+
+        # subtract  shifts to x
+        x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
+
+        # # get projections
+        projections = compute_projections(x_shifted, tun_vectors)
+
+        # compute preds
+        batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
+
+        # get predictions
+        y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
+        if len(predictions) == 0:
+            predictions = y_pred
+        else:
+            predictions = np.concatenate((predictions, y_pred))
+
+    # compute accuracy
+    acc = accuracy_score(predictions, y[:, 0])
+    print(f"accuracy={acc}")
+
+    print(confusion_matrix(y[:, 0], predictions))
+    print(classification_report(y[:, 0], predictions))
+
+
+
