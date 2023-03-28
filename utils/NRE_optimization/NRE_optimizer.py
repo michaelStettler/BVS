@@ -47,7 +47,6 @@ def compute_NRE_preds(projections, radius, use_ref=False):
 
 def compute_projections(x, tun_vectors) -> np.array:
     """
-
     :param x: (n_img, n_feat_map, n_dim)
     :param tun_vectors: (n_cat, n_feat_map, n_dim)
     :param nu:
@@ -82,9 +81,8 @@ def compute_distance(x: tf.Tensor, radius: tf.Tensor):
 # @tf.function  # create a graph (non-eager mode!)
 def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=None, lr=0.01, n_epochs=20,
                  alpha_ref=1, do_plot=False, plot_alpha=1, plot_name="NRE_optimizer", min_plot_axis=15,
-                 max_plot_axis=15):
+                 max_plot_axis=15, early_stopping=False):
     """
-
     :param x: (n_pts, n_feature_maps, n_dim)
     :param y:
     :param neutral:
@@ -242,12 +240,12 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             best_radius = radius
             best_tuning = tun_vectors
 
-        # # apply early stopping
-        # if epoch_acc < best_acc - 0.01:
-        #     print()
-        #     print(f"Early stopping at {epoch}!")
-        #     print("diff:", best_acc - epoch_acc)
-        #     break
+        # apply early stopping
+        if early_stopping and epoch_acc < best_acc - 0.01:
+            print()
+            print(f"Early stopping at {epoch}!")
+            print("diff:", best_acc - epoch_acc)
+            break
 
     if do_plot:
         cv2.destroyAllWindows()
@@ -324,7 +322,6 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                  alpha_ref=1, plot_alpha=1, plot_name="NRE_optimizer", min_plot_axis=15,
                  max_plot_axis=15, early_stopping=False):
     """
-
     :param x: (n_pts, n_feature_maps, n_dim)
     :param y:
     :param neutral:
@@ -449,6 +446,11 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
         else:
             print(f"epoch: {epoch}, train_acc={epoch_train_acc}")
 
+        # lower learning rate after
+        if epoch in [200, 300]:
+            print("Lowered lr by order of magnitude")
+            lr *= 0.1
+
         # save best
         if epoch_train_acc > best_acc:
             print("save parameters")
@@ -470,6 +472,3 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
         metrics = {'best_acc': best_acc, 'train_accuracies': train_accuracies}
 
     return predictions, {'references': best_ref, 'radius': best_radius, 'tun_vectors': best_tuning}, metrics
-
-
-
