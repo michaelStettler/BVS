@@ -242,12 +242,12 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             best_radius = radius
             best_tuning = tun_vectors
 
-        # apply early stopping
-        if epoch_acc < best_acc - 0.01:
-            print()
-            print(f"Early stopping at {epoch}!")
-            print("diff:", best_acc - epoch_acc)
-            break
+        # # apply early stopping
+        # if epoch_acc < best_acc - 0.01:
+        #     print()
+        #     print(f"Early stopping at {epoch}!")
+        #     print("diff:", best_acc - epoch_acc)
+        #     break
 
     if do_plot:
         cv2.destroyAllWindows()
