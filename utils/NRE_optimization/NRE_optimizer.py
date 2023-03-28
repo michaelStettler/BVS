@@ -120,7 +120,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
     for epoch in range(n_epochs):
         it = 0
-        predictions = []
         for x_batch, y_batch in batch(x, y, n=batch_size):
             batch_shifts = tf.zeros((x_batch.shape[0], n_feat_maps, n_dim), dtype=tf.float32, name="batch_shifts")
             # batch_radius = tf.zeros((x_batch.shape[0], n_feat_maps), dtype=tf.float32, name="batch_radius")
@@ -200,7 +199,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
             # compute accuracy
             y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
-            predictions.append(y_pred)
             acc = accuracy_score(y_batch[:, 0], y_pred)
             print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
@@ -219,8 +217,12 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
         # compute epoch accuracy
         print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
-        predictions = np.reshape(predictions, (-1))
-        epoch_acc = accuracy_score(y[:, 0], predictions)
+        epoch_acc, predictions = estimate_NRE(x, y,
+                                              {'references': shifts, 'radius': radius, 'tun_vectors': tun_vectors},
+                                              n_ref=n_ref,
+                                              batch_size=batch_size,
+                                              use_ref=use_ref,
+                                              verbose=False)
         print(f"epoch: {epoch}, epoch_acc={epoch_acc}")
 
         # save best
@@ -230,8 +232,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             best_ref = shifts
             best_radius = radius
             best_tuning = tun_vectors
-            print("best_ref[0]", best_ref[0])
-            print("best_radius", best_radius)
 
         # apply early stopping
         if epoch_acc < best_acc - 0.01:
@@ -256,13 +256,11 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     return predictions, {'references': best_ref, 'radius': best_radius, 'tun_vectors': best_tuning}
 
 
-def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
+def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1, verbose=True):
 
     refs = params['references']
     radius = params['radius']
     tun_vectors = params['tun_vectors']
-    print("refs", refs)
-    print("radius", radius)
 
     n_dim = tf.shape(x)[-1]
     n_feat_maps = tf.shape(x)[1]
@@ -296,7 +294,7 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
         batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
 
         # get predictions
-        y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
+        y_pred = np.argmax(batch_preds, axis=1)
         if len(predictions) == 0:
             predictions = y_pred
         else:
@@ -304,10 +302,13 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
 
     # compute accuracy
     acc = accuracy_score(predictions, y[:, 0])
-    print(f"accuracy={acc}")
+    if verbose:
+        print(f"accuracy={acc}")
 
-    print(confusion_matrix(y[:, 0], predictions))
-    print(classification_report(y[:, 0], predictions))
+        print(confusion_matrix(y[:, 0], predictions))
+        print(classification_report(y[:, 0], predictions))
+
+    return acc, predictions
 
 
 

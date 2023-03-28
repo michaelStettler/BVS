@@ -56,7 +56,7 @@ def compute_loss_with_ref(proj: tf.Tensor, y: tf.Tensor, distance: tf.Tensor, al
 
 def prob_neutral(x, rho):
     d = tf.reduce_sum(tf.norm(x, axis=2), axis=1)
-    return 1 - (1 / 1 + tf.exp(-(d + rho)))
+    return 1 - (1 / (1 + tf.exp(-(d + rho))))
 
 
 def prob_expression(proj, p_neut):

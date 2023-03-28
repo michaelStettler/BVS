@@ -151,18 +151,22 @@ if __name__ == '__main__':
                                 plot_alpha=plot_alpha,
                                 plot_name="NRE_FERG_optimizer")
 
+    print("finish training")
+    print()
+
+    print("training accuracy")
     y_pred = estimate_NRE(x_train, y_train, params,
                           batch_size=batch_size,
                           n_ref=n_ref)
+    print()
 
+    print("test accuracy")
     # test accuracy
     x_test = tf.convert_to_tensor(x_test, dtype=tf.float32)
     y_test = tf.convert_to_tensor(y_test, dtype=tf.int32)
     test_pred = estimate_NRE(x_test, y_test, params,
                              batch_size=batch_size,
                              n_ref=n_ref)
-
-
 
     if profiler:
         with writer.as_default():
