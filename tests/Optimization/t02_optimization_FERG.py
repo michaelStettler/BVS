@@ -42,11 +42,13 @@ if __name__ == '__main__':
     crop_size = 2048
     plot_alpha = 0.1
     use_only_one_cat = None
+    early_stopping = False
 
     # define configuration
     config_file = 'NR_03_FERG_from_LMK_m0001.json'
     config_file = 'NR_03_FERG_from_LMK_w0001.json'
-    config_file = 'NR_03_FERG_alex.json'
+    # config_file = 'NR_03_FERG_alex.json'
+
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
     # config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
@@ -149,6 +151,7 @@ if __name__ == '__main__':
                                 lr=lr,
                                 alpha_ref=alpha_ref,
                                 n_epochs=n_epochs,
+                                early_stopping=early_stopping,
                                 do_plot=do_plot,
                                 plot_alpha=plot_alpha,
                                 plot_name="NRE_FERG_optimizer")
