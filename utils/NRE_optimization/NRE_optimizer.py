@@ -221,14 +221,21 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
 
         predictions = np.reshape(predictions, (-1))
         epoch_acc = accuracy_score(y[:, 0], predictions)
+
         if epoch_acc > best_acc:
+            print('Better accuracy! Saving parameters...')
             best_acc = epoch_acc
             best_ref = shifts
             best_radius = radius
             best_tuning = tun_vectors
+        best_acc = epoch_acc
+        best_ref = shifts
+        best_radius = radius
+        best_tuning = tun_vectors
 
         print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
         print(f"epoch: {epoch}, loss {loss}, epoch_acc={epoch_acc}")
+
         if epoch_acc < best_acc - 0.01:
             print()
             print("Reached better accuracy!")

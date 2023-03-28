@@ -31,10 +31,10 @@ if __name__ == '__main__':
     neutral_cat = None
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
-    lr = 1
-    alpha_ref = 1  # strength of the ref cat in the loss function
+    lr = 1e-3
+    alpha_ref = .1  # strength of the ref cat in the loss function
     batch_size = 512
-    n_epochs = 34
+    n_epochs = 30
     crop_size = 2048
     plot_alpha = 0.1
     use_only_one_cat = None

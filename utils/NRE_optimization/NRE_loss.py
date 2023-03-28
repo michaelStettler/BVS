@@ -56,11 +56,13 @@ def compute_loss_with_ref(proj: tf.Tensor, y: tf.Tensor, distance: tf.Tensor, al
 
 def prob_neutral(x, rho):
     d = tf.reduce_sum(tf.norm(x, axis=2), axis=1)
-    return 1 - (1 / 1 + tf.exp(-(d + rho)))
+    return 1 - (1 / (1 + tf.exp(-(d - rho))))
 
 
 def prob_expression(proj, p_neut):
+    proj = proj - tf.math.reduce_max(proj, axis=1, keepdims=True) # Eliminate overflow and underflow in exponential
     exp = tf.exp(proj)
+    # print('exp:', exp)
     sum_exp = tf.reduce_sum(exp, axis=1)
     soft = exp / tf.expand_dims(sum_exp, axis=1)
     return (1 - tf.expand_dims(p_neut, axis=1)) * soft
@@ -81,13 +83,34 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
 
     # p_neut = prob_neutral(x, rho)
     # weighted version
-    p_neut = prob_neutral(x, rho) * alpha_ref
+
+    ### I think that increasing p_neut and then renormalizing to a probability distribution introduces some unintended behavior
+    # p_neut = prob_neutral(x, rho) * alpha_ref
+    # p_expr = prob_expression(proj, p_neut)
+    # prob = tf.concat((tf.expand_dims(p_neut, axis=1), p_expr), axis=-1)
+
+
+    # by hand
+    p_neut = prob_neutral(x, rho)
     p_expr = prob_expression(proj, p_neut)
     prob = tf.concat((tf.expand_dims(p_neut, axis=1), p_expr), axis=-1)
 
-    # use dicrete labels but cannot have sample_weight
-    scce = tf.keras.losses.SparseCategoricalCrossentropy()
-    loss = scce(y, prob)
+    alpha = [alpha_ref] + (prob.shape[1] - 1) * [1]
+    alpha = tf.expand_dims(tf.convert_to_tensor(alpha, dtype='float'), 0)
+    one_hot = tf.one_hot(y, depth=7)
+    # print(tf.math.reduce_min(p_expr, axis=1))
+    logs = tf.math.log(prob + 1e-10)
+    product = logs * one_hot
+    product = alpha * product
+    entropy = tf.reduce_sum(product)
+    if tf.math.is_nan(entropy):
+        raise ValueError('Entropy got killed')
+    loss = - entropy
+
+
+    # # use dicrete labels but cannot have sample_weight
+    # scce = tf.keras.losses.SparseCategoricalCrossentropy()
+    # loss = scce(y, prob)
 
     # # use one hot since we want the sample weight
     # sw = tf.ones_like(prob)
