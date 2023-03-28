@@ -45,9 +45,9 @@ if __name__ == '__main__':
     early_stopping = False
 
     # define configuration
-    config_file = 'NR_03_FERG_from_LMK_m0001.json'
-    config_file = 'NR_03_FERG_from_LMK_w0001.json'
-    # config_file = 'NR_03_FERG_alex.json'
+    # config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    # config_file = 'NR_03_FERG_from_LMK_w0001.json'
+    config_file = 'NR_03_FERG_alex.json'
 
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
