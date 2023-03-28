@@ -183,14 +183,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                     # compute loss
                     loss += compute_loss_without_ref(projections, y_batch[:, 0])
 
-            # compute accuracy
-            y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
-            predictions.append(y_pred)
-            acc = accuracy_score(y_batch[:, 0], y_pred)
-
-            # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
-            print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
-
             # compute gradients
             grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
             # grad_shifts, grad_radius, grad_t_shifts = tape.gradient(loss, [shifts, radius, t_shifts])
@@ -206,6 +198,14 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # increase iteration
             it += 1
 
+            # compute accuracy
+            y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
+            predictions.append(y_pred)
+            acc = accuracy_score(y_batch[:, 0], y_pred)
+
+            # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
+            print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
+
         if do_plot:
             tun_vect = tun_vectors.numpy()
             # img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
@@ -219,19 +219,26 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # write image
             video.write(img)
 
+        # compute epoch accuracy
+        print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
         predictions = np.reshape(predictions, (-1))
         epoch_acc = accuracy_score(y[:, 0], predictions)
+        print(f"epoch: {epoch}, epoch_acc={epoch_acc}")
+
+        # save best
         if epoch_acc > best_acc:
+            print("save parameters")
             best_acc = epoch_acc
             best_ref = shifts
             best_radius = radius
             best_tuning = tun_vectors
+            print("best_ref[0]", best_ref[0])
+            print("best_radius", best_radius)
 
-        print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
-        print(f"epoch: {epoch}, loss {loss}, epoch_acc={epoch_acc}")
+        # apply early stopping
         if epoch_acc < best_acc - 0.01:
             print()
-            print("Reached better accuracy!")
+            print(f"Early stopping at {epoch}!")
             print("diff:", best_acc - epoch_acc)
             break
 
@@ -240,8 +247,9 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
         video.release()
 
     # print last one to keep in the log
-    print(f"{epoch} it: {it}, loss {loss}, train_acc={best_acc}")
-    print(f"radius; {radius}")
+    print(f"best_acc={best_acc}")
+    print("best ref[0]", best_ref[0])
+    print("best_radius", best_radius)
     # print("predictions")
     # print(predictions)
     print("y_pred", np.shape(y_pred))
@@ -255,6 +263,8 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
     refs = params['references']
     radius = params['radius']
     tun_vectors = params['tun_vectors']
+    print("refs", refs)
+    print("radius", radius)
 
     n_dim = tf.shape(x)[-1]
     n_feat_maps = tf.shape(x)[1]
