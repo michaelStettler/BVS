@@ -62,7 +62,6 @@ def prob_neutral(x, rho):
 def prob_expression(proj, p_neut):
     proj = proj - tf.math.reduce_max(proj, axis=1, keepdims=True) # Eliminate overflow and underflow in exponential
     exp = tf.exp(proj)
-    # print('exp:', exp)
     sum_exp = tf.reduce_sum(exp, axis=1)
     soft = exp / tf.expand_dims(sum_exp, axis=1)
     return (1 - tf.expand_dims(p_neut, axis=1)) * soft

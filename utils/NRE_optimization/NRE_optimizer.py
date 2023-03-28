@@ -206,6 +206,11 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # increase iteration
             it += 1
 
+            # compute accuracy
+            y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
+            acc = accuracy_score(y_batch[:, 0], y_pred)
+            print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
+
         if do_plot:
             tun_vect = tun_vectors.numpy()
             # img = plot_space(x.numpy(), y.numpy(), n_cat, shifts=shifts.numpy(), tun_vectors=tun_vect)
@@ -219,26 +224,28 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             # write image
             video.write(img)
 
-        predictions = np.reshape(predictions, (-1))
-        epoch_acc = accuracy_score(y[:, 0], predictions)
+        # compute epoch accuracy
+        print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
+        epoch_acc, predictions = estimate_NRE(x, y,
+                                              {'references': shifts, 'radius': radius, 'tun_vectors': tun_vectors},
+                                              n_ref=n_ref,
+                                              batch_size=batch_size,
+                                              use_ref=use_ref,
+                                              verbose=False)
+        print(f"epoch: {epoch}, epoch_acc={epoch_acc}")
 
+        # save best
         if epoch_acc > best_acc:
-            print('Better accuracy! Saving parameters...')
+            print("save parameters")
             best_acc = epoch_acc
             best_ref = shifts
             best_radius = radius
             best_tuning = tun_vectors
-        best_acc = epoch_acc
-        best_ref = shifts
-        best_radius = radius
-        best_tuning = tun_vectors
 
-        print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
-        print(f"epoch: {epoch}, loss {loss}, epoch_acc={epoch_acc}")
-
+        # apply early stopping
         if epoch_acc < best_acc - 0.01:
             print()
-            print("Reached better accuracy!")
+            print(f"Early stopping at {epoch}!")
             print("diff:", best_acc - epoch_acc)
             break
 
@@ -247,8 +254,9 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
         video.release()
 
     # print last one to keep in the log
-    print(f"{epoch} it: {it}, loss {loss}, train_acc={best_acc}")
-    print(f"radius; {radius}")
+    print(f"best_acc={best_acc}")
+    print("best ref[0]", best_ref[0])
+    print("best_radius", best_radius)
     # print("predictions")
     # print(predictions)
     print("y_pred", np.shape(y_pred))
@@ -257,7 +265,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
     return predictions, {'references': best_ref, 'radius': best_radius, 'tun_vectors': best_tuning}
 
 
-def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
+def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1, verbose=True):
 
     refs = params['references']
     radius = params['radius']
@@ -295,7 +303,7 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
         batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
 
         # get predictions
-        y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
+        y_pred = np.argmax(batch_preds, axis=1)
         if len(predictions) == 0:
             predictions = y_pred
         else:
@@ -303,10 +311,13 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1):
 
     # compute accuracy
     acc = accuracy_score(predictions, y[:, 0])
-    print(f"accuracy={acc}")
+    if verbose:
+        print(f"accuracy={acc}")
 
-    print(confusion_matrix(y[:, 0], predictions))
-    print(classification_report(y[:, 0], predictions))
+        print(confusion_matrix(y[:, 0], predictions))
+        print(classification_report(y[:, 0], predictions))
+
+    return acc, predictions
 
 
 

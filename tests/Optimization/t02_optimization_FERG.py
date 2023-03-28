@@ -18,12 +18,16 @@ matplotlib.use('agg')
 """
 run: python -m tests.Optimization.t02_optimization_FERG
 tensorboard: tensorboard --logdir logs/func
+
+
+300 epochs, lr = 1, loss = 2.11518, acc = 0.896557
+2000 epochs, lr = 1, loss = 2.06291, acc = 0.864654
 """
 
 
 if __name__ == '__main__':
     profiler = False
-    do_plot = True
+    do_plot = False
 
     # declare parameters
     n_dim = 2
@@ -31,19 +35,21 @@ if __name__ == '__main__':
     neutral_cat = None
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
-    lr = 1e-3
-    alpha_ref = .1  # strength of the ref cat in the loss function
+    lr = 1
+    alpha_ref = 6  # strength of the ref cat in the loss function
     batch_size = 512
-    n_epochs = 30
+    n_epochs = 40
     crop_size = 2048
     plot_alpha = 0.1
     use_only_one_cat = None
 
     # define configuration
-    # config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    config_file = 'NR_03_FERG_from_LMK_m0001.json'
+    config_file = 'NR_03_FERG_from_LMK_w0001.json'
     config_file = 'NR_03_FERG_alex.json'
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+    config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
     config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
     print("-- Config loaded --")
     print()
@@ -91,7 +97,9 @@ if __name__ == '__main__':
     x_test = test_data
     y_train = np.array([train_label, train_avatar]).T
     y_test = np.array([test_label, test_avatar]).T
+    print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
+    print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
 
     if crop_size is not None:
@@ -119,6 +127,8 @@ if __name__ == '__main__':
         ref_pts = x_train[y_train[:, 1] == r]  # take every pts from the ref of interest
         ref_label = y_train[y_train[:, 1] == r]
         neutral_ref_pts = ref_pts[ref_label[:, 0] == 0]  # take only the neutral cat (ref)
+        if len(neutral_ref_pts) == 0:
+            raise ValueError("No pts found, increase sample size")
         init_ref.append(neutral_ref_pts[0] + np.random.rand(n_latent, n_dim) * 0.01)  # initialize to first neutral pose
     init_ref = tf.convert_to_tensor(init_ref, tf.float32)
     print("init_ref", init_ref.shape)
@@ -143,10 +153,16 @@ if __name__ == '__main__':
                                 plot_alpha=plot_alpha,
                                 plot_name="NRE_FERG_optimizer")
 
+    print("finish training")
+    print()
+
+    print("training accuracy")
     y_pred = estimate_NRE(x_train, y_train, params,
                           batch_size=batch_size,
                           n_ref=n_ref)
+    print()
 
+    print("test accuracy")
     # test accuracy
     x_test = tf.convert_to_tensor(x_test, dtype=tf.float32)
     y_test = tf.convert_to_tensor(y_test, dtype=tf.int32)
