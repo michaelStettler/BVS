@@ -202,8 +202,6 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
             y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
             predictions.append(y_pred)
             acc = accuracy_score(y_batch[:, 0], y_pred)
-
-            # print(f"{epoch} loss {loss}, radius[0]: {radius[0]}", end='\r')
             print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
         if do_plot:
