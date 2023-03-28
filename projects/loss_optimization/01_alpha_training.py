@@ -9,40 +9,29 @@ from matplotlib import cm
 
 from utils.load_config import load_config
 from utils.load_data import load_data
-from utils.NRE_optimization.NRE_optimizer import optimize_NRE
-from utils.NRE_optimization.NRE_optimizer import estimate_NRE
+from utils.NRE_optimization.NRE_optimizer import fit_NRE
 
 viridis = cm.get_cmap('viridis', 12)
 matplotlib.use('agg')
 
 """
-run: python -m tests.Optimization.t02_optimization_FERG
-tensorboard: tensorboard --logdir logs/func
-
-
-300 epochs, lr = 1, loss = 2.11518, acc = 0.896557
-2000 epochs, lr = 1, loss = 2.06291, acc = 0.864654
+run: python -m projects.loss_optimization.01_alpha_training
 """
 
-
 if __name__ == '__main__':
-    profiler = False
     do_plot = False
+    save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
 
     # declare parameters
     n_dim = 2
     n_cat = 7
-    neutral_cat = None
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
     lr = 1e-1
-    alpha_ref = 6  # strength of the ref cat in the loss function
-    batch_size = 512
     n_epochs = 400
-    crop_size = 2048
-    plot_alpha = 0.1
-    use_only_one_cat = None
     early_stopping = False
+
+    alpha_ref = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     # define configuration
     config_file = 'NR_03_FERG_from_LMK_m0001.json'
@@ -78,22 +67,6 @@ if __name__ == '__main__':
     print("-- Data loaded --")
     print()
 
-    # get only the data from the cat of ref
-    if use_only_one_cat is not None:
-        n_ref = 1
-        cat_idx = np.arange(len(train_avatar))[train_avatar == use_only_one_cat]
-        train_avatar = train_avatar[cat_idx]
-        train_label = train_label[cat_idx]
-        train_data = train_data[cat_idx]
-        cat_idx = np.arange(len(test_avatar))[test_avatar == use_only_one_cat]
-        test_avatar = test_avatar[cat_idx]
-        test_data = test_data[cat_idx]
-        test_label = test_label[cat_idx]
-        print("shape train_data", np.shape(train_data))
-        print("shape test_data", np.shape(test_data))
-        print("len train_avatar", len(train_avatar))
-        print("len test_avatar", len(test_avatar))
-
     # create labels as [category, identity]
     x_train = train_data
     x_test = test_data
@@ -104,14 +77,6 @@ if __name__ == '__main__':
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
 
-    if crop_size is not None:
-        x_train = x_train[:crop_size]
-        y_train = y_train[:crop_size]
-        print("after crop:")
-        print("shape x_train", np.shape(x_train))
-        print("shape y_train", np.shape(y_train))
-
-
     # transform to tensor
     # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)
     x_train = tf.convert_to_tensor(x_train, dtype=tf.float32)
@@ -120,12 +85,8 @@ if __name__ == '__main__':
     print("shape y_train", y_train.shape)
 
     # set init ref to first neutral
-    init_ref = None
     init_ref = []
     for r in range(n_ref):
-        # get only the one cat of ref
-        if use_only_one_cat is not None:
-            r = use_only_one_cat
         ref_pts = x_train[y_train[:, 1] == r]  # take every pts from the ref of interest
         ref_label = y_train[y_train[:, 1] == r]
         neutral_ref_pts = ref_pts[ref_label[:, 0] == 0]  # take only the neutral cat (ref)
@@ -135,49 +96,33 @@ if __name__ == '__main__':
     init_ref = tf.convert_to_tensor(init_ref, tf.float32)
     print("init_ref", init_ref.shape)
 
-    if profiler:
-        # create logs and tensorboard
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        logdir = 'logs/func/%s' % stamp
-        writer = tf.summary.create_file_writer(logdir)
+    # optimize_NRE for each alpha
+    batch_size = len(x_train)
+    train_accuracies = []
+    test_accuracies = []
+    for alpha in alpha_ref:
+        print("Alpha:", alpha)
+        pred, params, metrics = fit_NRE(x_train, y_train, n_cat,
+                                        x_test=x_test,
+                                        y_test=y_test,
+                                        batch_size=batch_size,
+                                        n_ref=n_ref,
+                                        init_ref=init_ref,
+                                        lr=lr,
+                                        alpha_ref=alpha,
+                                        n_epochs=n_epochs,
+                                        early_stopping=early_stopping)
 
-        tf.summary.trace_on(graph=True, profiler=True)
+        print("finish training")
+        print(f"best_accuracy: {metrics['best_acc']}")
+        print()
 
-    # optimize_NRE
-    pred, params = optimize_NRE(x_train, y_train, n_cat,
-                                batch_size=batch_size,
-                                n_ref=n_ref,
-                                init_ref=init_ref,
-                                lr=lr,
-                                alpha_ref=alpha_ref,
-                                n_epochs=n_epochs,
-                                early_stopping=early_stopping,
-                                do_plot=do_plot,
-                                plot_alpha=plot_alpha,
-                                plot_name="NRE_FERG_optimizer")
+        # append results
+        train_accuracies.append(metrics['train_accuracies'])
+        test_accuracies.append(metrics['test_accuracies'])
 
-    print("finish training")
-    print()
-
-    print("training accuracy")
-    y_pred = estimate_NRE(x_train, y_train, params,
-                          batch_size=batch_size,
-                          n_ref=n_ref)
-    print()
-
-    print("test accuracy")
-    # test accuracy
-    x_test = tf.convert_to_tensor(x_test, dtype=tf.float32)
-    y_test = tf.convert_to_tensor(y_test, dtype=tf.int32)
-    test_pred = estimate_NRE(x_test, y_test, params,
-                             batch_size=batch_size,
-                             n_ref=n_ref)
-
-
-
-    if profiler:
-        with writer.as_default():
-            tf.summary.trace_export(
-                name="my_func_trace",
-                step=0,
-                profiler_outdir=logdir)
+    # save results
+    print("shape train_alpha_accuracy", np.shape(train_accuracies))
+    print("shape test_alpha_accuracy", np.shape(test_accuracies))
+    np.save(os.path.join(save_path, 'train_alpha_accuracy'), train_accuracies)
+    np.save(os.path.join(save_path, 'test_alpha_accuracy'), test_accuracies)
