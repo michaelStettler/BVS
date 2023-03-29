@@ -9,7 +9,7 @@ def compute_loss_without_ref(proj: tf.Tensor, y: tf.Tensor):
     :return:
     """
 
-    # compute sum of all exp proj
+    # compute sum of all exp poj
     # sum_proj = np.sum(np.exp(proj), axis=1)  # don't think this is the correct way for us (email)
     n_img = proj.shape[0]
 
