@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pickle
 
 import tensorflow as tf
 from datetime import datetime
@@ -33,7 +34,8 @@ if __name__ == '__main__':
     early_stopping = False
 
     # alpha_ref = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    alpha_ref = [.06]
+    alpha_ref = [i * 0.01 for i in range(1, 15)]
+    # alpha_ref = [0.06]
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
@@ -100,8 +102,8 @@ if __name__ == '__main__':
 
     # optimize_NRE for each alpha
     batch_size = len(x_train)
-    train_accuracies = []
-    test_accuracies = []
+    train_accuracies = {}
+    test_accuracies = {}
     for alpha in alpha_ref:
         print("Alpha:", alpha)
         pred, params, metrics = fit_NRE(x_train, y_train, n_cat,
@@ -120,11 +122,13 @@ if __name__ == '__main__':
         print()
 
         # append results
-        train_accuracies.append(metrics['train_accuracies'])
-        test_accuracies.append(metrics['test_accuracies'])
+        train_accuracies[alpha] = metrics['train_accuracies']
+        test_accuracies[alpha] = metrics['test_accuracies']
 
     # save results
-    print("shape train_alpha_accuracy", np.shape(train_accuracies))
-    print("shape test_alpha_accuracy", np.shape(test_accuracies))
-    np.save(os.path.join(save_path, 'train_alpha_accuracy'), train_accuracies)
-    np.save(os.path.join(save_path, 'test_alpha_accuracy'), test_accuracies)
+
+    with open(os.path.join(save_path, 'train_alpha_accuracy'), 'wb') as f:
+        pickle.dump(train_accuracies, f)
+
+    with open(os.path.join(save_path, 'test_alpha_accuracy'), 'wb') as f:
+        pickle.dump(test_accuracies, f)
