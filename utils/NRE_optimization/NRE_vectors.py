@@ -39,7 +39,20 @@ def compute_tun_vectors(x, y, n_cat, use_ref=False, type="average"):
                 # print(x_cat[:, f])
 
                 # svd results not consistent between torch and tf
+
+                ### DEBUGGING
                 s, u, vh = tf.linalg.svd(x_cat[:, f], full_matrices=False)
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(vh)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('SVD failed!')
+                    print('x shape:', x_cat[:, f].shape)
+                    print('x:', x_cat[:, f])
+                    print('min:', tf.math.reduce_min(x_cat[:, f]))
+                    print('max:', tf.math.reduce_max(x_cat[:, f]))
+                    print('nan values:', tf.math.is_nan(x_cat[:, f]))
+
+
                 # print("shape u, s, vh", u.shape, s.shape, vh.shape)
                 # print(vh)
 

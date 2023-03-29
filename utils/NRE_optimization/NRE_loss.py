@@ -106,6 +106,7 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
     product = alpha * product
     entropy = tf.reduce_sum(product)
     if tf.math.is_nan(entropy):
+        print('proj:', proj)
         print('p_expr', tf.math.reduce_min(p_expr, axis=1))
         print('p_neut', p_neut)
         print('logs:', tf.math.reduce_min(logs, axis=1))

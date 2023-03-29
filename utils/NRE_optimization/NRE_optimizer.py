@@ -357,6 +357,13 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
             batch_shifts = tf.zeros((x_batch.shape[0], n_feat_maps, n_dim), dtype=tf.float32, name="batch_shifts")
             loss = 0
 
+            ### DEBUG
+            # check whether the x values are already nan
+            nan = tf.experimental.numpy.ravel(tf.math.is_nan(x_batch)).numpy()
+            nan = list(nan)
+            if sum(nan) > 0:
+                print('x_batch are nan!')
+
             with tf.GradientTape() as tape:
                 tape.watch(shifts)
                 tape.watch(radius)
@@ -377,8 +384,32 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                     # assign value like: batch_shifts[indices] = shifts[indices]
                     batch_shifts = tf.tensor_scatter_nd_update(batch_shifts, indices, shifts_updates)
 
+                    ### DEBUG
+                    # check whether the shift values are already nan
+                    nan = tf.experimental.numpy.ravel(tf.math.is_nan(rep_shifts)).numpy()
+                    nan = list(nan)
+                    if sum(nan) > 0:
+                        print('Rep shifts are nan!')
+                        print('bRep shifts', batch_shifts)
+
+
+                ### DEBUG
+                # check whether the shift values are already nan
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(batch_shifts)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('Shifts are nan!')
+                    print('batch shifts:', batch_shifts)
+
                 # subtract  shifts to x
                 x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
+
+                ### DEBUG
+                # check whether the x_shifted values are already nan
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(x_shifted)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('x_shifted are nan!')
 
                 # get tun vectors
                 tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
@@ -389,9 +420,22 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                 # get projections
                 projections = compute_projections(x_shifted, tun_vectors)
 
+                ### DEBUG
+                # check whether the projections values are already nan
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(projections)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('Projections are nan!')
+
 
                 # compute preds
                 batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
+
+                ### DEBUG
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(batch_preds)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('batch_preds are nan!')
 
                 if use_ref:
                     loss += compute_loss_with_ref2(x_shifted, projections, y_batch[:, 0], radius, alpha_ref=alpha_ref)
@@ -399,6 +443,18 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                 else:
                     # compute loss
                     loss += compute_loss_without_ref(projections, y_batch[:, 0])
+
+                ### DEBUG
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(loss)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('loss is nan!')
+
+                ### DEBUG
+                nan = tf.experimental.numpy.ravel(tf.math.is_nan(radius)).numpy()
+                nan = list(nan)
+                if sum(nan) > 0:
+                    print('radius is nan!')
 
             # compute accuracy
             y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
@@ -409,9 +465,25 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
             # compute gradients
             grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
 
+            ### DEBUG
+            # check whether grads are already nan
+            nan = tf.experimental.numpy.ravel(tf.math.is_nan(grad_shifts)).numpy()
+            nan = list(nan)
+            if sum(nan) > 0:
+                print('grad shifts are nan!')
+                print('Number of nan values in tensori:', sum(nan))
+
             # update parameters
             shifts = shifts - lr * grad_shifts
             radius = radius - lr * grad_radius
+
+            ### DEBUG
+            # check whether the shifts values are already nan
+            nan = tf.experimental.numpy.ravel(tf.math.is_nan(shifts)).numpy()
+            nan = list(nan)
+            if sum(nan) > 0:
+                print('Shifts are nan after update!')
+                print('Number of nan values in tensor:', sum(nan))
 
             # increase iteration
             it += 1
