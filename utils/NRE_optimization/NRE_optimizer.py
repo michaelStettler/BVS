@@ -287,6 +287,9 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1, verbose=Tru
             # construct updates values
             rep_shifts = tf.repeat(tf.expand_dims(refs[r], axis=0), x_batch.shape[0], axis=0, name="rep_shifts")
             shifts_updates = tf.gather(rep_shifts, tf.squeeze(indices))
+            # Unsqueeze in case of 2-rank tensor (happens if only one training example)
+            if tf.rank(shifts_updates) < 3:
+                shifts_updates = tf.expand_dims(shifts_updates, 0)
 
             # assign value like: batch_shifts[indices] = shifts[indices]
             batch_shifts = tf.tensor_scatter_nd_update(batch_shifts, indices, shifts_updates)
@@ -339,9 +342,7 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
     shifts = tf.zeros((n_ref, n_feat_maps, n_dim), dtype=tf.float32, name="shifts")
     if init_ref is not None:
         shifts = tf.identity(init_ref, name="shifts")
-    print("shape shifts", shifts.shape)
     radius = tf.ones(1, dtype=tf.float32, name="radius")
-    print("shape radius", radius.shape)
     best_acc = 0
 
     best_ref = None
@@ -374,6 +375,9 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                     rep_shifts = tf.repeat(tf.expand_dims(shifts[r], axis=0), x_batch.shape[0],
                                            axis=0, name="rep_shifts")
                     shifts_updates = tf.gather(rep_shifts, tf.squeeze(indices))
+                    # Unsqueeze in case of 2-rank tensor (happens if only one training example)
+                    if tf.rank(shifts_updates) < 3:
+                        shifts_updates = tf.expand_dims(shifts_updates, 0)
 
                     # assign value like: batch_shifts[indices] = shifts[indices]
                     batch_shifts = tf.tensor_scatter_nd_update(batch_shifts, indices, shifts_updates)
@@ -468,7 +472,7 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
         losses.append(loss)
 
         if is_test_set:
-            epoch_test_acc, _ = estimate_NRE(x, y,
+            epoch_test_acc, _ = estimate_NRE(x_test, y_test,
                                              {'references': shifts, 'radius': radius,
                                               'tun_vectors': tun_vectors},
                                              n_ref=n_ref,

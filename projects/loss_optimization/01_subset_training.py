@@ -132,10 +132,6 @@ if __name__ == '__main__':
 
     # Initialize training subsets
     remaining_indices, x_sub, y_sub = get_first_samples(x_train, y_train)
-    print(x_sub.shape)
-    print(y_sub.shape)
-    print(x_train.shape)
-    print(len(remaining_indices))
 
     # Number of images to add on each epoch
     subset_increaser = np.concatenate((np.array([1]), 2 ** np.arange(15)))
@@ -146,6 +142,7 @@ if __name__ == '__main__':
                                                       remaining_indices=remaining_indices, x_sub=x_sub, y_sub=y_sub,
                                                       n_samples=n_new)
         n_sub = x_sub.shape[0]
+        print('number of images:', n_sub)
 
         # transform to tensor
         # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)
