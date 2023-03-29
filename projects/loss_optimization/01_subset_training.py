@@ -20,28 +20,53 @@ matplotlib.use('agg')
 run: python -m projects.loss_optimization.01_subset_training
 """
 
-def get_groups(y):
-    unique_labels = np.unique(y[:, 0])
+def get_first_samples(x_train, y_train):
+    x_sub = np.zeros((0, 10, 2))
+    y_sub = np.zeros((0, 2))
+
+    # partition data by category
+    unique_labels = np.unique(y_train[:, 0])
     groups = {}
     for cat in unique_labels:
-        groups[cat] = list(np.where(y[:, 0] == cat)[0])
-    return groups
+        groups[cat] = list(np.where(y_train[:, 0] == cat)[0])
 
-def add_samples(x_train, y_train, groups, x_sub=None, y_sub=None, n_samples=1):
-    if x_sub is None:
-        x_sub = np.zeros((0, 10, 2))
-        y_sub = np.zeros((0, 2))
-    # loop over unique categories (7)
+    # loop over non-neutral categories (6) and add a random sample from each category
     for cat in groups.keys():
-        # take random indices from group
-        idx = np.random.choice(groups[cat], size=n_samples, replace=False)
+        if cat == 0:
+            # skip neutral expression for now
+            continue
+        # take random index from group
+        id = np.random.choice(groups[cat], size=1, replace=False)
         # remove index from pool
-        for id in idx:
-            groups[cat].remove(id)
+        groups[cat].remove(id)
         # add index to the training set
-        x_sub = np.concatenate((x_sub, x_train[idx, :, :]), 0)
-        y_sub = np.concatenate((y_sub, y_train[idx, :]), 0)
-    return groups, x_sub, y_sub
+        x_sub = np.concatenate((x_sub, x_train[id, :, :]), 0)
+        y_sub = np.concatenate((y_sub, y_train[id, :]), 0)
+
+    # loop over avatars and take a random neutral sample from each avatar
+    for avatar in range(6):
+        idx = list(np.where((y_train == (0, avatar)).all(axis=1))[0])
+        id = np.random.choice(idx, size=1, replace=False)
+        # remove index from pool
+        groups[0].remove(id)
+        # add index to the training set
+        x_sub = np.concatenate((x_sub, x_train[id, :, :]), 0)
+        y_sub = np.concatenate((y_sub, y_train[id, :]), 0)
+
+    # undo partition into groups to sample randomly from now on
+    remaining_indices = []
+    for cat in groups.keys():
+        remaining_indices.extend(groups[cat])
+    return remaining_indices, x_sub, y_sub
+
+def add_samples(x_train, y_train, remaining_indices, x_sub=None, y_sub=None, n_samples=1):
+    new_idx = np.random.choice(remaining_indices, size=n_samples, replace=False)
+    for id in new_idx:
+        remaining_indices.remove(id)
+
+    x_sub = np.concatenate((x_sub, x_train[new_idx, :, :]), 0)
+    y_sub = np.concatenate((y_sub, y_train[new_idx, :]), 0)
+    return remaining_indices, x_sub, y_sub
 
 
 if __name__ == '__main__':
@@ -56,9 +81,10 @@ if __name__ == '__main__':
     n_ref = 6  # == n_cat
     lr = 1e-5
     n_epochs = 400
+    lr_decay = [75, 200, 300]
     early_stopping = False
 
-    alpha_ref = [0.06]
+    alpha_ref = 0.06
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
@@ -104,30 +130,30 @@ if __name__ == '__main__':
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
 
-    # Get training indices separated by group
-    groups = get_groups(y_train)
-
     # Initialize training subsets
-    x_sub, y_sub = None, None
+    remaining_indices, x_sub, y_sub = get_first_samples(x_train, y_train)
+    print(x_sub.shape)
+    print(y_sub.shape)
+    print(x_train.shape)
+    print(len(remaining_indices))
 
     # Number of images to add on each epoch
-    subset_increaser = np.concatenate((np.array([1]), 2 ** np.arange(12)))
+    subset_increaser = np.concatenate((np.array([1]), 2 ** np.arange(15)))
 
     # Loop to add samples to the training set
     for n_new in subset_increaser:
-        groups, x_sub, y_sub = add_samples(x_train=x_train, y_train=y_train,
-                                           groups=groups, x_sub=x_sub, y_sub=y_sub, n_samples=n_new)
-        print(x_sub.shape)
-        print(y_sub.shape)
+        remaining_indices, x_sub, y_sub = add_samples(x_train=x_train, y_train=y_train,
+                                                      remaining_indices=remaining_indices, x_sub=x_sub, y_sub=y_sub,
+                                                      n_samples=n_new)
         n_sub = x_sub.shape[0]
 
         # transform to tensor
         # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)
         x_sub = tf.convert_to_tensor(x_sub, dtype=tf.float32)
         y_sub = tf.convert_to_tensor(y_sub, dtype=tf.int32)
+        print(y_sub)
         print("shape x_sub", x_sub.shape)
         print("shape y_sub", y_sub.shape)
-
 
         # set init ref to first neutral
         init_ref = []
