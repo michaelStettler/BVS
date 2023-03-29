@@ -21,8 +21,8 @@ run: python -m projects.loss_optimization.01_alpha_training
 
 if __name__ == '__main__':
     do_plot = False
-    # save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
-    save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
+    save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
+    # save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
 
     # declare parameters
     n_dim = 2
@@ -39,13 +39,13 @@ if __name__ == '__main__':
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
-    # config_file = 'NR_03_FERG_from_LMK_w0001.json'
-    config_file = 'NR_03_FERG_alex.json'
+    config_file = 'NR_03_FERG_from_LMK_w0001.json'
+    # config_file = 'NR_03_FERG_alex.json'
 
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
-    # config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
-    config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
+    config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+    # config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
     print("-- Config loaded --")
     print()
 

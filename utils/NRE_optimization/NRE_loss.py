@@ -110,7 +110,10 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
         print('p_expr', tf.math.reduce_min(p_expr, axis=1))
         print('p_neut', p_neut)
         print('logs:', tf.math.reduce_min(logs, axis=1))
-        raise ValueError('Entropy got killed')
+        print('--------------------------------------------------------------------------------------------------------')
+        print('Entropy killed. Stop optimization here.')
+        print('--------------------------------------------------------------------------------------------------------')
+        return None
     loss = - entropy
 
     # # use one hot since we want the sample weight

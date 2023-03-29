@@ -438,11 +438,14 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                     print('batch_preds are nan!')
 
                 if use_ref:
-                    loss += compute_loss_with_ref2(x_shifted, projections, y_batch[:, 0], radius, alpha_ref=alpha_ref)
-
+                    batch_loss = compute_loss_with_ref2(x_shifted, projections, y_batch[:, 0], radius, alpha_ref=alpha_ref)
                 else:
                     # compute loss
-                    loss += compute_loss_without_ref(projections, y_batch[:, 0])
+                    batch_loss = compute_loss_without_ref(projections, y_batch[:, 0])
+                # Stop optimization if the loss breaks down
+                if batch_loss == None:
+                    break
+                loss += batch_loss
 
                 ### DEBUG
                 nan = tf.experimental.numpy.ravel(tf.math.is_nan(loss)).numpy()
@@ -471,7 +474,7 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
             nan = list(nan)
             if sum(nan) > 0:
                 print('grad shifts are nan!')
-                print('Number of nan values in tensori:', sum(nan))
+                print('Number of nan values in tensor:', sum(nan))
 
             # update parameters
             shifts = shifts - lr * grad_shifts
