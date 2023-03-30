@@ -21,31 +21,32 @@ run: python -m projects.loss_optimization.01_alpha_training
 
 if __name__ == '__main__':
     do_plot = False
-    save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
-    # save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
+    # save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
+    save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
 
     # declare parameters
     n_dim = 2
     n_cat = 7
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
-    lr = 1e-5
+    lr = 1e-4
     n_epochs = 400
+    lr_decay = [100, 150, 200, 300]
     early_stopping = False
 
     # alpha_ref = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    alpha_ref = [i * 0.01 for i in range(1, 15)]
-    # alpha_ref = [0.06]
+    # alpha_ref = [i * 0.01 for i in range(1, 15)]
+    alpha_ref = [0.1]
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
-    config_file = 'NR_03_FERG_from_LMK_w0001.json'
-    # config_file = 'NR_03_FERG_alex.json'
+    # config_file = 'NR_03_FERG_from_LMK_w0001.json'
+    config_file = 'NR_03_FERG_alex.json'
 
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
-    config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
-    # config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
+    # config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+    config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
     print("-- Config loaded --")
     print()
 
@@ -62,6 +63,7 @@ if __name__ == '__main__':
     test_data = np.load(config['test_lmk_pos'])
     print("shape train_data", np.shape(train_data))
     print("shape test_data", np.shape(test_data))
+
 
     # load avatar types
     train_avatar = np.load(config['train_avatar_type'])
@@ -80,6 +82,13 @@ if __name__ == '__main__':
     print("shape y_train", np.shape(y_train))
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
+
+    # ### Print problematic features
+    # dom0 = np.where(y_train[:, 1] == 0)[0]
+    # x_train = x_train[dom0, :, :]
+    # for i in range(x_train.shape[0]):
+    #     print(x_train[i, 6, :])
+    # raise ValueError('Error')
 
     # transform to tensor
     # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)

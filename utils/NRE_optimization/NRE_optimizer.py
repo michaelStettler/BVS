@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import tensorflow as tf
 import numpy as np
@@ -385,7 +386,6 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                 # subtract  shifts to x
                 x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
 
-
                 # get tun vectors
                 tun_vectors = compute_tun_vectors(x_shifted, y_batch[:, 0], n_cat, use_ref=use_ref)
                 # if epoch == 0 and it == 0:
@@ -423,6 +423,23 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
             if sum(nan) > 0:
                 print('grad shifts are nan!')
                 print('Number of nan values in tensor:', sum(nan))
+
+                # save everything
+                problems = {}
+                problems['batch_shifts'] = batch_shifts
+                problems['radius'] = radius
+                problems['grad_radius'] = grad_radius
+                problems['shifts'] = shifts
+                problems['grad_shifts'] = grad_shifts
+                problems['x_shifted'] = x_shifted
+                problems['tun_vectors'] = tun_vectors
+                problems['projections'] = projections
+                problems['loss'] = loss
+                save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
+                with open(os.path.join(save_path, 'problems'), 'wb') as f:
+                    pickle.dump(problems, f)
+                raise ValueError('Error')
+
 
                 # remove nans from the gradient
                 nan_indices = tf.where(tf.math.is_nan(grad_shifts))
