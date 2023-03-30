@@ -29,13 +29,14 @@ if __name__ == '__main__':
     n_cat = 7
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
-    lr = 1e-5
+    lr = 1e-4
     n_epochs = 400
+    lr_decay = [100, 150, 200, 300]
     early_stopping = False
 
     # alpha_ref = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    alpha_ref = [i * 0.01 for i in range(1, 15)]
-    # alpha_ref = [0.06]
+    # alpha_ref = [i * 0.01 for i in range(1, 15)]
+    alpha_ref = [0.1]
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
@@ -81,6 +82,15 @@ if __name__ == '__main__':
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
 
+
+    # ### Only test on non-neutrals
+    # non_neutral_idx = np.where(y_test[:, 0] == 0)[0]
+    # x_test = x_test[non_neutral_idx]
+    # y_test = y_test[non_neutral_idx]
+
+    print("shape x_test", np.shape(x_test))
+    print("shape y_test", np.shape(y_test))
+
     # transform to tensor
     # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)
     x_train = tf.convert_to_tensor(x_train, dtype=tf.float32)
@@ -104,6 +114,7 @@ if __name__ == '__main__':
     batch_size = len(x_train)
     train_accuracies = {}
     test_accuracies = {}
+    losses = {}
     for alpha in alpha_ref:
         print("Alpha:", alpha)
         pred, params, metrics = fit_NRE(x_train, y_train, n_cat,
@@ -115,6 +126,7 @@ if __name__ == '__main__':
                                         lr=lr,
                                         alpha_ref=alpha,
                                         n_epochs=n_epochs,
+                                        lr_decay=lr_decay,
                                         early_stopping=early_stopping)
 
         print("finish training")
@@ -124,6 +136,7 @@ if __name__ == '__main__':
         # append results
         train_accuracies[alpha] = metrics['train_accuracies']
         test_accuracies[alpha] = metrics['test_accuracies']
+        losses[alpha] = metrics['losses']
 
     # save results
 
@@ -132,3 +145,6 @@ if __name__ == '__main__':
 
     with open(os.path.join(save_path, 'test_alpha_accuracy'), 'wb') as f:
         pickle.dump(test_accuracies, f)
+
+    with open(os.path.join(save_path, 'alpha_losses'), 'wb') as f:
+        pickle.dump(losses, f)

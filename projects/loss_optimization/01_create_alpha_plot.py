@@ -25,4 +25,12 @@ plt.ylabel('Accuracy')
 plt.legend()
 plt.show()
 
+for alpha in test_accuracy.keys():
+    plt.plot(test_accuracy[alpha], label=str(alpha))
+plt.title('Test set classification accuracy for different balancing parameters')
+plt.xlabel('Training epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
 
