@@ -29,14 +29,14 @@ if __name__ == '__main__':
     n_cat = 7
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
-    lr = 1e-4
-    n_epochs = 400
-    lr_decay = [100, 150, 200, 300]
+    lr = 1e-3
+    n_epochs = 150
+    lr_decay = [150]
     early_stopping = False
 
     # alpha_ref = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     # alpha_ref = [i * 0.01 for i in range(1, 15)]
-    alpha_ref = [0.1]
+    alpha_ref = [1]
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
@@ -83,20 +83,13 @@ if __name__ == '__main__':
     print("shape y_test", np.shape(y_test))
 
 
-    # ### Only test on non-neutrals
-    # non_neutral_idx = np.where(y_test[:, 0] == 0)[0]
-    # x_test = x_test[non_neutral_idx]
-    # y_test = y_test[non_neutral_idx]
+    ### Only test on neutrals
+    non_neutral_idx = np.where(y_test[:, 0] == 0)[0]
+    x_test = x_test[non_neutral_idx]
+    y_test = y_test[non_neutral_idx]
 
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
-
-    # ### Print problematic features
-    # dom0 = np.where(y_train[:, 1] == 0)[0]
-    # x_train = x_train[dom0, :, :]
-    # for i in range(x_train.shape[0]):
-    #     print(x_train[i, 6, :])
-    # raise ValueError('Error')
 
     # transform to tensor
     # init_ref = tf.convert_to_tensor(x_train[[0, 20]] + 0.01, dtype=tf.float64)

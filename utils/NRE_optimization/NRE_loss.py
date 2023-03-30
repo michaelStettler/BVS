@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 
 def compute_loss_without_ref(proj: tf.Tensor, y: tf.Tensor):
@@ -58,7 +59,6 @@ def prob_neutral(x, rho):
     # add epsilon noise to x to avoid gradient loss if x = 0
     eps = tf.random.normal(x.shape) * 1e-10
     x = x + eps
-
     d = tf.reduce_sum(tf.norm(x, axis=2), axis=1)
     return 1 - (1 / (1 + tf.exp(-(d - rho))))
 

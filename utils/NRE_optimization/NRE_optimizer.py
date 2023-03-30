@@ -21,28 +21,21 @@ def batch(x, y, n=32):
         yield x[ndx:min(ndx + n, l)], y[ndx:min(ndx + n, l)]
 
 
-def compute_NRE_preds(projections, radius, use_ref=False):
+def compute_NRE_preds(x, projections, radius, use_ref=False):
     # everything that is under the radius is considered as category ref
     if use_ref:
-        # get only the max proj to see if they are within the circle
-        max_proj = np.amax(projections, axis=2)
-        # consider only the absolute values as we want to be in the circle
-        ref_proj = np.abs(max_proj)
-        # set to zero all values within the radius (they don't count)
-        ref_proj[ref_proj < radius] = 0
-        # compute sum per entry (need that all pts are within the radius)
-        ref_proj = np.sum(ref_proj, axis=1)
-        # if the sum is zero, that means we are everywhere within the radius, thus it is a ref point
-        ref_proj[ref_proj > 0] = -1
-        ref_proj[ref_proj == 0] = float("inf")
-        ref_proj[ref_proj < 1] = 0
-        # set ref values
-        projections[..., 0] = np.repeat(np.expand_dims(ref_proj, axis=1), projections.shape[1], axis=1)
-
-    # add projections per feature maps
-    predictions = np.sum(projections, axis=1)
-
-    return predictions
+        # compute d for p_neutral
+        d = np.sum(np.linalg.norm(x, axis=2), axis=1)
+        print('d', np.min(d), np.median(d), np.max(d))
+        # sum over features maps
+        proj = np.sum(projections, axis=1)
+        # max projection length
+        max_proj = np.amax(np.abs(proj), axis=1)
+        # max projection direction
+        preds = np.argmax(np.abs(proj), axis=1)
+        # set to zero all values within the radius (classified as neutrals)
+        preds[d < radius] = 0
+    return preds
 
 
 
@@ -169,7 +162,7 @@ def optimize_NRE(x, y, n_cat, use_ref=True, batch_size=32, n_ref=1, init_ref=Non
                 # print(projections)
 
                 # compute preds
-                batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
+                batch_preds = compute_NRE_preds(x_shifted.numpy(), projections.numpy(), radius.numpy(), use_ref=use_ref)
 
                 if use_ref:
                     # sig_distance = compute_distance(x_shifted, batch_radius)
@@ -298,18 +291,17 @@ def estimate_NRE(x, y, params, use_ref=True, batch_size=32, n_ref=1, verbose=Tru
         # subtract  shifts to x
         x_shifted = tf.subtract(x_batch, batch_shifts, name="x_shifted")
 
-        # # get projections
+        # get projections
         projections = compute_projections(x_shifted, tun_vectors)
 
         # compute preds
-        batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
+        batch_preds = compute_NRE_preds(x_shifted.numpy(), projections.numpy(), radius.numpy(), use_ref=use_ref)
 
         # get predictions
-        y_pred = np.argmax(batch_preds, axis=1)
         if len(predictions) == 0:
-            predictions = y_pred
+            predictions = batch_preds
         else:
-            predictions = np.concatenate((predictions, y_pred))
+            predictions = np.concatenate((predictions, batch_preds))
 
     # compute accuracy
     acc = accuracy_score(predictions, y[:, 0])
@@ -396,7 +388,7 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                 projections = compute_projections(x_shifted, tun_vectors)
 
                 # compute preds
-                batch_preds = compute_NRE_preds(projections.numpy(), radius.numpy(), use_ref=use_ref)
+                batch_preds = compute_NRE_preds(x_shifted.numpy(), projections.numpy(), radius.numpy(), use_ref=use_ref)
 
                 if use_ref:
                     batch_loss = compute_loss_with_ref2(x_shifted, projections, y_batch[:, 0], radius, alpha_ref=alpha_ref)
@@ -409,9 +401,8 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
                 loss += batch_loss
 
             # compute accuracy
-            y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
-            predictions.append(y_pred)
-            acc = accuracy_score(y_batch[:, 0], y_pred)
+            predictions.append(batch_preds)
+            acc = accuracy_score(y_batch[:, 0], batch_preds)
             print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
 
             # compute gradients
@@ -475,9 +466,9 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
             it += 1
 
             # compute accuracy
-            y_pred = np.argmax(batch_preds, axis=1)  # sum vectors over all feature space
-            acc = accuracy_score(y_batch[:, 0], y_pred)
+            acc = accuracy_score(y_batch[:, 0], batch_preds)
             print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}", end='\r')
+            print('radius:', radius)
 
         # compute epoch accuracy
         print(f"it: {it}, loss={loss:.4f}, train_acc={acc:.3f}")  # simply to re-print because of the EOL
