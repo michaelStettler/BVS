@@ -21,8 +21,8 @@ run: python -m projects.loss_optimization.01_alpha_training
 
 if __name__ == '__main__':
     do_plot = False
-    # save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
-    save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
+    save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
+    # save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
 
     # declare parameters
     n_dim = 2
@@ -40,13 +40,13 @@ if __name__ == '__main__':
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
-    # config_file = 'NR_03_FERG_from_LMK_w0001.json'
-    config_file = 'NR_03_FERG_alex.json'
+    config_file = 'NR_03_FERG_from_LMK_w0001.json'
+    # config_file = 'NR_03_FERG_alex.json'
 
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
-    # config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
-    config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
+    config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+    # config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
     print("-- Config loaded --")
     print()
 
@@ -64,7 +64,6 @@ if __name__ == '__main__':
     print("shape train_data", np.shape(train_data))
     print("shape test_data", np.shape(test_data))
 
-
     # load avatar types
     train_avatar = np.load(config['train_avatar_type'])
     test_avatar = np.load(config['test_avatar_type'])
@@ -80,6 +79,15 @@ if __name__ == '__main__':
     y_test = np.array([test_label, test_avatar]).T
     print("shape x_train", np.shape(x_train))
     print("shape y_train", np.shape(y_train))
+    print("shape x_test", np.shape(x_test))
+    print("shape y_test", np.shape(y_test))
+
+
+    # ### Only test on non-neutrals
+    # non_neutral_idx = np.where(y_test[:, 0] == 0)[0]
+    # x_test = x_test[non_neutral_idx]
+    # y_test = y_test[non_neutral_idx]
+
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
 
@@ -113,6 +121,7 @@ if __name__ == '__main__':
     batch_size = len(x_train)
     train_accuracies = {}
     test_accuracies = {}
+    losses = {}
     for alpha in alpha_ref:
         print("Alpha:", alpha)
         pred, params, metrics = fit_NRE(x_train, y_train, n_cat,
@@ -124,6 +133,7 @@ if __name__ == '__main__':
                                         lr=lr,
                                         alpha_ref=alpha,
                                         n_epochs=n_epochs,
+                                        lr_decay=lr_decay,
                                         early_stopping=early_stopping)
 
         print("finish training")
@@ -133,6 +143,7 @@ if __name__ == '__main__':
         # append results
         train_accuracies[alpha] = metrics['train_accuracies']
         test_accuracies[alpha] = metrics['test_accuracies']
+        losses[alpha] = metrics['losses']
 
     # save results
 
@@ -141,3 +152,6 @@ if __name__ == '__main__':
 
     with open(os.path.join(save_path, 'test_alpha_accuracy'), 'wb') as f:
         pickle.dump(test_accuracies, f)
+
+    with open(os.path.join(save_path, 'alpha_losses'), 'wb') as f:
+        pickle.dump(losses, f)

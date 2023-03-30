@@ -416,6 +416,8 @@ def fit_NRE(x, y, n_cat, x_test=None, y_test=None, use_ref=True, batch_size=32, 
 
             # compute gradients
             grad_shifts, grad_radius = tape.gradient(loss, [shifts, radius])
+            # print(tf.math.reduce_min(grad_shifts))
+            # print(tf.math.reduce_max(grad_shifts))
 
             # check whether grads are nan
             nan = tf.experimental.numpy.ravel(tf.math.is_nan(grad_shifts)).numpy()
