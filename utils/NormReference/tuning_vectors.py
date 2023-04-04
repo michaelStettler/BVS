@@ -76,11 +76,12 @@ def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize
         tun_vectors = learn_tun_vectors(filt_lmk_pos, filt_labels, ref_vectors, filt_avatar_labels, idx_array=idx_array)
 
         # compute projections
-        projections_preds = compute_projections(lmk_pos, avatar_labels, ref_vectors, tun_vectors,
+        # projections_preds = compute_projections(lmk_pos, avatar_labels, ref_vectors, tun_vectors,
+        projections_preds = compute_projections(filt_lmk_pos, filt_avatar_labels, ref_vectors, tun_vectors,
                                                 neutral_threshold=5,
                                                 verbose=False)
         # compute accuracy
-        new_accuracy = compute_accuracy(projections_preds, labels)
+        new_accuracy = compute_accuracy(projections_preds, filt_labels)
 
         if new_accuracy > accuracy:
             print("new accuracy: {}, idx: {} (matching {})".format(new_accuracy, i, cat_img_idx[i]))
