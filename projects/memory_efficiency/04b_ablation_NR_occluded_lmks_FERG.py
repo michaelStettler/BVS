@@ -21,11 +21,11 @@ run: python -m projects.memory_efficiency.04b_ablation_NR_occluded_lmks_FERG
 Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
-# computer = "mac"
-computer = "windows"
+computer = "mac"
+# computer = "windows"
 # avatar_type = None
 avatar_type = 5
-do_optimize = True
+do_optimize = False
 conditions = ["eyes", "mouth", "left", "right"]
 cond = 3
 if conditions[cond] == "eyes":

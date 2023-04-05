@@ -22,7 +22,7 @@ Optimize the tuning direction over all dataset, no mather the avatar type
 """
 
 avatar_type = None
-avatar_type = 5
+avatar_type = 0
 do_optimize = False
 
 
