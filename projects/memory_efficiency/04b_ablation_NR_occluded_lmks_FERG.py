@@ -21,11 +21,11 @@ run: python -m projects.memory_efficiency.04b_ablation_NR_occluded_lmks_FERG
 Optimize the tuning direction over all dataset, using only part of the lmks
 """
 
-computer = "mac"
-# computer = "windows"
+# computer = "mac"
+computer = "windows"
 # avatar_type = None
 avatar_type = 5
-do_optimize = False
+do_optimize = True
 conditions = ["eyes", "mouth", "left", "right"]
 cond = 3
 if conditions[cond] == "eyes":
@@ -59,9 +59,9 @@ n_cat = 7
 
 #%%
 # Load data
-train_data = load_data(config, get_raw=True)
+train_data = load_data(config, get_raw=True, get_only_label=True)
 train_label = train_data[1]
-test_data = load_data(config, train=False, get_raw=True)
+test_data = load_data(config, train=False, get_raw=True, get_only_label=True)
 test_label = test_data[1]
 print("shape train_data[0]", np.shape(train_data[0]))
 print("shape test_data[0]", np.shape(test_data[0]))
@@ -166,66 +166,122 @@ if do_optimize:
 if conditions[cond] == "eyes":
     if avatar_type is None:
         idx_array = [0, 591, 1972, 2676, 3818, 282, 4413]  # NRE-I best
+    # with accuracy computed on the full dataset
+    # elif avatar_type == 0:
+    #     idx_array = [0, 236, 103, 285, 853, 668, 67]  # NRE-Jules best
+    # elif avatar_type == 1:
+    #     idx_array = [0, 45, 392, 488, 294, 579, 606]  # NRE-malcolm best
+    # elif avatar_type == 2:
+    #     idx_array = [0, 660, 34, 485, 517, 789, 541]  # NRE-ray best
+    # elif avatar_type == 3:
+    #     idx_array = [0, 112, 377, 132, 1386, 791, 1249]  # NRE-aia best
+    # elif avatar_type == 4:
+    #     idx_array = [0, 1132, 315, 726, 1171, 954, 20]  # NRE-bonnie best
+    # elif avatar_type == 5:
+    #     idx_array = [0, 609, 979, 132, 225, 660, 137]  # NRE-mery best
+
     elif avatar_type == 0:
-        idx_array = [0, 236, 103, 285, 853, 668, 67]  # NRE-Jules best
+        idx_array = [0, 116, 0, 0, 642, 3, 2]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, 45, 392, 488, 294, 579, 606]  # NRE-malcolm best
+        idx_array = [0, 64, 148, 23, 620, 3, 928]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, 660, 34, 485, 517, 789, 541]  # NRE-ray best
+        idx_array = [0, 573, 435, 72, 0, 555, 96]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, 112, 377, 132, 1386, 791, 1249]  # NRE-aia best
+        idx_array = [0, 651, 2, 68, 173, 0, 765]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, 1132, 315, 726, 1171, 954, 20]  # NRE-bonnie best
+        idx_array = [0, 215, 0, 1080, 137, 757, 594]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, 609, 979, 132, 225, 660, 137]  # NRE-mery best
+        idx_array = [0, 135, 1063, 18, 201, 394, 105]  # NRE-mery best
 
 elif conditions[cond] == "mouth":
     if avatar_type is None:
         idx_array = [0, 1121, 5498, 3305, 4216, 4802, 4734]  # NRE-I best
+    # with accuracy computed on the full dataset
+    # elif avatar_type == 0:
+    #     idx_array = [0, 570, 237, 684, 1210, 570, 665]  # NRE-Jules best
+    # elif avatar_type == 1:
+    #     idx_array = [0, 351, 407, 58, 758, 155, 411]  # NRE-malcolm best
+    # elif avatar_type == 2:
+    #     idx_array = [0, 489, 1148, 61, 753, 593, 651]  # NRE-ray best
+    # elif avatar_type == 3:
+    #     idx_array = [0, 901, 1100, 327, 189, 227, 793]  # NRE-aia best
+    # elif avatar_type == 4:
+    #     idx_array = [0, 812, 880, 1069, 1080, 135, 400]  # NRE-bonnie best
+    # elif avatar_type == 5:
+    #     idx_array = [0, 795, 179, 156, 127, 445, 527]  # NRE-mery best
+
     elif avatar_type == 0:
-        idx_array = [0, 570, 237, 684, 1210, 570, 665]  # NRE-Jules best
+        idx_array = [0, 922, 64, 228, 408, 550, 991]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, 351, 407, 58, 758, 155, 411]  # NRE-malcolm best
+        idx_array = [0, 319, 352, 159, 169, 480, 163]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, 489, 1148, 61, 753, 593, 651]  # NRE-ray best
+        idx_array = [0, 626, 9, 510, 237, 8, 175]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, 901, 1100, 327, 189, 227, 793]  # NRE-aia best
+        idx_array = [0, 447, 626, 765, 726, 574, 257]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, 812, 880, 1069, 1080, 135, 400]  # NRE-bonnie best
+        idx_array = [0, 335, 292, 212, 856, 0, 1500]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, 795, 179, 156, 127, 445, 527]  # NRE-mery best
+        idx_array = [0, 85, 867, 162, 163, 301, 625]  # NRE-mery best
 
 elif conditions[cond] == "left":
     if avatar_type is None:
         idx_array = [0, 3670, 5812, 379, 6725, 247, 5777]  # NRE-I best
+    # with accuracy computed on the full dataset
+    # elif avatar_type == 0:
+    #     idx_array = [0, 363, 95, 326, 1439, 1086, 518]  # NRE-Jules best
+    # elif avatar_type == 1:
+    #     idx_array = [0, 371, 702, 483, 574, 766, 3]  # NRE-malcolm best
+    # elif avatar_type == 2:
+    #     idx_array = [0, 121, 734, 836, 306, 556, 423]  # NRE-ray best
+    # elif avatar_type == 3:
+    #     idx_array = [0, 763, 1157, 8, 471, 316, 317]  # NRE-aia best
+    # elif avatar_type == 4:
+    #     idx_array = [0, 95, 321, 877, 1247, 305, 614]  # NRE-bonnie best
+    # elif avatar_type == 5:
+    #     idx_array = [0, 748, 141, 651, 407, 26, 326]  # NRE-mery best
+
     elif avatar_type == 0:
-        idx_array = [0, 363, 95, 326, 1439, 1086, 518]  # NRE-Jules best
+        idx_array = [0, 784, 926, 262, 6, 61, 35]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, 371, 702, 483, 574, 766, 3]  # NRE-malcolm best
+        idx_array = [0, 749, 702, 356, 529, 57, 285]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, 121, 734, 836, 306, 556, 423]  # NRE-ray best
+        idx_array = [0, 481, 255, 205, 304, 4, 204]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, 763, 1157, 8, 471, 316, 317]  # NRE-aia best
+        idx_array = [0, 144, 622, 44, 730, 751, 1002]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, 95, 321, 877, 1247, 305, 614]  # NRE-bonnie best
+        idx_array = [0, 387, 829, 1119, 178, 305, 1460]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, 748, 141, 651, 407, 26, 326]  # NRE-mery best
+        idx_array = [0, 839, 572, 384, 127, 623, 236]  # NRE-mery best
 
 elif conditions[cond] == "right":
     if avatar_type is None:
         idx_array = [0, 4750, 757, 844, 5555, 1420, 2981]  # NRE-I best
+    # with accuracy computed on the full dataset
+    # elif avatar_type == 0:
+    #     idx_array = [0, 188, 286, 68, 1022, 521, 357]  # NRE-Jules best
+    # elif avatar_type == 1:
+    #     idx_array = [0, 25, 698, 120, 638, 548, 618]  # NRE-malcolm best
+    # elif avatar_type == 2:
+    #     idx_array = [0, 369, 637, 578, 500, 443, 742]  # NRE-ray best
+    # elif avatar_type == 3:
+    #     idx_array = [0, 915, 315, 128, 940, 633, 383]  # NRE-aia best
+    # elif avatar_type == 4:
+    #     idx_array = [0, 459, 1006, 412, 631, 220, 572]  # NRE-bonnie best
+    # elif avatar_type == 5:
+    #     idx_array = [0, 386, 224, 313, 439, 388, 173]  # NRE-mery best
+
     elif avatar_type == 0:
-        idx_array = [0, 188, 286, 68, 1022, 521, 357]  # NRE-Jules best
+        idx_array = [0, 250, 448, 262, 194, 1, 28]  # NRE-Jules best
     elif avatar_type == 1:
-        idx_array = [0, 25, 698, 120, 638, 548, 618]  # NRE-malcolm best
+        idx_array = [0, 351, 485, 169, 419, 377, 925]  # NRE-malcolm best
     elif avatar_type == 2:
-        idx_array = [0, 369, 637, 578, 500, 443, 742]  # NRE-ray best
+        idx_array = [0, 481, 168, 455, 348, 0, 169]  # NRE-ray best
     elif avatar_type == 3:
-        idx_array = [0, 915, 315, 128, 940, 633, 383]  # NRE-aia best
+        idx_array = [0, 118, 644, 44, 141, 179, 260]  # NRE-aia best
     elif avatar_type == 4:
-        idx_array = [0, 459, 1006, 412, 631, 220, 572]  # NRE-bonnie best
+        idx_array = [0, 529, 191, 581, 635, 305, 273]  # NRE-bonnie best
     elif avatar_type == 5:
-        idx_array = [0, 386, 224, 313, 439, 388, 173]  # NRE-mery best
+        idx_array = [0, 611, 1076, 257, 14, 37, 478]  # NRE-mery best
 
 # learn tun vectors from one avatar
 opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
