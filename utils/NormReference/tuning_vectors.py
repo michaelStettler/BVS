@@ -116,8 +116,11 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
         norm_t = np.linalg.norm(tun_vectors, axis=2)
     elif norm_type == 'categorical':
         norm_t = np.linalg.norm(tun_vectors, axis=2)
-        norm_t = np.linalg.norm(norm_t, axis=1)
-        norm_t = np.repeat(np.expand_dims(norm_t, axis=1), np.shape(tun_vectors)[1], axis=1)
+        norm_t = np.linalg.norm(norm_t, axis=1, keepdims=True)
+        norm_t = np.repeat(norm_t, np.shape(tun_vectors)[1], axis=1)
+    elif norm_type == 'frobenius':
+        norm_t = np.linalg.norm(tun_vectors, axis=(1, 2), keepdims=True)
+        norm_t = np.repeat(norm_t[..., 0], np.shape(tun_vectors)[1], axis=1)
     else:
         raise NotImplementedError("norm_type {} is not a valid type".format(norm_type))
 

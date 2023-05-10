@@ -32,6 +32,7 @@
   "init_sigma": 1000,
   "k_size": [5, 5],
   "use_only_last": true,
-  "condition_names": ["Hum. Anger", "Hum. Fear", "Monk. Anger", "Monk. Fear"]
+  "condition_names": ["Hum. Anger", "Hum. Fear", "Monk. Anger", "Monk. Fear"],
+  "save_path": "model_preds"
 
 }
