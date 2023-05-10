@@ -19,14 +19,20 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 """
 
 #%% import config
+config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json'
+config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json'
+config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_affectnet_w0001.json'
 config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'
+config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'
+config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 cond = 0
-condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
+conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
+condition = conditions[cond]
 morph_csv = [os.path.join(config['directory'], "morphing_space_human_orig.csv"),
              os.path.join(config['directory'], "morphing_space_monkey_orig.csv"),
              os.path.join(config['directory'], "morphing_space_human_equi.csv"),
@@ -35,7 +41,7 @@ morph_csv = [os.path.join(config['directory'], "morphing_space_human_orig.csv"),
 # edit dictionary for single condition type
 if cond is not None:
     config["train_csv"] = morph_csv[cond]
-    config["condition"] = condition[cond]
+    config["condition"] = condition
     if "human" in condition[cond]:
         config["avatar_types"] = ["human"]
     else:

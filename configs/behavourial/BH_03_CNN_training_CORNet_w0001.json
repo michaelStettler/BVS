@@ -1,6 +1,6 @@
 {
-  "config_name": "BH_03_CNN_training_VGG19_w0003",
-  "project": "VGG19_imagenet_scratch",
+  "config_name": "BH_03_CNN_training_CORNet_w0001",
+  "project": "CORNet_affectnet",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
@@ -10,14 +10,13 @@
   "test_csv": "D:/Dataset/MorphingSpace/morphing_space_human_orig_val.csv",
   "directory": "D:/Dataset/MorphingSpace",
   "input_shape": [224, 224, 3],
-  "extraction_model": "VGG19",
+  "extraction_model": "ResNet50V2",
   "include_top": false,
-  "weights": "None",
-  "base_learning_rate": 0.0002,
+  "weights": "D:/DNN_weights/CORnet_S_m0003_affectnet_resnetv2_blue_2022-02-18_03-44",
+  "base_learning_rate": 0.001,
   "momentum": 0.9,
-  "decay_rate": 0.96,
-  "decay_steps": 10,
+  "decay_rate": 0.9,
   "initial_epochs": 45,
   "batch_size": 64,
-  "l2_regularization": 0.01
+  "transfer_layer": "scratch"
 }

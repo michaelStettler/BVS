@@ -17,9 +17,11 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 
 #%% import config
 config_path = 'BH_03_CNN_training_ResNet50v2_w0001.json'  # ResNet50v2_imagenet
-config_path = 'BH_03_CNN_training_VGG19_w0001.json'       # VGG19_imagenet
-config_path = 'BH_03_CNN_training_VGG19_w0002.json'       # VGG19_imagenet_conv3_3
-config_path = 'BH_03_CNN_training_VGG19_w0003.json'       # VGG19_imagenet_scratch
+config_path = 'BH_03_CNN_training_ResNet50v2_w0002.json'      # ResNet50v2_affectnet
+#config_path = 'BH_03_CNN_training_VGG19_w0001.json'       # VGG19_imagenet
+#onfig_path = 'BH_03_CNN_training_VGG19_w0002.json'       # VGG19_imagenet_conv3_3
+#config_path = 'BH_03_CNN_training_VGG19_w0003.json'       # VGG19_imagenet_scratch
+config_path = 'BH_03_CNN_training_CORNet_w0001.json'       # CORNet_affectnet
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
@@ -43,21 +45,38 @@ from wandb.keras import WandbMetricsLogger
 #         'batch_size': {'value': 64}
 #     }
 # }
+# VGG scratch
+# sweep_config = {
+#     'method': 'grid',
+#     'metric': {
+#         'metric': {'goal': 'maximize', 'name': 'val_acc'},
+#     },
+#     'parameters': {
+#         'lr': {'values': [0.001]},
+#         'epoch': {'values': [1200]},
+#         'decay_step': {'values': [1200]},
+#         'decay_rate': {'values': [0.96]},
+#         'momentum': {'value': 0.9},
+#         'batch_size': {'value': 64},
+#         'l2': {'values': [0.001]},
+#     }
+#
+# }
+# Resnet_affectnet
 sweep_config = {
     'method': 'grid',
     'metric': {
         'metric': {'goal': 'maximize', 'name': 'val_acc'},
     },
     'parameters': {
-        'lr': {'values': [0.001, 0.0002, 0.0001]},
-        'epoch': {'values': [1200]},
-        'decay_step': {'values': [1200]},
-        'decay_rate': {'values': [0.96]},
+        'lr': {'values': [0.02, 0.01]},
+        'epoch': {'values': [180]},
+        'decay_step': {'values': [25, 30]},
+        'decay_rate': {'values': [.7, .75]},
         'momentum': {'value': 0.9},
         'batch_size': {'value': 64},
-        'l2': {'values': [0.001, 0.01, 0.1]},
+        'l2': {'values': [0.5, 0.7, 0.9]}
     }
-
 }
 pprint.pprint(sweep_config)
 
@@ -86,43 +105,62 @@ def main():
     print()
 
     #%% create model
+
+    # load weights
+    if config["weights"] == "imagenet":
+        weights = config["weights"]
+    elif config["weights"] == "None":
+        weights = None
+    else:
+        load_custom_model = True
+        weights = config["weights"]
+    print(f"Weight Loaded: {config['weights']}")
+
+    if "ResNet" in config["project"]:
+        preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
+        if load_custom_model:
+            print("load custom ResNet model")
+            base_model = tf.keras.models.load_model(weights)
+            # remove last Dense and avg pooling
+            base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-3].output)
+        else:
+            base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=weights)
+    elif "VGG19" in config["project"]:
+        preprocess_input = tf.keras.applications.vgg19.preprocess_input
+        base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=weights)
+    elif "CORNet" in config["project"]:
+        preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
+        if load_custom_model:
+            print("load custom CORNet model")
+            base_model = tf.keras.models.load_model(weights)
+            # remove last Dense and avg pooling
+            base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-4].output)
+    base_model.training = True
+    # print(base_model.summary())
+    # print("end base model")
+
+    # apply transfer learning to base model
+    if config.get('transfer_layer'):
+        fine_tune_at = 0
+        for l, layer in enumerate(base_model.layers):
+            if config['transfer_layer'] == layer.name:
+                fine_tune_at = l
+                print(l, "layer", layer.name)
+                print("fine tune at:", fine_tune_at)
+        for layer in base_model.layers[:fine_tune_at]:
+            print(f"layer {layer} set to non-trainable")
+            layer.trainable = False
+
+    # declare layers for new model
     # declare layers
     data_augmentation = tf.keras.Sequential([
       tf.keras.layers.RandomFlip('horizontal'),
       tf.keras.layers.RandomRotation(0.2),
     ])
-    if config["weights"] == "imagenet":
-        weights = config["weights"]
-    elif config["weights"] == "None":
-        weights = None
-
-    if "ResNet" in config["project"]:
-        preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
-        base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=weights)
-    elif "VGG19" in config["project"]:
-        preprocess_input = tf.keras.applications.vgg19.preprocess_input
-        base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=weights)
     global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-    fc = tf.keras.layers.Dense(512, activation='relu')
     prediction_layer = tf.keras.layers.Dense(config["n_category"], activation='relu')
 
-    # apply transfer learning to base model
-    if config.get('transfer_layer'):
-        base_model.training = True
-        fine_tune_at = 0
-        if config['transfer_layer'] != 'scratch':
-            for l, layer in enumerate(base_model.layers):
-                if config['transfer_layer'] == layer.name:
-                    fine_tune_at = l
-                    print(l, "layer", layer.name)
-                    print("fine tune at:", fine_tune_at)
-        for layer in base_model.layers[:fine_tune_at]:
-            print(f"layer {layer} set to non-trainable")
-            layer.trainable = False
-
-    else:
-        base_model.training = False
-
+    # construct new model
     inputs = tf.keras.Input(shape=config["input_shape"])
     x = data_augmentation(inputs)
     x = preprocess_input(x)
@@ -130,10 +168,12 @@ def main():
     x = global_average_layer(x)
     # add a fully connected layer for VGGto correlate better with original implementation
     if "VGG" in config["project"] and not config["include_top"]:
+        fc = tf.keras.layers.Dense(512, activation='relu')
         x = fc(x)
     outputs = prediction_layer(x)
     model = tf.keras.Model(inputs, outputs)
 
+    # apply l2 if present
     if config.get('l2_regularization'):
         for layer in model.layers:
             if isinstance(layer, tf.keras.layers.Conv2D) or isinstance(layer, tf.keras.layers.Dense):
@@ -148,6 +188,7 @@ def main():
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=["accuracy"])
     model.summary()
+    print("end new model")
 
     #%% Train de model
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
