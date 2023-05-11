@@ -5,7 +5,7 @@
   "x_col": "image_path",
   "y_col": "category",
   "directory": "D:/Dataset/MorphingSpace",
-  "load_directory": "D:/Dataset/MorphingSpace/saved_model",
+  "load_directory": "D:/Dataset/MorphingSpace/DNN_weights",
   "save_directory": "D:/Dataset/MorphingSpace/model_preds",
   "input_shape": [224, 224, 3],
   "model_name": ""

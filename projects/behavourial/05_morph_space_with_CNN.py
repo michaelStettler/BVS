@@ -42,7 +42,7 @@ if cond is not None:
         config["avatar_types"] = ["monkey"]
 
 # create directory
-save_path = os.path.join(config["directory"], "model_preds")
+save_path = os.path.join(config["directory"], config["load_directory"])
 if not os.path.exists(save_path):
     os.mkdir(save_path)
 
