@@ -56,10 +56,10 @@ model_name = 'NRE'
 # norm_type = 'individual'
 # norm_type = 'categorical'  # deprecated
 norm_type = 'frobenius'
-use_dynamic = False
+use_dynamic = True
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-cond = 0
+cond = 1
 condition = conditions[cond]
 train_csv = [os.path.join(computer_path, "morphing_space_human_orig.csv"),
              os.path.join(computer_path, "morphing_space_monkey_orig.csv"),
@@ -360,7 +360,7 @@ def compute_dynamic_responses(seq_resp, n_cat=5, tau_u=3, tau_v=3, tau_y=15, tau
 if use_dynamic:
     ds_neurons = []
     print("shape NRE_proj", np.shape(NRE_proj))
-    for i in range(50):
+    for i in range(25):
         ds_neuron = compute_dynamic_responses(NRE_proj[i*150:i*150+150],
                                               tau_u=tau_u,
                                               tau_v=tau_v,
@@ -390,7 +390,7 @@ if use_dynamic:
 
 #%% plot sequence analysis
 indexes = [np.arange(150), np.arange(750, 900), np.arange(3600, 3750)]
-video_names = ["HA_Angry_1.0_Human_1.0.mp4", "HA_Angry_1.0_Human_0.75.mp4", "HA_Angry_0.0_Human_0.0.mp4"]
+video_names = [f"HA_Angry_1.0_{condition}_1.0.mp4", f"HA_Angry_1.0_{condition}_0.75.mp4", f"HA_Angry_0.0_{condition}_0.0.mp4"]
 
 for index, video_name in zip(indexes, video_names):
     plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
@@ -479,6 +479,7 @@ for i in range(np.shape(amax_ms_grid)[0]):
         cat_grid[i, j, np.argmax(x)] = 1
         prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
 
+print(f"finish script for NRE-{norm_type}-{modality}-{condition}")
 print(f"save in: {save_path}")
 np.save(os.path.join(save_path, f"{model_name}_{norm_type}_{modality}_{condition}_raw_ms_grid"), amax_ms_grid)
 np.save(os.path.join(save_path, f"{model_name}_{norm_type}_{modality}_{condition}_cat_grid"), cat_grid)

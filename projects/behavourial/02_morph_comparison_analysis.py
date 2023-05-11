@@ -11,10 +11,10 @@ run: python -m projects.behavourial.02_morph_comparison_analysis
 
 show_plots = False
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-cond = 0
+cond = 1
 condition = conditions[cond]
-# norm_type = "individual"
-norm_type = "frobenius"
+norm_type = "individual"
+# norm_type = "frobenius"
 use_dynamic = False
 
 # declare saving and loading path
@@ -31,9 +31,12 @@ if use_dynamic:
 # load data
 if condition == "human_orig":
     behav_data = np.load(os.path.join(morph_space, behav_path, "human_avatar_orig.npy"))
-    behav_data = np.moveaxis(behav_data, 0, -1)
-    pred_data = np.load(os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_prob_grid.npy"))
-    cat_data = np.load(os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_cat_grid.npy"))
+elif condition == "monkey_orig":
+    behav_data = np.load(os.path.join(morph_space, behav_path, "monkey_avatar_orig.npy"))
+
+behav_data = np.moveaxis(behav_data, 0, -1)
+pred_data = np.load(os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_prob_grid.npy"))
+cat_data = np.load(os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_cat_grid.npy"))
 
 print("shape behav_data", np.shape(behav_data))
 print("max behav_data", np.amax(behav_data))

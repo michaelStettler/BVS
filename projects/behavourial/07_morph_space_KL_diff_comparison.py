@@ -24,12 +24,11 @@ show_plots = True
 model_names = ["NRE-indi-S", "NRE-indi-D", "NRE-cat-S", "NRE-cat-D"]
 load_path = os.path.join(computer_path, 'model_preds')
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-cond = 0
-condition = conditions[cond]
+conditions = ["human_orig", "monkey_orig"]
 
 
 #%%
-def get_path(model_name):
+def get_path(model_name, condition):
     if 'NRE' in model_name:
         # retrieve norm_type
         norm_type = 'individual'
@@ -48,20 +47,28 @@ def get_path(model_name):
 
     return acc_path, kl_div_path
 
+
 #%% load data
 accuracies = []
 kl_divergences = []
 for model_name in model_names:
-    # create path
-    acc_path, kl_div_path = get_path(model_name)
+    accuracy = []
+    kl_divergence = []
+    for condition in conditions:
+        # create path
+        acc_path, kl_div_path = get_path(model_name, condition)
 
-    # load data
-    accuracy = np.load(acc_path)
-    kl_div = np.load(kl_div_path)
+        # load data
+        acc = np.load(acc_path)
+        kl_div = np.load(kl_div_path)
 
-    # append
+        # append to condition
+        accuracy.append(acc)
+        kl_divergence.append(kl_div)
+
+    # append to models
     accuracies.append(accuracy)
-    kl_divergences.append(kl_div)
+    kl_divergences.append(kl_divergence)
 
 accuracies = np.array(accuracies)
 kl_divergences = np.array(kl_divergences)
@@ -73,9 +80,15 @@ print("shape kl_divergences", np.shape(kl_divergences))
 sum_kl_div = np.sum(kl_divergences, axis=(1, 2))
 print("shape sum_kl_div", np.shape(sum_kl_div))
 
-plt.figure()
+fig, ax = plt.subplots()
 x = np.arange(len(kl_divergences))
-plt.bar(model_names, sum_kl_div)
-
+width = 0.25
+# plot each condition
+for c, condition in enumerate(conditions):
+    offset = width * c
+    rects = plt.bar(x + offset, sum_kl_div[:, c], width, label=condition)
+    # ax.bar_label(rects, padding=3)  # add value to bar
+ax.set_xticks(x + width, model_names)
+ax.legend()
 if show_plots:
     plt.show()
