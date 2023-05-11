@@ -21,9 +21,10 @@ elif 'mac' in computer:
 
 #%% declare script parameters
 show_plots = True
-model_names = ["NRE-indi-S", "NRE-indi-D", "NRE-cat-S", "NRE-cat-D"]
+model_names = ["NRE-indi-S", "NRE-indi-D", "NRE-cat-S", "NRE-cat-D",
+               "VGG19-imagenet", "VGG19-imagenet-conv3_3", "Resnet50v2-imagenet",
+               "VGG19-affectnet", "ResNet50v2-affectnet", "CORNet-affectnet"]
 load_path = os.path.join(computer_path, 'model_preds')
-conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
 conditions = ["human_orig", "monkey_orig"]
 
 
@@ -44,6 +45,8 @@ def get_path(model_name, condition):
         kl_div_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_KL_div.npy")
     else:
         print("TODO CNN models")
+        acc_path = None
+        kl_div_path = None
 
     return acc_path, kl_div_path
 
@@ -59,8 +62,14 @@ for model_name in model_names:
         acc_path, kl_div_path = get_path(model_name, condition)
 
         # load data
-        acc = np.load(acc_path)
-        kl_div = np.load(kl_div_path)
+        if acc_path is not None:
+            acc = np.load(acc_path)
+        else:
+            acc = 0
+        if kl_div_path is not None:
+            kl_div = np.load(kl_div_path)
+        else:
+            kl_div = np.zeros((5, 5))
 
         # append to condition
         accuracy.append(acc)
@@ -90,5 +99,8 @@ for c, condition in enumerate(conditions):
     # ax.bar_label(rects, padding=3)  # add value to bar
 ax.set_xticks(x + width, model_names)
 ax.legend()
+
+plt.savefig(f"bar_plot_kl_div_analysis.svg", format='svg')
+
 if show_plots:
     plt.show()
