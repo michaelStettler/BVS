@@ -16,12 +16,12 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 """
 
 #%% import config
-config_path = 'BH_03_CNN_training_ResNet50v2_w0001.json'  # ResNet50v2_imagenet
-config_path = 'BH_03_CNN_training_ResNet50v2_w0002.json'      # ResNet50v2_affectnet
-#config_path = 'BH_03_CNN_training_VGG19_w0001.json'       # VGG19_imagenet
-#onfig_path = 'BH_03_CNN_training_VGG19_w0002.json'       # VGG19_imagenet_conv3_3
-#config_path = 'BH_03_CNN_training_VGG19_w0003.json'       # VGG19_imagenet_scratch
-config_path = 'BH_03_CNN_training_CORNet_w0001.json'       # CORNet_affectnet
+config_path = 'BH_03_CNN_training_ResNet50v2_imagenet_w0001.json'  # ResNet50v2_imagenet
+config_path = 'BH_03_CNN_training_ResNet50v2_affectnet_w0001.json'      # ResNet50v2_affectnet
+#config_path = 'BH_03_CNN_training_VGG19_imagnet_w0001.json'       # VGG19_imagenet
+#onfig_path = 'BH_03_CNN_training_VGG19_imagenet_conv33_w0001.json'       # VGG19_imagenet_conv3_3
+#config_path = 'BH_03_CNN_training_VGG19_scratch_w0001.json'       # VGG19_imagenet_scratch
+config_path = 'BH_03_CNN_training_CORNet_affectnet_w0001.json'       # CORNet_affectnet
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
@@ -205,7 +205,7 @@ def main():
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
     # model.save(os.path.join(save_path, config["extraction_model"] + "_" + wandb.run.name))
-    model.save(os.path.join(save_path, config["extraction_model"] + "_" + run.name))
+    model.save(os.path.join(save_path, config["project"] + "_" + run.name))
 
 
 wandb.agent(sweep_id, function=main)

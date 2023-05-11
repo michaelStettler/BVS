@@ -1,0 +1,23 @@
+{
+  "config_name": "BH_03_CNN_training_VGG19_affectnet_w0001",
+  "project": "VGG19_affectnet",
+  "train_data": "FERG",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 5,
+  "ref_category": 0,
+  "train_csv": "D:/Dataset/MorphingSpace/morphing_space_orig_train.csv",
+  "test_csv": "D:/Dataset/MorphingSpace/morphing_space_orig_val.csv",
+  "directory": "D:/Dataset/MorphingSpace",
+  "input_shape": [224, 224, 3],
+  "extraction_model": "VGG19",
+  "include_top": false,
+  "weights": "vgg19_m0006_affectnet_vgg_blue_2021-12-21_01-04",
+  "base_learning_rate": 0.0002,
+  "momentum": 0.9,
+  "decay_rate": 0.96,
+  "decay_steps": 10,
+  "initial_epochs": 45,
+  "batch_size": 64,
+  "l2_regularization": 0.01
+}
