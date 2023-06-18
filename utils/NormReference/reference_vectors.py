@@ -110,7 +110,7 @@ def optimize_inferred_ref(lmk_pos, labels, avatar_labels, n_avatar, avatar_of_in
             avatar_ref_train_data = av_data[av_labels == expr_to_infer]
 
             # loop over all images of this avatar and expression
-            new_accuracy = None
+            new_accuracy = 0
             new_ref_vectors = ref_vectors
             for i in tqdm(range(len(avatar_ref_train_data))):
                 lmk_vector = avatar_ref_train_data[i]
@@ -130,10 +130,7 @@ def optimize_inferred_ref(lmk_pos, labels, avatar_labels, n_avatar, avatar_of_in
                 # compute accuracy
                 accuracy = compute_accuracy(projections_preds, av_labels)
 
-                if new_accuracy is None:
-                    print(f"idx: {i}, new_accuracy: {accuracy}")
-                    new_accuracy = accuracy
-                elif accuracy > new_accuracy:
+                if accuracy > new_accuracy:
                     # update ref_vectors
                     print(f"idx: {i}, new_accuracy: {accuracy}")
                     optimized_ref_vect[a] = inferred_ref
