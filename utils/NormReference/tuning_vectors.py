@@ -2,7 +2,6 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.Metrics.accuracy import compute_accuracy
-from utils.NormReference.reference_vectors import learn_ref_vector
 
 
 def filter_by_avatar(lmk_pos, labels, avatar_labels, avatar_type_idx):
@@ -43,14 +42,14 @@ def learn_tun_vectors(lmk_pos, labels, ref_vectors, avatar_labels, n_cat=7, idx_
     return np.array(tun_vectors)
 
 
-def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize, idx_array, n_cat,
+def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize, idx_array,
                             avatar_type_idx=None, ref_vectors=None):
 
     # learn neutral pattern
     if ref_vectors is not None:
         ref_vectors = ref_vectors
     else:
-        ref_vectors = learn_ref_vector(lmk_pos, labels, avatar_labels, n_cat)
+        raise ValueError("Please provide ref_vectors")
 
     print("len lmk_pos", len(lmk_pos))
     # discard all image not from that avatar

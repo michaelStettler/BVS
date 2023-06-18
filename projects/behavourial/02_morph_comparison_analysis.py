@@ -10,12 +10,12 @@ run: python -m projects.behavourial.02_morph_comparison_analysis
 """
 
 show_plots = False
-conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-cond = 1
+conditions = ["human_orig", "monkey_orig"]
+cond = 0
 condition = conditions[cond]
-norm_type = "individual"
-# norm_type = "frobenius"
-use_dynamic = False
+# norm_type = "individual"
+norm_type = "frobenius"
+use_dynamic = True
 
 # declare saving and loading path
 morph_space = "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace"

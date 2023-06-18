@@ -59,7 +59,7 @@ norm_type = 'frobenius'
 use_dynamic = True
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
-cond = 1
+cond = 0
 condition = conditions[cond]
 train_csv = [os.path.join(computer_path, "morphing_space_human_orig.csv"),
              os.path.join(computer_path, "morphing_space_monkey_orig.csv"),
@@ -68,6 +68,7 @@ train_csv = [os.path.join(computer_path, "morphing_space_human_orig.csv"),
 modality = 'static'
 if use_dynamic:
     modality = 'dynamic'
+prot_indexes = [np.arange(150), np.arange(600, 750), np.arange(3000, 3150), np.arange(3600, 3750)]
 
 #%% declare hyper parameters
 n_iter = 2
@@ -75,10 +76,10 @@ max_sigma = None
 max_sigma = 3000
 train_idx = None
 # train_idx = [50]
-tau_u = 3
-tau_v = 3
-tau_y = 2
-tau_d = 2
+tau_u = 6
+tau_v = 6
+tau_y = 1
+tau_d = 1
 
 #%% import config
 config_path = 'BH_01_morph_space_with_NRE_{}0001.json'.format(computer_letter)
@@ -184,6 +185,16 @@ if load_FR_pathway:
     FR_pos = np.load(os.path.join(load_path, "FR_LMK_pos.npy"))
     face_ids = np.load(os.path.join(load_path, "face_identities.npy"))
     face_positions = np.load(os.path.join(load_path, "face_positions.npy"))
+
+    if 'human' in condition:
+        FR_pos = FR_pos[:3750]
+        face_ids = face_ids[:3750]
+        face_positions = face_positions[:3750]
+    else:
+        FR_pos = FR_pos[3750:]
+        face_ids = face_ids[3750:]
+        face_positions = face_positions[3750:]
+
 else:
     FR_pos, face_ids, face_positions = get_identity_and_pos(train_data[0], v4_model, config, FR_patterns_list, FR_sigma_list)
 
@@ -210,6 +221,11 @@ if load_FER_pos:
         FER_pos = np.load(os.path.join(load_path, "FER_LMK_pos.npy"))
     else:
         FER_pos = merge_LMK_pos(config)
+
+    if 'human' in condition:
+        FER_pos = FER_pos[:3750]
+    else:
+        FER_pos = FER_pos[3750:]
 else:
     print("create FER pos")
     FER_pos = create_lmk_dataset(train_data[0], v4_model, "FER", config, FER_patterns_list, FER_sigma_list)
@@ -359,49 +375,56 @@ def compute_dynamic_responses(seq_resp, n_cat=5, tau_u=3, tau_v=3, tau_y=15, tau
 # get decision neurons
 if use_dynamic:
     ds_neurons = []
+    diff_neurons = []
     print("shape NRE_proj", np.shape(NRE_proj))
     for i in range(25):
-        ds_neuron = compute_dynamic_responses(NRE_proj[i*150:i*150+150],
-                                              tau_u=tau_u,
-                                              tau_v=tau_v,
-                                              tau_d=tau_d,
-                                              tau_y=tau_y)
+        ds_neuron, differentiators = compute_dynamic_responses(NRE_proj[i*150:i*150+150],
+                                                               get_differentiator=True,
+                                                               tau_u=tau_u,
+                                                               tau_v=tau_v,
+                                                               tau_d=tau_d,
+                                                               tau_y=tau_y)
         ds_neurons.append(ds_neuron)
+        diff_neurons.append(differentiators)
     ds_neurons = np.reshape(ds_neurons, (-1, np.shape(ds_neurons)[-1]))
+    diff_neurons = np.array(diff_neurons)
     print("shape ds_neurons", np.shape(ds_neurons))
+    print("shape diff_neurons", np.shape(diff_neurons))
 else:
     ds_neurons = NRE_proj
 
 #%% plot categorization over sequence from decision neurons
 if use_dynamic:
-    for i in range(5, 10):
-        print("shape ds_neurons[:150]", np.shape(ds_neurons[:150]))
-        print("max ds_neurons[:150]", np.amax(ds_neurons[150*i:150*(i+1)], axis=0))
+    mapping_array = [0, 4, 20, 24]
+    for i in range(len(prot_indexes)):
+        print(f"prototype {i}, index: {prot_indexes[i][0]}:{prot_indexes[i][-1]}")
         # plot test human fear
-        fig, (ax1, ax2) = plt.subplots(1, 2)
-        ax1.plot(NRE_proj[150*i:150*(i+1)])
-        ax2.plot(ds_neurons[150*i:150*(i+1)])
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
+        ax1.plot(NRE_proj[prot_indexes[i]])
+        ax2.plot(diff_neurons[mapping_array[i], 0])
+        ax3.plot(diff_neurons[mapping_array[i], 1])
+        ax4.plot(ds_neurons[prot_indexes[i]])
         fig.legend(["N", "HA", "HF", "MA", "MF"])
         fig.suptitle(f"seq_{i}")
-        fig.savefig(f"NRE_{norm_type}_decision_neurons_seq_{i}.jpeg")
+        fig.savefig(f"NRE_{norm_type}_dyn_seq_{i}_u_{tau_u}_v_{tau_v}_y_{tau_y}_d_{tau_d}.jpeg")
 
         if show_plot:
             fig.show()
 
-#%% plot sequence analysis
-indexes = [np.arange(150), np.arange(750, 900), np.arange(3600, 3750)]
-video_names = [f"HA_Angry_1.0_{condition}_1.0.mp4", f"HA_Angry_1.0_{condition}_0.75.mp4", f"HA_Angry_0.0_{condition}_0.0.mp4"]
-
-for index, video_name in zip(indexes, video_names):
-    plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
-                                 NRE_proj[index], config,
-                                 video_name=video_name,
-                                 lmk_proj=NRE_proj_lmk[index],
-                                 pre_processing='VGG19',
-                                 lmk_size=3)
-print("finish creating sequence analysis")
-
-matplotlib.use('macosx')
+# #%% plot sequence analysis
+# video_names = [f"{condition}_Angry_1.0_Human_1.0.mp4", f"{condition}_Angry_0.0_Human_1.0.mp4",
+#                f"{condition}_Angry_1.0_Human_0.0.mp4", f"{condition}_Angry_0.0_Human_0.0.mp4"]
+#
+# for index, video_name in zip(prot_indexes, video_names):
+#     plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
+#                                  NRE_proj[index], config,
+#                                  video_name=video_name,
+#                                  lmk_proj=NRE_proj_lmk[index],
+#                                  pre_processing='VGG19',
+#                                  lmk_size=3)
+# print("finish creating sequence analysis")
+#
+# matplotlib.use('macosx')
 
 
 #%%
@@ -416,9 +439,9 @@ def print_morph_space(amax_ms_grid=None, cat_grid=None, prob_grid=None,
 
         if save:
             if save_path is None:
-                plt.savefig("morph_space_read_out_values_{}.jpeg".format(norm_type))
+                plt.savefig(f"{title}_morph_space_read_out_values.jpeg")
             else:
-                plt.savefig(os.path.join(save_path, "morph_space_read_out_values_{}.jpeg".format(norm_type)))
+                plt.savefig(os.path.join(save_path, f"{title}_morph_space_read_out_values.jpeg"))
         if show_plot:
             plt.show()
 
@@ -432,9 +455,9 @@ def print_morph_space(amax_ms_grid=None, cat_grid=None, prob_grid=None,
 
         if save:
             if save_path is None:
-                plt.savefig("morph_space_categories_values_{}.jpeg".format(norm_type))
+                plt.savefig(f"{title}_morph_space_categories_values.jpeg")
             else:
-                plt.savefig(os.path.join(save_path, "morph_space_categories_values_{}.jpeg".format(norm_type)))
+                plt.savefig(os.path.join(save_path, f"{title}_morph_space_categories_values.jpeg"))
         if show_plot:
             plt.show()
 
@@ -448,9 +471,9 @@ def print_morph_space(amax_ms_grid=None, cat_grid=None, prob_grid=None,
 
         if save:
             if save_path is None:
-                plt.savefig("morph_space_probabilities_values_{}.jpeg".format(norm_type))
+                plt.savefig(f"{title}_morph_space_probabilities_values.jpeg")
             else:
-                plt.savefig(os.path.join(save_path, "morph_space_probabilities_values_{}.jpeg".format(norm_type)))
+                plt.savefig(os.path.join(save_path, f"{title}_morph_space_probabilities_values.jpeg"))
         if show_plot:
             plt.show()
 
@@ -479,12 +502,13 @@ for i in range(np.shape(amax_ms_grid)[0]):
         cat_grid[i, j, np.argmax(x)] = 1
         prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
 
-print(f"finish script for NRE-{norm_type}-{modality}-{condition}")
+title = f"{model_name}_{norm_type}_{modality}_{condition}"
+print(f"finish script for {title}")
 print(f"save in: {save_path}")
-np.save(os.path.join(save_path, f"{model_name}_{norm_type}_{modality}_{condition}_raw_ms_grid"), amax_ms_grid)
-np.save(os.path.join(save_path, f"{model_name}_{norm_type}_{modality}_{condition}_cat_grid"), cat_grid)
-np.save(os.path.join(save_path, f"{model_name}_{norm_type}_{modality}_{condition}_prob_grid"), prob_grid)
+np.save(os.path.join(save_path, f"{title}_raw_ms_grid"), amax_ms_grid)
+np.save(os.path.join(save_path, f"{title}_cat_grid"), cat_grid)
+np.save(os.path.join(save_path, f"{title}_prob_grid"), prob_grid)
 
 
-print_morph_space(amax_ms_grid, cat_grid, prob_grid, show_plot=False, title="Human")
+print_morph_space(amax_ms_grid, cat_grid, prob_grid, show_plot=False, title=title)
 
