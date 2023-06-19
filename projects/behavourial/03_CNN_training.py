@@ -16,13 +16,13 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 """
 
 #%% import config
-config_path = 'BH_03_CNN_training_ResNet50v2_imagenet_w0001.json'  # ResNet50v2_imagenet
-config_path = 'BH_03_CNN_training_ResNet50v2_affectnet_w0001.json'      # ResNet50v2_affectnet
-#config_path = 'BH_03_CNN_training_VGG19_imagnet_w0001.json'       # VGG19_imagenet
-#config_path = 'BH_03_CNN_training_VGG19_affectnet_w0001.json'       # VGG19_affectnet
-#onfig_path = 'BH_03_CNN_training_VGG19_imagenet_conv33_w0001.json'       # VGG19_imagenet_conv3_3
-#config_path = 'BH_03_CNN_training_VGG19_scratch_w0001.json'       # VGG19_imagenet_scratch
-config_path = 'BH_03_CNN_training_CORNet_affectnet_w0001.json'       # CORNet_affectnet
+# config_path = 'BH_03_CNN_training_ResNet50v2_imagenet_w0001.json'           # ResNet50v2_imagenet DONE
+# config_path = 'BH_03_CNN_training_ResNet50v2_affectnet_w0001.json'        # ResNet50v2_affectnet DONE
+# config_path = 'BH_03_CNN_training_VGG19_imagnet_w0001.json'                # VGG19_imagenet DONE
+config_path = 'BH_03_CNN_training_VGG19_affectnet_w0001.json'              # VGG19_affectnet
+# config_path = 'BH_03_CNN_training_VGG19_imagenet_conv33_w0001.json'         # VGG19_imagenet_conv3_3 DONE
+#config_path = 'BH_03_CNN_training_VGG19_scratch_w0001.json'                # VGG19_imagenet_scratch
+# config_path = 'BH_03_CNN_training_CORNet_affectnet_w0001.json'            # CORNet_affectnet DONE
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
@@ -31,22 +31,24 @@ import wandb
 from wandb.keras import WandbCallback
 from wandb.keras import WandbMetricsLogger
 
-#%% set sweep config
-# sweep_config = {
-#     'method': 'grid',
-#     'metric': {
-#         'metric': {'goal': 'maximize', 'name': 'val_acc'},
-#     },
-#     'parameters': {
-#         'lr': {'values': [0.001]},  # vgg  0.0001, 0.00001
-#         'epoch': {'values': [40, 45, 50]},
-#         'decay_step': {'values': [200, 20, 15, 10]},
-#         'decay_rate': {'values': [1.0, 0.95, 0.9, 0.85]},
-#         'momentum': {'value': 0.9},
-#         'batch_size': {'value': 64}
-#     }
-# }
-# VGG scratch
+# Used for all but VGG AffectNet
+sweep_config = {
+    'method': 'grid',
+    'metric': {
+        'metric': {'goal': 'maximize', 'name': 'val_acc'},
+    },
+    'parameters': {
+        'lr': {'values': [0.02, 0.01, 0.001]},
+        'epoch': {'values': [180]},
+        'decay_step': {'values': [25, 30]},
+        'decay_rate': {'values': [0., .9, .8, .7, .75]},
+        'momentum': {'value': 0.9},
+        'batch_size': {'value': 32},
+        'l2': {'values': [0., 0.5, 0.7, 0.9]}
+    }
+}
+
+# Used for VGG affectnet
 # sweep_config = {
 #     'method': 'grid',
 #     'metric': {
@@ -54,31 +56,14 @@ from wandb.keras import WandbMetricsLogger
 #     },
 #     'parameters': {
 #         'lr': {'values': [0.001]},
-#         'epoch': {'values': [1200]},
-#         'decay_step': {'values': [1200]},
-#         'decay_rate': {'values': [0.96]},
+#         'epoch': {'values': [180]},
+#         'decay_step': {'values': [200]},
+#         'decay_rate': {'values': [0.9]},
 #         'momentum': {'value': 0.9},
 #         'batch_size': {'value': 64},
-#         'l2': {'values': [0.001]},
+#         'l2': {'values': [0.0]}
 #     }
-#
 # }
-# Resnet_affectnet
-sweep_config = {
-    'method': 'grid',
-    'metric': {
-        'metric': {'goal': 'maximize', 'name': 'val_acc'},
-    },
-    'parameters': {
-        'lr': {'values': [0.02, 0.01]},
-        'epoch': {'values': [180]},
-        'decay_step': {'values': [25, 30]},
-        'decay_rate': {'values': [.7, .75]},
-        'momentum': {'value': 0.9},
-        'batch_size': {'value': 64},
-        'l2': {'values': [0.5, 0.7, 0.9]}
-    }
-}
 pprint.pprint(sweep_config)
 
 # create sweep id
@@ -108,8 +93,9 @@ def main():
     #%% create model
 
     # load weights
+    load_custom_model = False
     if config["weights"] == "imagenet":
-        weights = config["weights"]
+        weights = "imagenet"
     elif config["weights"] == "None":
         weights = None
     else:
@@ -126,9 +112,18 @@ def main():
             base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-3].output)
         else:
             base_model = tf.keras.applications.resnet_v2.ResNet50V2(include_top=config["include_top"], weights=weights)
+
     elif "VGG19" in config["project"]:
         preprocess_input = tf.keras.applications.vgg19.preprocess_input
-        base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=weights)
+        if load_custom_model:
+            print("load custom VGG model")
+            base_model = tf.keras.models.load_model(weights)
+            # base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-5].output)
+            base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-3].output)
+        else:
+            base_model = tf.keras.applications.vgg19.VGG19(include_top=config["include_top"], weights=weights)
+            base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-2].output)
+
     elif "CORNet" in config["project"]:
         preprocess_input = tf.keras.applications.resnet_v2.preprocess_input
         if load_custom_model:
@@ -136,9 +131,11 @@ def main():
             base_model = tf.keras.models.load_model(weights)
             # remove last Dense and avg pooling
             base_model = tf.keras.models.Model(inputs=base_model.input, outputs=base_model.layers[-4].output)
+
+
     base_model.training = True
-    # print(base_model.summary())
-    # print("end base model")
+    print(base_model.summary())
+    print("end base model")
 
     # apply transfer learning to base model
     if config.get('transfer_layer'):
@@ -166,9 +163,11 @@ def main():
     x = data_augmentation(inputs)
     x = preprocess_input(x)
     x = base_model(x)
-    x = global_average_layer(x)
-    # add a fully connected layer for VGGto correlate better with original implementation
-    if "VGG" in config["project"] and not config["include_top"]:
+    if "VGG" not in config["project"]:
+        x = global_average_layer(x)
+    # add a fully connected layer for VGGto correlate with original implementation
+    if "VGG" in config["project"] and not config["include_top"] and not load_custom_model:
+        print("add extra dense layer for VGG")  # only to train on affectnet
         fc = tf.keras.layers.Dense(512, activation='relu')
         x = fc(x)
     outputs = prediction_layer(x)
@@ -180,6 +179,7 @@ def main():
             if isinstance(layer, tf.keras.layers.Conv2D) or isinstance(layer, tf.keras.layers.Dense):
                 layer.kernel_regularizer = tf.keras.regularizers.l2(wandb.config.l2)
 
+    # set learning scheduler
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(wandb.config.lr,
                                                                  decay_steps=wandb.config.decay_step*n_steps,
                                                                  decay_rate=wandb.config.decay_rate,
@@ -194,12 +194,16 @@ def main():
     #%% Train de model
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    # set early stopping
+    early_stopping_callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',
+                                                               patience=wandb.config.epoch,
+                                                               restore_best_weights=True)
 
     model.fit(train_dataset,
               epochs=wandb.config.epoch,
               batch_size=wandb.config.batch_size,
               validation_data=val_dataset,
-              callbacks=[tensorboard_callback, WandbMetricsLogger()])
+              callbacks=[early_stopping_callback, tensorboard_callback, WandbMetricsLogger()])
     callbacks = [WandbCallback()]
 
     save_path = os.path.join(config["directory"], "saved_model")

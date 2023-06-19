@@ -17,6 +17,5 @@
   "momentum": 0.9,
   "decay_rate": 0.9,
   "initial_epochs": 45,
-  "batch_size": 64,
-  "transfer_layer": "scratch"
+  "batch_size": 64
 }

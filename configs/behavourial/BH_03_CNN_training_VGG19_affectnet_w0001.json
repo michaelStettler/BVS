@@ -12,7 +12,7 @@
   "input_shape": [224, 224, 3],
   "extraction_model": "VGG19",
   "include_top": false,
-  "weights": "vgg19_m0006_affectnet_vgg_blue_2021-12-21_01-04",
+  "weights": "D:/DNN_weights/vgg19_m0006_affectnet_vgg_blue_2021-12-21_01-04",
   "base_learning_rate": 0.0002,
   "momentum": 0.9,
   "decay_rate": 0.96,
