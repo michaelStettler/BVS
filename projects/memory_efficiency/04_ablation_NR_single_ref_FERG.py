@@ -22,17 +22,17 @@ Optimize the tuning direction over all dataset, using only a single ref
 """
 
 avatar_type = None
-avatar_type = 0
-do_optimize = False
+avatar_type = 5
+do_optimize = True
 
 
 #%%
 # define configuration
-config_file = 'NR_03_FERG_from_LMK_m0001.json'
-#config_file = 'NR_03_FERG_from_LMK_w0001.json'
+#config_file = 'NR_03_FERG_from_LMK_m0001.json'
+config_file = 'NR_03_FERG_from_LMK_w0001.json'
 # load config
-config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
-#config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+# config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
 print("-- Config loaded --")
 print()
 
@@ -72,12 +72,13 @@ found_neutral = False
 n_idx = 0
 # find first neutral images:
 while not found_neutral:
-    if int(test_label[ref_idx[n_idx]]) == 0:
-        ref_idx = n_idx
+    if int(train_label[ref_idx[n_idx]]) == 0:
+        ref_idx = ref_idx[n_idx]
         found_neutral = True
     n_idx += 1
 
 if int(train_label[ref_idx]) != 0:
+    print(f"ref_index: {ref_idx}, val: {int(train_label[ref_idx])}")
     raise ValueError("Ref vector is not from a neutral expression!")
 
 ref_vector = train_data[ref_idx]
@@ -140,7 +141,6 @@ if do_optimize:
         category_to_optimize = cat
         best_idx, accuracy, best_matching_idx = optimize_tuning_vectors(train_data, train_label, train_avatar,
                                                                         category_to_optimize, idx_array,
-                                                                        len(config['avatar_names']),
                                                                         avatar_type_idx=avatar_type,
                                                                         ref_vectors=ref_vectors)
         print("category: {}, best_idx: {}, accuracy: {}".format(cat, best_idx, accuracy))
@@ -173,16 +173,30 @@ if avatar_type is None:
 # elif avatar_type == 5:
 #     idx_array = [0, 150, 519, 317, 365, 209, 272]  # NRE-mery best
 
+# ref might not have been neutral?
+# elif avatar_type == 0:
+#     idx_array = [0, 28, 21, 10, 0, 0, 0]  # NRE-Jules best
+# elif avatar_type == 1:
+#     idx_array = [0, 1, 148, 145, 244, 205, 749]  # NRE-malcolm best
+# elif avatar_type == 2:
+#     idx_array = [0, 36, 342, 40, 66, 0, 280]  # NRE-ray best
+# elif avatar_type == 3:
+#     idx_array = [0, 49, 853, 91, 731, 509, 260]  # NRE-aia best
+# elif avatar_type == 4:
+#     idx_array = [0, 903, 14, 627, 24, 427, 1214]  # NRE-bonnie best
+# elif avatar_type == 5:
+#     idx_array = [0, 210, 314, 581, 68, 375, 659]  # NRE-mery best
+
 elif avatar_type == 0:
-    idx_array = [0, 913, 61, 57, 12, 0, 91]  # NRE-Jules best
+    idx_array = [0, 28, 21, 10, 0, 0, 0]  # NRE-Jules best
 elif avatar_type == 1:
-    idx_array = [0, 133, 796, 5, 697, 56, 420]  # NRE-malcolm best
+    idx_array = [0, 1, 148, 145, 244, 205, 749]  # NRE-malcolm best
 elif avatar_type == 2:
-    idx_array = [0, 0, 3, 243, 648, 170, 630]  # NRE-ray best
+    idx_array = [0, 36, 342, 40, 66, 0, 280]  # NRE-ray best
 elif avatar_type == 3:
-    idx_array = [0, 32, 562, 227, 293, 865, 971]  # NRE-aia best
+    idx_array = [0, 49, 853, 91, 731, 509, 260]  # NRE-aia best
 elif avatar_type == 4:
-    idx_array = [0, 929, 1034, 299, 268, 439, 1471]  # NRE-bonnie best
+    idx_array = [0, 903, 14, 627, 24, 427, 1214]  # NRE-bonnie best
 elif avatar_type == 5:
     idx_array = [0, 210, 314, 581, 68, 375, 659]  # NRE-mery best
 

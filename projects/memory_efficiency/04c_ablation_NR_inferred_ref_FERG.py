@@ -23,8 +23,8 @@ Optimize the tuning direction over all dataset, using only a ref inferred from o
 """
 
 avatar_type = None
-avatar_type = 0
-infer_expr = 1  # inferred expressions
+avatar_type = 5
+infer_expr = 6  # inferred expressions
 #                   0 = neutral,
 #                   1 = joy,
 #                   2 = anger,
@@ -37,11 +37,11 @@ do_optimize = True
 
 #%%
 # define configuration
-config_file = 'NR_03_FERG_from_LMK_m0001.json'
-#config_file = 'NR_03_FERG_from_LMK_w0001.json'
+#config_file = 'NR_03_FERG_from_LMK_m0001.json'
+config_file = 'NR_03_FERG_from_LMK_w0001.json'
 # load config
-config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
-#config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+#config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
 print("-- Config loaded --")
 print()
 
@@ -132,35 +132,6 @@ for a in range(len(config['avatar_names'])):
 # set tuning vector with optimized direction
 if avatar_type is None:
     idx_array = [0, ]  # NRE-I best
-
-# with accuracy computed on the full dataset
-# elif avatar_type == 0:
-#     idx_array = [0, 69, 351, 270, 784, 666, 0]  # NRE-Jules best
-# elif avatar_type == 1:
-#     idx_array = [0, 133, 583, 115, 747, 445, 218]  # NRE-malcolm best
-# elif avatar_type == 2:
-#     idx_array = [0, 369, 1138, 586, 293, 64, 745]  # NRE-ray best
-# elif avatar_type == 3:
-#     idx_array = [0, 292, 588, 686, 1324, 412, 967]  # NRE-aia best
-# elif avatar_type == 4:
-#     idx_array = [0, 490, 955, 1170, 1248, 813, 567]  # NRE-bonnie best
-# elif avatar_type == 5:
-#     idx_array = [0, 150, 519, 317, 365, 209, 272]  # NRE-mery best
-
-# elif avatar_type == 0:
-#     idx_array = [0, 913, 61, 57, 12, 0, 91]  # NRE-Jules best
-# elif avatar_type == 1:
-#     idx_array = [0, 133, 796, 5, 697, 56, 420]  # NRE-malcolm best
-# elif avatar_type == 2:
-#     idx_array = [0, 0, 3, 243, 648, 170, 630]  # NRE-ray best
-# elif avatar_type == 3:
-#     idx_array = [0, 32, 562, 227, 293, 865, 971]  # NRE-aia best
-# elif avatar_type == 4:
-#     idx_array = [0, 929, 1034, 299, 268, 439, 1471]  # NRE-bonnie best
-# elif avatar_type == 5:
-#     idx_array = [0, 210, 314, 581, 68, 375, 659]  # NRE-mery best
-
-
 elif avatar_type == 0:
     idx_array = [0, 28, 21, 10, 0, 0, 0]  # NRE-Jules best
 elif avatar_type == 1:
@@ -235,7 +206,8 @@ opt_test_projections_preds = compute_projections(test_data, test_avatar, ref_vec
 print("shape opt_test_projections_preds", np.shape(opt_test_projections_preds))
 
 # compute accuracy
-print("opt test accuracy", compute_accuracy(opt_test_projections_preds, test_label))
+test_accuracy = compute_accuracy(opt_test_projections_preds, test_label)
+print(f"opt test accuracy: {test_accuracy}")
 
 #%% analysis
 confusion_matrix(test_label, opt_test_projections_preds)
@@ -251,3 +223,7 @@ for a in range(len(config['avatar_names'])):
     conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
     print(conf_mat)
     print()
+
+print("-------- finished ----------")
+print(f"finished 04c with avatar: {config['avatar_names'][avatar_type]} ({avatar_type}) and inferred expression: {infer_expr}")
+print(f"opt test accuracy: {test_accuracy}")
