@@ -15,11 +15,11 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 
 #%% import config
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json'              # OK
-config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json'         # OK
+# config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json        # OK
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'             # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'        # OK
-# config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            #
+config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            # OK
 # load config
 config = load_config(config_path, path='configs/behavourial')
 
