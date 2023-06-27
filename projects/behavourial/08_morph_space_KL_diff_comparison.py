@@ -6,7 +6,7 @@ import matplotlib.gridspec as gridspec
 
 np.set_printoptions(precision=3, suppress=True)
 """
-run: python -m projects.behavourial.07_morph_space_KL_diff_comparison
+run: python -m projects.behavourial.08_morph_space_KL_diff_comparison
 """
 
 #%% define computer path
@@ -22,9 +22,9 @@ elif 'mac' in computer:
 #%% declare script parameters
 show_plots = True
 model_names = ["NRE-indi-S", "NRE-indi-D", "NRE-cat-S", "NRE-cat-D",
-               "VGG19-imagenet", "VGG19-imagenet-conv3_3", "Resnet50v2-imagenet",
-               "VGG19-affectnet", "ResNet50v2-affectnet", "CORNet-affectnet"]
-load_path = os.path.join(computer_path, 'model_preds')
+               "VGG19_imagenet", "VGG19_imagenet_conv33", "Resnet50v2_imagenet",
+               "VGG19_affectnet", "ResNet50v2_affectnet", "CORNet_affectnet"]
+load_path = os.path.join(computer_path, 'model_behav_preds')
 conditions = ["human_orig", "monkey_orig"]
 
 
@@ -41,47 +41,46 @@ def get_path(model_name, condition):
         if 'D' in model_name:
             modality = 'dynamic'
 
-        acc_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_morph_acc.npy")
+        # acc_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_morph_acc.npy")
         kl_div_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_KL_div.npy")
     else:
-        print("TODO CNN models")
-        acc_path = None
-        kl_div_path = None
+        # acc_path = os.path.join(load_path, f"{model_name}_{condition}_morph_acc.npy")
+        kl_div_path = os.path.join(load_path, f"{model_name}_{condition}_KL_div.npy")
 
-    return acc_path, kl_div_path
+    return kl_div_path
 
 
 #%% load data
 accuracies = []
 kl_divergences = []
 for model_name in model_names:
-    accuracy = []
+    # accuracy = []
     kl_divergence = []
     for condition in conditions:
         # create path
-        acc_path, kl_div_path = get_path(model_name, condition)
+        kl_div_path = get_path(model_name, condition)
 
-        # load data
-        if acc_path is not None:
-            acc = np.load(acc_path)
-        else:
-            acc = 0
+        # # load data
+        # if acc_path is not None:
+        #     acc = np.load(acc_path)
+        # else:
+        #     acc = 0
         if kl_div_path is not None:
             kl_div = np.load(kl_div_path)
         else:
             kl_div = np.zeros((5, 5))
 
         # append to condition
-        accuracy.append(acc)
+        # accuracy.append(acc)
         kl_divergence.append(kl_div)
 
     # append to models
-    accuracies.append(accuracy)
+    # accuracies.append(accuracy)
     kl_divergences.append(kl_divergence)
 
-accuracies = np.array(accuracies)
+# accuracies = np.array(accuracies)
 kl_divergences = np.array(kl_divergences)
-print("shape accuracies", np.shape(accuracies))
+# print("shape accuracies", np.shape(accuracies))
 print("shape kl_divergences", np.shape(kl_divergences))
 
 
