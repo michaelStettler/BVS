@@ -85,7 +85,7 @@ print("shape kl_divergences", np.shape(kl_divergences))
 
 
 #%% plot kl divergence
-sum_kl_div = np.sum(kl_divergences, axis=(1, 2))
+sum_kl_div = np.sum(kl_divergences, axis=(2, 3))
 print("shape sum_kl_div", np.shape(sum_kl_div))
 
 fig, ax = plt.subplots()
@@ -96,10 +96,18 @@ for c, condition in enumerate(conditions):
     offset = width * c
     rects = plt.bar(x + offset, sum_kl_div[:, c], width, label=condition)
     # ax.bar_label(rects, padding=3)  # add value to bar
-ax.set_xticks(x + width, model_names)
+# ax.set_xticks(x + width, model_names)
+ax.set_xticks(x, model_names)
+plt.xticks(rotation=90)
+plt.tight_layout()
 ax.legend()
 
 plt.savefig(f"bar_plot_kl_div_analysis.svg", format='svg')
+
+for m, model in enumerate(model_names):
+    for c, condition in enumerate(conditions):
+        print(f"model: {model}-{condition}, KL-div: {sum_kl_div[m, c]}")
+    print()
 
 if show_plots:
     plt.show()
