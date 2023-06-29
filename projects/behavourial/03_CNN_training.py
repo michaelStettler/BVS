@@ -18,8 +18,8 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 #%% import config
 # config_path = 'BH_03_CNN_training_ResNet50v2_imagenet_w0001.json'           # ResNet50v2_imagenet DONE
 # config_path = 'BH_03_CNN_training_ResNet50v2_affectnet_w0001.json'        # ResNet50v2_affectnet DONE
-# config_path = 'BH_03_CNN_training_VGG19_imagnet_w0001.json'                # VGG19_imagenet DONE
-config_path = 'BH_03_CNN_training_VGG19_affectnet_w0001.json'              # VGG19_affectnet
+config_path = 'BH_03_CNN_training_VGG19_imagnet_w0001.json'                # VGG19_imagenet DONE
+# config_path = 'BH_03_CNN_training_VGG19_affectnet_w0001.json'              # VGG19_affectnet
 # config_path = 'BH_03_CNN_training_VGG19_imagenet_conv33_w0001.json'         # VGG19_imagenet_conv3_3 DONE
 #config_path = 'BH_03_CNN_training_VGG19_scratch_w0001.json'                # VGG19_imagenet_scratch
 # config_path = 'BH_03_CNN_training_CORNet_affectnet_w0001.json'            # CORNet_affectnet DONE

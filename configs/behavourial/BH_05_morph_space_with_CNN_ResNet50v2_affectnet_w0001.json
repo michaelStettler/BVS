@@ -8,5 +8,5 @@
   "load_directory": "D:/Dataset/MorphingSpace/DNN_weights",
   "save_directory": "D:/Dataset/MorphingSpace/model_preds",
   "input_shape": [224, 224, 3],
-  "model_name": "ResNet50V2_sparkling-sweep-2"
+  "model_name": "ResNet50v2_affectnet_brisk-sweep-77"
 }

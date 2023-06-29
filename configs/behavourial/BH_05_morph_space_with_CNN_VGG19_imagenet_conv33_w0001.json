@@ -8,5 +8,5 @@
   "load_directory": "D:/Dataset/MorphingSpace/DNN_weights",
   "save_directory": "D:/Dataset/MorphingSpace/model_preds",
   "input_shape": [224, 224, 3],
-  "model_name": "VGG19_colorful-sweep-5"
+  "model_name": "VGG19_imagenet_conv3_3_fragrant-sweep-48"
 }
