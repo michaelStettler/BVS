@@ -15,7 +15,7 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 
 #%% import config
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json'              # OK
-# config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json        # OK
+# config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json'        # OK
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'             # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'        # OK
@@ -26,7 +26,7 @@ config = load_config(config_path, path='configs/behavourial')
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 show_plot = True
-cond = 0
+cond = 1
 conditions = ["human_orig", "monkey_orig"]
 condition = conditions[cond]
 morph_csv = [os.path.join(config['directory'], "morphing_space_human_orig.csv"),
