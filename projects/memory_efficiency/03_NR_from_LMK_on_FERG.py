@@ -23,6 +23,8 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
     # normalize by norm of each landmarks
     norm_t = np.linalg.norm(tun_vectors, axis=2)
 
+    print('inputs shape:', inputs.shape)
+
     # for each images
     for i in range(len(inputs)):
         inp = inputs[i]
@@ -94,18 +96,32 @@ def add_matching_tun_vectors(tun_vectors, ref_vectors, tun_idx, ref_idx):
 # define configuration
 config_file = 'NR_03_FERG_from_LMK_m0001.json'
 # load config
-config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+# config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
 print("-- Config loaded --")
 print()
+
+
+#####
+# define configuration
+# config_file = 'NR_03_FERG_from_LMK_m0001.json'
+# config_file = 'NR_03_FERG_from_LMK_w0001.json'
+config_file = 'NR_03_FERG_alex.json'
+
+# load config
+# config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+# config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
+print("-- Config loaded --")
+#####
 
 # declare variables
 n_cat = 7
 
 #%%
 # Load data
-train_data = load_data(config, get_raw=True)
+train_data = load_data(config, get_raw=True, get_only_label=True)
 train_label = train_data[1]
-test_data = load_data(config, train=False, get_raw=True)
+test_data = load_data(config, train=False, get_raw=True, get_only_label=True)
 test_label = test_data[1]
 print("shape train_data[0]", np.shape(train_data[0]))
 print("shape test_data[0]", np.shape(test_data[0]))
@@ -146,7 +162,7 @@ print("shape ref_vectors", np.shape(ref_vectors))
 
 #%%
 # learn tun vectors from one avatar
-avatar = 0
+avatar = 1
 avatar_train_data = train_data[train_avatar == avatar]
 avatar_train_label = train_label[train_avatar == avatar]
 
@@ -201,16 +217,16 @@ print("test accuracy", compute_accuracy(test_projections_preds, test_label))
 confusion_matrix(train_label, projections_preds)
 
 #%%
-# accuracy per avatar
-for a in range(len(config['avatar_names'])):
-    avatar_test_projections_preds = test_projections_preds[test_avatar == a]
-    avatar_test_label = test_label[test_avatar == a]
-    accuracy = compute_accuracy(avatar_test_projections_preds, avatar_test_label)
-    print("test accuracy avatar {}: {}".format(a, accuracy))
-
-    conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
-    print(conf_mat)
-    print()
+# # accuracy per avatar
+# for a in range(len(config['avatar_names'])):
+#     avatar_test_projections_preds = test_projections_preds[test_avatar == a]
+#     avatar_test_label = test_label[test_avatar == a]
+#     accuracy = compute_accuracy(avatar_test_projections_preds, avatar_test_label)
+#     print("test accuracy avatar {}: {}".format(a, accuracy))
+#
+#     conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
+#     print(conf_mat)
+#     print()
 
 
 
