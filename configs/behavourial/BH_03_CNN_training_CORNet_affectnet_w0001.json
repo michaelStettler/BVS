@@ -1,0 +1,22 @@
+{
+  "config_name": "BH_03_CNN_training_CORNet_affectnet_w0001",
+  "project": "CORNet_affectnet",
+  "train_data": "FERG",
+  "x_col": "image_path",
+  "y_col": "category",
+  "n_category": 5,
+  "ref_category": 0,
+  "train_csv": "D:/Dataset/MorphingSpace/morphing_space_orig_train.csv",
+  "test_csv": "D:/Dataset/MorphingSpace/morphing_space_orig_val.csv",
+  "directory": "D:/Dataset/MorphingSpace",
+  "input_shape": [224, 224, 3],
+  "extraction_model": "ResNet50V2",
+  "include_top": false,
+  "weights": "D:/DNN_weights/CORnet_S_m0003_affectnet_resnetv2_blue_2022-02-18_03-44",
+  "base_learning_rate": 0.001,
+  "momentum": 0.9,
+  "decay_rate": 0.9,
+  "initial_epochs": 45,
+  "batch_size": 64,
+  "transfer_layer": "scratch"
+}

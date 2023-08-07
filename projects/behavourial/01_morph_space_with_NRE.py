@@ -31,7 +31,7 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 """
 
 #%% declare script variables
-computer = 'windows'
+computer = 'mac'
 if 'windows' in computer:
     computer_path = 'D:/Dataset/MorphingSpace'
     computer_letter = 'w'
@@ -52,15 +52,23 @@ load_ref = True
 save_ref = False
 load_tun = True
 save_tun = False
+model_name = 'NRE'
 # norm_type = 'individual'
-norm_type = 'categorical'
+# norm_type = 'categorical'  # deprecated
+norm_type = 'frobenius'
+use_dynamic = True
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
-condition = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
+conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
+cond = 0
+condition = conditions[cond]
 train_csv = [os.path.join(computer_path, "morphing_space_human_orig.csv"),
              os.path.join(computer_path, "morphing_space_monkey_orig.csv"),
              os.path.join(computer_path, "morphing_space_human_equi.csv"),
              os.path.join(computer_path, "morphing_space_monkey_equi.csv")]
-cond = 0
+modality = 'static'
+if use_dynamic:
+    modality = 'dynamic'
+prot_indexes = [np.arange(150), np.arange(600, 750), np.arange(3000, 3150), np.arange(3600, 3750)]
 
 #%% declare hyper parameters
 n_iter = 2
@@ -68,6 +76,10 @@ max_sigma = None
 max_sigma = 3000
 train_idx = None
 # train_idx = [50]
+tau_u = 6
+tau_v = 6
+tau_y = 1
+tau_d = 1
 
 #%% import config
 config_path = 'BH_01_morph_space_with_NRE_{}0001.json'.format(computer_letter)
@@ -77,23 +89,23 @@ config = load_config(config_path, path='configs/behavourial')
 # edit dictionary for single condition type
 if cond is not None:
     config["train_csv"] = train_csv[cond]
-    config["condition"] = condition[cond]
-    if "human" in condition[cond]:
+    config["condition"] = condition
+    if "human" in condition:
         config["avatar_types"] = ["human"]
     else:
         config["avatar_types"] = ["monkey"]
 
 # create directory
-save_path = os.path.join(config["directory"], config["LMK_data_directory"])
-if not os.path.exists(save_path):
-    os.mkdir(save_path)
-save_path = os.path.join(save_path, config["condition"])
+load_path = os.path.join(config["directory"], config["LMK_data_directory"], condition)
+save_lmk_path = load_path
+save_path = os.path.join(config["directory"], config["save_path"])
 if not os.path.exists(save_path):
     os.mkdir(save_path)
 
 print("-- Config loaded --")
 print()
 
+# declare LMK to train
 config["FR_lmk_name"] = ["left_eye", "right_eye", "nose"]
 config["FR_lmk_name"] = []
 
@@ -111,7 +123,7 @@ print("len train_data[0]", len(train_data[0]))
 print()
 
 #%% split training for LMK and norm base
-NRE_train = get_extrm_frame_from_morph_space(train_data, condition=condition[cond])
+NRE_train = get_extrm_frame_from_morph_space(train_data, condition=condition)
 LMK_train = train_data  # take all
 
 print("-- Data Split --")
@@ -170,16 +182,26 @@ if train_RBF_pattern:
 #%% get identity and positions from the FR Pathway
 extremes_idx = get_morph_extremes_idx()
 if load_FR_pathway:
-    FR_pos = np.load(os.path.join(save_path, "FR_LMK_pos.npy"))
-    face_ids = np.load(os.path.join(save_path, "face_identities.npy"))
-    face_positions = np.load(os.path.join(save_path, "face_positions.npy"))
+    FR_pos = np.load(os.path.join(load_path, "FR_LMK_pos.npy"))
+    face_ids = np.load(os.path.join(load_path, "face_identities.npy"))
+    face_positions = np.load(os.path.join(load_path, "face_positions.npy"))
+
+    if 'human' in condition:
+        FR_pos = FR_pos[:3750]
+        face_ids = face_ids[:3750]
+        face_positions = face_positions[:3750]
+    else:
+        FR_pos = FR_pos[3750:]
+        face_ids = face_ids[3750:]
+        face_positions = face_positions[3750:]
+
 else:
     FR_pos, face_ids, face_positions = get_identity_and_pos(train_data[0], v4_model, config, FR_patterns_list, FR_sigma_list)
 
     if save_FR_pos:
-        np.save(os.path.join(save_path, "FR_LMK_pos"), FR_pos)
-        np.save(os.path.join(save_path, "face_positions"), face_positions)
-        np.save(os.path.join(save_path, "face_identities"), face_ids)
+        np.save(os.path.join(save_lmk_path, "FR_LMK_pos"), FR_pos)
+        np.save(os.path.join(save_lmk_path, "face_positions"), face_positions)
+        np.save(os.path.join(save_lmk_path, "face_identities"), face_ids)
 print("shape FR_pos", np.shape(FR_pos))
 print("shape face_ids", np.shape(face_ids))
 print("face_ids[0]", face_ids[0])
@@ -195,21 +217,26 @@ print("face_ids[0]", face_ids[0])
 #%% predict LMK pos
 if load_FER_pos:
     print("load FER pos")
-    if os.path.exists(os.path.join(save_path, "FER_LMK_pos.npy")):
-        FER_pos = np.load(os.path.join(save_path, "FER_LMK_pos.npy"))
+    if os.path.exists(os.path.join(load_path, "FER_LMK_pos.npy")):
+        FER_pos = np.load(os.path.join(load_path, "FER_LMK_pos.npy"))
     else:
         FER_pos = merge_LMK_pos(config)
+
+    if 'human' in condition:
+        FER_pos = FER_pos[:3750]
+    else:
+        FER_pos = FER_pos[3750:]
 else:
     print("create FER pos")
     FER_pos = create_lmk_dataset(train_data[0], v4_model, "FER", config, FER_patterns_list, FER_sigma_list)
 
     if save_FER_pos:
         if save_FER_with_lmk_name:
-            np.save(os.path.join(save_path, "FER_LMK_pos" + "_" + config["FER_lmk_name"][0]), FER_pos)
+            np.save(os.path.join(save_lmk_path, "FER_LMK_pos" + "_" + config["FER_lmk_name"][0]), FER_pos)
 
             FER_pos = merge_LMK_pos(config)
         else:
-            np.save(os.path.join(save_path, "FER_LMK_pos"), FER_pos)
+            np.save(os.path.join(save_lmk_path, "FER_LMK_pos"), FER_pos)
 print("shape FER_pos", np.shape(FER_pos))
 print()
 
@@ -222,13 +249,13 @@ ref_idx = [0]
 avatar_labels = np.array([0]).astype(int)
 
 if load_ref:
-    ref_vectors = np.load(os.path.join(save_path, "ref_vectors.npy"))
+    ref_vectors = np.load(os.path.join(load_path, "ref_vectors.npy"))
 else:
     # ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=2)
     ref_vectors = learn_ref_vector(FER_pos[ref_idx], train_data[1][ref_idx], avatar_labels=avatar_labels, n_avatar=1)
 
     if save_ref:
-        np.save(os.path.join(save_path, "ref_vectors"), ref_vectors)
+        np.save(os.path.join(save_lmk_path, "ref_vectors"), ref_vectors)
 
 print("shape ref_vectors", np.shape(ref_vectors))
 
@@ -256,12 +283,12 @@ if show_plot:
 #%% learn tuning vectors
 tun_idx = [0] + get_morph_extremes_idx(config["condition"])[:4]
 if load_tun:
-    tun_vectors = np.load(os.path.join(save_path, "tun_vectors.npy"))
+    tun_vectors = np.load(os.path.join(load_path, "tun_vectors.npy"))
 else:
     tun_vectors = learn_tun_vectors(FER_pos[tun_idx], train_data[1][tun_idx], ref_vectors, face_ids[tun_idx], n_cat=5)
 
     if save_tun:
-        np.save(os.path.join(save_path, "tun_vectors"), tun_vectors)
+        np.save(os.path.join(save_lmk_path, "tun_vectors"), tun_vectors)
 
 print("shape tun_vectors", np.shape(tun_vectors))
 print(tun_vectors)
@@ -289,20 +316,115 @@ print()
 #     plt.title("seq_{}".format(0))
 #     plt.show()
 
-#%% plot sequence analysis
-indexes = [np.arange(150), np.arange(750, 900), np.arange(3600, 3750)]
-video_names = ["HA_Angry_1.0_Human_1.0.mp4", "HA_Angry_1.0_Human_0.75.mp4", "HA_Angry_0.0_Human_0.0.mp4"]
 
-for index, video_name in zip(indexes, video_names):
-    plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
-                                 NRE_proj[index], config,
-                                 video_name=video_name,
-                                 lmk_proj=NRE_proj_lmk[index],
-                                 pre_processing='VGG19',
-                                 lmk_size=3)
-print("finish creating sequence analysis")
+#%% Compute differentiators
+def compute_dynamic_responses(seq_resp, n_cat=5, tau_u=3, tau_v=3, tau_y=15, tau_d=5, w_inhib=0.8, get_differentiator=False):
+    """
+    Compute the dynamic responses of recognition neurons
+    Compute first a differentiation circuit followed by a competitive network
+    :param seq_resp:
+    :return:
+    """
+    seq_length = np.shape(seq_resp)[0]
 
-matplotlib.use('macosx')
+    # --------------------------------------------------------------------------------------------------------------
+    # compute differentitator
+
+    # declare differentiator
+    v_df = np.zeros((seq_length, n_cat))  # raw difference
+    pos_df = np.zeros((seq_length, n_cat))  # positive flanks
+    neg_df = np.zeros((seq_length, n_cat))  # negative flanks
+    y_df = np.zeros((seq_length, n_cat))  # integrator
+
+    for f in range(1, seq_length):
+        # compute differences
+        pos_dif = seq_resp[f - 1] - v_df[f - 1]
+        pos_dif[pos_dif < 0] = 0
+        neg_dif = v_df[f - 1] - seq_resp[f - 1]
+        neg_dif[neg_dif < 0] = 0
+
+        # update differentiator states
+        v_df[f] = ((tau_v - 1) * v_df[f - 1] + seq_resp[f - 1]) / tau_v
+        pos_df[f] = ((tau_u - 1) * pos_df[f - 1] + pos_dif) / tau_u
+        neg_df[f] = ((tau_u - 1) * neg_df[f - 1] + neg_dif) / tau_u
+        y_df[f] = ((tau_y - 1) * y_df[f - 1] + pos_df[f - 1] + neg_df[f - 1]) / tau_y
+
+    # --------------------------------------------------------------------------------------------------------------
+    # compute decision network
+
+    # declare inhibition kernel
+    inhib_k = (1 - np.eye(n_cat) * 0.8) * w_inhib
+    # declare decision neurons
+    ds_neuron = np.zeros((seq_length, n_cat))
+
+    for f in range(1, seq_length):
+        # update decision neurons
+        ds_neur = ((tau_d - 1) * ds_neuron[f - 1] + y_df[f - 1] - inhib_k @ ds_neuron[f - 1]) / tau_d
+
+        # apply activation to decision neuron
+        ds_neur[ds_neur < 0] = 0
+        ds_neuron[f] = ds_neur
+
+    if get_differentiator:
+        return ds_neuron, np.array([pos_df, neg_df])
+    else:
+        return ds_neuron
+
+
+#%%
+# get decision neurons
+if use_dynamic:
+    ds_neurons = []
+    diff_neurons = []
+    print("shape NRE_proj", np.shape(NRE_proj))
+    for i in range(25):
+        ds_neuron, differentiators = compute_dynamic_responses(NRE_proj[i*150:i*150+150],
+                                                               get_differentiator=True,
+                                                               tau_u=tau_u,
+                                                               tau_v=tau_v,
+                                                               tau_d=tau_d,
+                                                               tau_y=tau_y)
+        ds_neurons.append(ds_neuron)
+        diff_neurons.append(differentiators)
+    ds_neurons = np.reshape(ds_neurons, (-1, np.shape(ds_neurons)[-1]))
+    diff_neurons = np.array(diff_neurons)
+    print("shape ds_neurons", np.shape(ds_neurons))
+    print("shape diff_neurons", np.shape(diff_neurons))
+else:
+    ds_neurons = NRE_proj
+
+#%% plot categorization over sequence from decision neurons
+if use_dynamic:
+    mapping_array = [0, 4, 20, 24]
+    for i in range(len(prot_indexes)):
+        print(f"prototype {i}, index: {prot_indexes[i][0]}:{prot_indexes[i][-1]}")
+        # plot test human fear
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
+        ax1.plot(NRE_proj[prot_indexes[i]])
+        ax2.plot(diff_neurons[mapping_array[i], 0])
+        ax3.plot(diff_neurons[mapping_array[i], 1])
+        ax4.plot(ds_neurons[prot_indexes[i]])
+        fig.legend(["N", "HA", "HF", "MA", "MF"])
+        fig.suptitle(f"seq_{i}")
+        fig.savefig(f"NRE_{norm_type}_dyn_seq_{i}_u_{tau_u}_v_{tau_v}_y_{tau_y}_d_{tau_d}.jpeg")
+
+        if show_plot:
+            fig.show()
+
+# #%% plot sequence analysis
+# video_names = [f"{condition}_Angry_1.0_Human_1.0.mp4", f"{condition}_Angry_0.0_Human_1.0.mp4",
+#                f"{condition}_Angry_1.0_Human_0.0.mp4", f"{condition}_Angry_0.0_Human_0.0.mp4"]
+#
+# for index, video_name in zip(prot_indexes, video_names):
+#     plot_signature_proj_analysis(np.array(train_data[0][index]), FER_pos[index], ref_vectors, tun_vectors,
+#                                  NRE_proj[index], config,
+#                                  video_name=video_name,
+#                                  lmk_proj=NRE_proj_lmk[index],
+#                                  pre_processing='VGG19',
+#                                  lmk_size=3)
+# print("finish creating sequence analysis")
+#
+# matplotlib.use('macosx')
 
 
 #%%
@@ -310,52 +432,52 @@ def print_morph_space(amax_ms_grid=None, cat_grid=None, prob_grid=None,
                       title=None, show_plot=True, save=True, save_path=None):
     if amax_ms_grid is not None:
         fig, axs = plt.subplots(2, 2)
-        axs[0, 0].imshow(amax_ms_grid[..., 1], cmap='hot', interpolation='nearest')
-        axs[0, 1].imshow(amax_ms_grid[..., 2], cmap='hot', interpolation='nearest')
-        axs[1, 0].imshow(amax_ms_grid[..., 3], cmap='hot', interpolation='nearest')
-        axs[1, 1].imshow(amax_ms_grid[..., 4], cmap='hot', interpolation='nearest')
+        axs[0, 0].imshow(amax_ms_grid[..., 0], cmap='hot', interpolation='nearest')
+        axs[0, 1].imshow(amax_ms_grid[..., 1], cmap='hot', interpolation='nearest')
+        axs[1, 0].imshow(amax_ms_grid[..., 2], cmap='hot', interpolation='nearest')
+        axs[1, 1].imshow(amax_ms_grid[..., 3], cmap='hot', interpolation='nearest')
 
-        if show_plot:
-            plt.show()
         if save:
             if save_path is None:
-                plt.savefig("morph_space_read_out_values_{}.jpeg".format(norm_type))
+                plt.savefig(f"{title}_morph_space_read_out_values.jpeg")
             else:
-                plt.savefig(os.path.join(save_path, "morph_space_read_out_values_{}.jpeg".format(norm_type)))
+                plt.savefig(os.path.join(save_path, f"{title}_morph_space_read_out_values.jpeg"))
+        if show_plot:
+            plt.show()
 
     if cat_grid is not None:
         # print category grid
         fig, axs = plt.subplots(2, 2)
-        axs[0, 0].imshow(cat_grid[..., 1], cmap='hot', interpolation='nearest')
-        axs[0, 1].imshow(cat_grid[..., 2], cmap='hot', interpolation='nearest')
-        axs[1, 0].imshow(cat_grid[..., 3], cmap='hot', interpolation='nearest')
-        axs[1, 1].imshow(cat_grid[..., 4], cmap='hot', interpolation='nearest')
+        axs[0, 0].imshow(cat_grid[..., 0], cmap='hot', interpolation='nearest')
+        axs[0, 1].imshow(cat_grid[..., 1], cmap='hot', interpolation='nearest')
+        axs[1, 0].imshow(cat_grid[..., 2], cmap='hot', interpolation='nearest')
+        axs[1, 1].imshow(cat_grid[..., 3], cmap='hot', interpolation='nearest')
 
-        if show_plot:
-            plt.show()
         if save:
             if save_path is None:
-                plt.savefig("morph_space_categories_values_{}.jpeg".format(norm_type))
+                plt.savefig(f"{title}_morph_space_categories_values.jpeg")
             else:
-                plt.savefig(os.path.join(save_path, "morph_space_categories_values_{}.jpeg".format(norm_type)))
+                plt.savefig(os.path.join(save_path, f"{title}_morph_space_categories_values.jpeg"))
+        if show_plot:
+            plt.show()
 
     # print probability grid
     if cat_grid is not None:
         fig, axs = plt.subplots(2, 2)
-        axs[0, 0].imshow(prob_grid[..., 1], cmap='hot', interpolation='nearest')
-        axs[0, 1].imshow(prob_grid[..., 2], cmap='hot', interpolation='nearest')
-        axs[1, 0].imshow(prob_grid[..., 3], cmap='hot', interpolation='nearest')
-        axs[1, 1].imshow(prob_grid[..., 4], cmap='hot', interpolation='nearest')
+        axs[0, 0].imshow(prob_grid[..., 0], cmap='hot', interpolation='nearest')
+        axs[0, 1].imshow(prob_grid[..., 1], cmap='hot', interpolation='nearest')
+        axs[1, 0].imshow(prob_grid[..., 2], cmap='hot', interpolation='nearest')
+        axs[1, 1].imshow(prob_grid[..., 3], cmap='hot', interpolation='nearest')
 
-        if show_plot:
-            plt.show()
         if save:
             if save_path is None:
-                plt.savefig("morph_space_probabilities_values_{}.jpeg".format(norm_type))
+                plt.savefig(f"{title}_morph_space_probabilities_values.jpeg")
             else:
-                plt.savefig(os.path.join(save_path, "morph_space_probabilities_values_{}.jpeg".format(norm_type)))
+                plt.savefig(os.path.join(save_path, f"{title}_morph_space_probabilities_values.jpeg"))
+        if show_plot:
+            plt.show()
 
-morph_space_data = np.reshape(NRE_proj[:3750], [25, 150, -1])
+morph_space_data = np.reshape(ds_neurons[:3750], [25, 150, -1])
 print("shape morph_space_data", np.shape(morph_space_data))
 
 # fig, axs = plt.subplots(len(morph_space_data))
@@ -369,20 +491,24 @@ print(amax_ms)
 
 # make into grid
 amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
+amax_ms_grid = amax_ms_grid[..., 1:]
 print("shape amax_ms_grid", np.shape(amax_ms_grid))
 
-cat_grid = np.zeros((5, 5, 5))
-prob_grid = np.zeros((5, 5, 5))
+cat_grid = np.zeros((5, 5, 4))
+prob_grid = np.zeros((5, 5, 4))
 for i in range(np.shape(amax_ms_grid)[0]):
     for j in range(np.shape(amax_ms_grid)[0]):
-        x = amax_ms_grid[i, j]
+        x = amax_ms_grid[i, j]  # discard neutral
         cat_grid[i, j, np.argmax(x)] = 1
         prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
 
-np.save(os.path.join(save_path, "amax_ms_grid_{}".format(norm_type)), amax_ms_grid)
-np.save(os.path.join(save_path, "cat_grid_{}".format(norm_type)), cat_grid)
-np.save(os.path.join(save_path, "prob_grid_{}".format(norm_type)), prob_grid)
+title = f"{model_name}_{norm_type}_{modality}_{condition}"
+print(f"finish script for {title}")
+print(f"save in: {save_path}")
+np.save(os.path.join(save_path, f"{title}_raw_ms_grid"), amax_ms_grid)
+np.save(os.path.join(save_path, f"{title}_cat_grid"), cat_grid)
+np.save(os.path.join(save_path, f"{title}_prob_grid"), prob_grid)
 
 
-print_morph_space(amax_ms_grid, cat_grid, prob_grid, show_plot=True, title="Human")
+print_morph_space(amax_ms_grid, cat_grid, prob_grid, show_plot=False, title=title)
 

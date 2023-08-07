@@ -7,8 +7,9 @@ from utils.load_config import load_config
 from utils.load_data import load_data
 from utils.Metrics.accuracy import compute_accuracy
 from utils.NormReference.reference_vectors import learn_ref_vector
+from utils.NormReference.reference_vectors import infer_ref_vector
+from utils.NormReference.reference_vectors import optimize_inferred_ref
 from utils.NormReference.tuning_vectors import learn_tun_vectors
-from utils.NormReference.tuning_vectors import optimize_tuning_vectors
 from utils.NormReference.tuning_vectors import compute_projections
 
 
@@ -16,13 +17,21 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
 
 """
-run: python -m projects.memory_efficiency.04_ablation_NR_single_ref_FERG
+run: python -m projects.memory_efficiency.04c_ablation_NR_inferred_ref_FERG
 
-Optimize the tuning direction over all dataset, using only a single ref
+Optimize the tuning direction over all dataset, using only a ref inferred from one expression
 """
 
 avatar_type = None
 avatar_type = 5
+infer_expr = 6  # inferred expressions
+#                   0 = neutral,
+#                   1 = joy,
+#                   2 = anger,
+#                   3 = sadness
+#                   4 = surprise
+#                   5 = fear
+#                   6 = disgust
 do_optimize = True
 
 
@@ -31,7 +40,7 @@ do_optimize = True
 #config_file = 'NR_03_FERG_from_LMK_m0001.json'
 config_file = 'NR_03_FERG_from_LMK_w0001.json'
 # load config
-# config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
+#config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
 config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
 print("-- Config loaded --")
 print()
@@ -64,26 +73,9 @@ print()
 
 
 #%%
-# select a ref vector (first neutral from the avatar of interest)
-ref_idx = np.arange(len(train_avatar))
-ref_idx = ref_idx[train_avatar == avatar_type]
-
-found_neutral = False
-n_idx = 0
-# find first neutral images:
-while not found_neutral:
-    if int(train_label[ref_idx[n_idx]]) == 0:
-        ref_idx = ref_idx[n_idx]
-        found_neutral = True
-    n_idx += 1
-
-if int(train_label[ref_idx]) != 0:
-    print(f"ref_index: {ref_idx}, val: {int(train_label[ref_idx])}")
-    raise ValueError("Ref vector is not from a neutral expression!")
-
-ref_vector = train_data[ref_idx]
-# duplicate ref_vector to match downstream code
-ref_vectors = np.repeat(np.expand_dims(ref_vector, axis=0), 6, axis=0)
+# learn neutral patterns
+# for now it is ok to learn one for each identity, I can use them to check with the inferred one latter
+ref_vectors = learn_ref_vector(train_data, train_label, train_avatar, len(config['avatar_names']))
 print("shape ref_vectors", np.shape(ref_vectors))
 
 
@@ -91,8 +83,27 @@ print("shape ref_vectors", np.shape(ref_vectors))
 # learn tun vectors from one avatar
 if avatar_type is not None:
     print("avatar name:", config['avatar_names'][avatar_type])
-tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar, n_cat=n_cat, avatar_type_idx=avatar_type)
+tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
+                                n_cat=n_cat,
+                                avatar_type_idx=avatar_type)
 print("shape tun_vectors", np.shape(tun_vectors))
+
+#%%
+# infer a ref vector from the tuning vectors
+inferred_ref_vectors = infer_ref_vector(train_data, train_label, train_avatar, len(config['avatar_names']),
+                                        avatar_of_int=avatar_type,
+                                        expr_to_infer=infer_expr,
+                                        tuning_vectors=tun_vectors)
+
+print("ref_vectors[1]:")
+print(ref_vectors[1])
+print("inferred_ref_vectors[1]:")
+print(inferred_ref_vectors[1])
+print("difference")
+print(ref_vectors[1] - inferred_ref_vectors[1])
+
+ref_vectors = inferred_ref_vectors
+print("shape ref_vectors", np.shape(ref_vectors))
 
 #%%
 # compute projections
@@ -106,87 +117,21 @@ train_accuracy = compute_accuracy(projections_preds, train_label)
 print("train accuracy", train_accuracy)
 
 #%%
-# ------ test -----------
-# compute test projections
-test_projections_preds = compute_projections(test_data, test_avatar, ref_vectors, tun_vectors,
-                                             neutral_threshold=5,
-                                             verbose=False)
-print("shape test_projections_preds", np.shape(test_projections_preds))
-
-# compute accuracy
-print("test accuracy", compute_accuracy(test_projections_preds, test_label))
-
-#%% analysis
-confusion_matrix(test_label, test_projections_preds)
-
-#%%
 # accuracy per avatar
 for a in range(len(config['avatar_names'])):
-    avatar_test_projections_preds = test_projections_preds[test_avatar == a]
-    avatar_test_label = test_label[test_avatar == a]
-    accuracy = compute_accuracy(avatar_test_projections_preds, avatar_test_label)
-    print("test accuracy avatar {}: {}".format(a, accuracy))
+    avatar_projections_preds = projections_preds[train_avatar == a]
+    avatar_train_label = train_label[train_avatar == a]
+    accuracy = compute_accuracy(avatar_projections_preds, avatar_train_label)
+    print(f"train accuracy avatar {a}: {accuracy}")
 
-    conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
+    conf_mat = confusion_matrix(avatar_train_label, avatar_projections_preds)
     print(conf_mat)
     print()
-
-#%%
-if do_optimize:
-    # optimize
-    idx_array = np.zeros(n_cat).astype(int)
-    best_idexes = []
-    new_accuracy = 0
-    for cat in range(1, 7):
-        category_to_optimize = cat
-        best_idx, accuracy, best_matching_idx = optimize_tuning_vectors(train_data, train_label, train_avatar,
-                                                                        category_to_optimize, idx_array,
-                                                                        avatar_type_idx=avatar_type,
-                                                                        ref_vectors=ref_vectors)
-        print("category: {}, best_idx: {}, accuracy: {}".format(cat, best_idx, accuracy))
-        print()
-        idx_array[cat] = best_idx
-        best_idexes.append(best_matching_idx)
-
-        if accuracy > new_accuracy:
-            new_accuracy = accuracy
-
-    print("best_indexes".format(best_idexes))
-    print("optimized from: {} to {}".format(train_accuracy, accuracy))
 
 #%%
 # set tuning vector with optimized direction
 if avatar_type is None:
     idx_array = [0, ]  # NRE-I best
-
-# with accuracy computed on the full dataset
-# elif avatar_type == 0:
-#     idx_array = [0, 69, 351, 270, 784, 666, 0]  # NRE-Jules best
-# elif avatar_type == 1:
-#     idx_array = [0, 133, 583, 115, 747, 445, 218]  # NRE-malcolm best
-# elif avatar_type == 2:
-#     idx_array = [0, 369, 1138, 586, 293, 64, 745]  # NRE-ray best
-# elif avatar_type == 3:
-#     idx_array = [0, 292, 588, 686, 1324, 412, 967]  # NRE-aia best
-# elif avatar_type == 4:
-#     idx_array = [0, 490, 955, 1170, 1248, 813, 567]  # NRE-bonnie best
-# elif avatar_type == 5:
-#     idx_array = [0, 150, 519, 317, 365, 209, 272]  # NRE-mery best
-
-# ref might not have been neutral?
-# elif avatar_type == 0:
-#     idx_array = [0, 28, 21, 10, 0, 0, 0]  # NRE-Jules best
-# elif avatar_type == 1:
-#     idx_array = [0, 1, 148, 145, 244, 205, 749]  # NRE-malcolm best
-# elif avatar_type == 2:
-#     idx_array = [0, 36, 342, 40, 66, 0, 280]  # NRE-ray best
-# elif avatar_type == 3:
-#     idx_array = [0, 49, 853, 91, 731, 509, 260]  # NRE-aia best
-# elif avatar_type == 4:
-#     idx_array = [0, 903, 14, 627, 24, 427, 1214]  # NRE-bonnie best
-# elif avatar_type == 5:
-#     idx_array = [0, 210, 314, 581, 68, 375, 659]  # NRE-mery best
-
 elif avatar_type == 0:
     idx_array = [0, 28, 21, 10, 0, 0, 0]  # NRE-Jules best
 elif avatar_type == 1:
@@ -200,6 +145,8 @@ elif avatar_type == 4:
 elif avatar_type == 5:
     idx_array = [0, 210, 314, 581, 68, 375, 659]  # NRE-mery best
 
+print(f"idx_array: {idx_array}")
+
 # learn tun vectors from one avatar
 opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
                                     n_cat=n_cat,
@@ -208,7 +155,39 @@ opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_
 print("shape opt_tun_vectors", np.shape(opt_tun_vectors))
 
 #%%
-# compute optimized projections
+print("------ before inferred optimization ------")
+# compute avatar optimized projections
+opt_projections_preds = compute_projections(train_data, train_avatar, ref_vectors, opt_tun_vectors,
+                                            neutral_threshold=5,
+                                            verbose=False)
+print("shape opt_projections_preds", np.shape(opt_projections_preds))
+
+# compute accuracy
+opt_train_accuracy = compute_accuracy(opt_projections_preds, train_label)
+print("opt_train_accuracy accuracy", opt_train_accuracy)
+
+# accuracy per avatar
+for a in range(len(config['avatar_names'])):
+    avatar_projections_preds = opt_projections_preds[train_avatar == a]
+    avatar_train_label = train_label[train_avatar == a]
+    accuracy = compute_accuracy(avatar_projections_preds, avatar_train_label)
+    print(f"train accuracy avatar {a}: {accuracy}")
+
+    conf_mat = confusion_matrix(avatar_train_label, avatar_projections_preds)
+    print(conf_mat)
+    print()
+
+#%%
+if do_optimize:
+    inferred_ref = optimize_inferred_ref(train_data, train_label, train_avatar, len(config['avatar_names']),
+                                         avatar_of_int=avatar_type,
+                                         expr_to_infer=infer_expr,
+                                         ref_vectors=ref_vectors,
+                                         tun_vectors=tun_vectors)
+    ref_vectors = inferred_ref
+
+#%%
+print("------ after inferred optimization ------")
 opt_projections_preds = compute_projections(train_data, train_avatar, ref_vectors, opt_tun_vectors,
                                             neutral_threshold=5,
                                             verbose=False)
@@ -227,7 +206,8 @@ opt_test_projections_preds = compute_projections(test_data, test_avatar, ref_vec
 print("shape opt_test_projections_preds", np.shape(opt_test_projections_preds))
 
 # compute accuracy
-print("opt test accuracy", compute_accuracy(opt_test_projections_preds, test_label))
+test_accuracy = compute_accuracy(opt_test_projections_preds, test_label)
+print(f"opt test accuracy: {test_accuracy}")
 
 #%% analysis
 confusion_matrix(test_label, opt_test_projections_preds)
@@ -243,3 +223,7 @@ for a in range(len(config['avatar_names'])):
     conf_mat = confusion_matrix(avatar_test_label, avatar_test_projections_preds)
     print(conf_mat)
     print()
+
+print("-------- finished ----------")
+print(f"finished 04c with avatar: {config['avatar_names'][avatar_type]} ({avatar_type}) and inferred expression: {infer_expr}")
+print(f"opt test accuracy: {test_accuracy}")

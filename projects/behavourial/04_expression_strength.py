@@ -30,7 +30,7 @@ np.set_printoptions(precision=3, suppress=True, linewidth=180)
 run: python -m projects.behavourial.04_expression_strength
 """
 #%% declare script variables
-show_plot = False
+show_plot = True
 load_RBF_pattern = True
 train_RBF_pattern = False
 save_RBF_pattern = False
@@ -46,7 +46,8 @@ save_tun = True
 load_test_lmk_pos = True
 save_test_lmk_pos = False
 # norm_type = 'individual'
-norm_type = 'categorical'
+# norm_type = 'categorical'  # deprecated
+norm_type = 'frobenius'
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 train_csv = ["/Users/michaelstettler/PycharmProjects/BVS/data/ExpressivityLevels/train.csv"]
 avatar_name = ["monkey"]
@@ -310,45 +311,50 @@ if show_plot:
     linewidths = [0.5, 1.0, 1.5, 2.0]
     fig.suptitle('NRE Predictions for expression strength level')
     for i in range(3):
+        seq_idx = (i * 4 + 3) * 120  # +00% is at pos 4
+        max_data = np.amax(NRE_test_proj[seq_idx:seq_idx + 120, i+1])
+
         for j in range(4):  # don't plot neutral
             seq_idx = (i * 4 + j) * 120
 
-            axs[i].plot(NRE_test_proj[seq_idx:seq_idx + 120, i+1], color=colors[i], linewidth=linewidths[j])
+            seq_data = NRE_test_proj[seq_idx:seq_idx + 120, i+1] / max_data
+            axs[i].plot(seq_data, color=colors[i], linewidth=linewidths[j])
             if i == 0:
                 axs[i].legend(["25", "50", "75", "100"])
+    plt.savefig(f"NRE_{norm_type}_projections.svg", format='svg')
     plt.show()
-    # plt.savefig("NRE_projections")
 
 #%% bar plot
-fig, axs = plt.subplots(1, 3)
-colors = np.array([(0, 0, 255), (0, 191, 0), (237, 0, 0)]) / 255
-titles = ["Fear", "Lipsmack", "threat"]
-# fig.suptitle('NRE Predictions for expression strength level')
-for i in range(3):
-    heights = []
-    for j in range(4):  # don't plot neutral
-        seq_idx = (i * 4 + j) * 120
-        seq = [NRE_test_proj[seq_idx:seq_idx + 120, i+1]]
-        heights.append(np.amax(seq))
+if show_plot:
+    fig, axs = plt.subplots(1, 3)
+    colors = np.array([(0, 0, 255), (0, 191, 0), (237, 0, 0)]) / 255
+    titles = ["Fear", "Lipsmack", "threat"]
+    # fig.suptitle('NRE Predictions for expression strength level')
+    for i in range(3):
+        heights = []
+        for j in range(4):  # don't plot neutral
+            seq_idx = (i * 4 + j) * 120
+            seq = [NRE_test_proj[seq_idx:seq_idx + 120, i+1]]
+            heights.append(np.amax(seq))
 
-    x = [0, 1, 2, 3]
-    y = heights/np.amax(heights)
-    z = np.polyfit(x, y, 1)
-    p = np.poly1d(z)
+        x = [0, 1, 2, 3]
+        y = heights/np.amax(heights)
+        z = np.polyfit(x, y, 1)
+        p = np.poly1d(z)
 
-    axs[i].bar(x, y, color=colors[i])
-    axs[i].set_xticks(np.arange(4), ['25', '50', '75', '100'])
-    axs[i].set_title(titles[i], color=colors[i])
-    axs[i].plot(x, p(x), color='black', linewidth=2)
+        axs[i].bar(x, y, color=colors[i])
+        axs[i].set_xticks(np.arange(4), ['25', '50', '75', '100'])
+        axs[i].set_title(titles[i], color=colors[i])
+        axs[i].plot(x, p(x), color='black', linewidth=2)
 
-    axs[i].spines['top'].set_visible(False)
-    axs[i].spines['right'].set_visible(False)
-    if i > 0:
-        axs[i].spines['left'].set_visible(False)
-        axs[i].get_yaxis().set_ticks([])
-    # axs[i].spines['bottom'].set_visible(False)
-plt.show()
-# plt.savefig("NRE_bar_expr_level")
+        axs[i].spines['top'].set_visible(False)
+        axs[i].spines['right'].set_visible(False)
+        if i > 0:
+            axs[i].spines['left'].set_visible(False)
+            axs[i].get_yaxis().set_ticks([])
+        # axs[i].spines['bottom'].set_visible(False)
+    plt.savefig(f"NRE_{norm_type}_bar_expr_level.svg", format='svg')
+    plt.show()
 
 
 

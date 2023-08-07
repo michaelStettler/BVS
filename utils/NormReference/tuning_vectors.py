@@ -2,7 +2,6 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.Metrics.accuracy import compute_accuracy
-from utils.NormReference.reference_vectors import learn_ref_vector
 
 
 def filter_by_avatar(lmk_pos, labels, avatar_labels, avatar_type_idx):
@@ -43,14 +42,14 @@ def learn_tun_vectors(lmk_pos, labels, ref_vectors, avatar_labels, n_cat=7, idx_
     return np.array(tun_vectors)
 
 
-def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize, idx_array, n_cat,
+def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize, idx_array,
                             avatar_type_idx=None, ref_vectors=None):
 
     # learn neutral pattern
     if ref_vectors is not None:
         ref_vectors = ref_vectors
     else:
-        ref_vectors = learn_ref_vector(lmk_pos, labels, avatar_labels, n_cat)
+        raise ValueError("Please provide ref_vectors")
 
     print("len lmk_pos", len(lmk_pos))
     # discard all image not from that avatar
@@ -76,11 +75,12 @@ def optimize_tuning_vectors(lmk_pos, labels, avatar_labels, category_to_optimize
         tun_vectors = learn_tun_vectors(filt_lmk_pos, filt_labels, ref_vectors, filt_avatar_labels, idx_array=idx_array)
 
         # compute projections
-        projections_preds = compute_projections(lmk_pos, avatar_labels, ref_vectors, tun_vectors,
+        # projections_preds = compute_projections(lmk_pos, avatar_labels, ref_vectors, tun_vectors,
+        projections_preds = compute_projections(filt_lmk_pos, filt_avatar_labels, ref_vectors, tun_vectors,
                                                 neutral_threshold=5,
                                                 verbose=False)
         # compute accuracy
-        new_accuracy = compute_accuracy(projections_preds, labels)
+        new_accuracy = compute_accuracy(projections_preds, filt_labels)
 
         if new_accuracy > accuracy:
             print("new accuracy: {}, idx: {} (matching {})".format(new_accuracy, i, cat_img_idx[i]))
@@ -115,8 +115,11 @@ def compute_projections(inputs, avatars, ref_vectors, tun_vectors, nu=1, neutral
         norm_t = np.linalg.norm(tun_vectors, axis=2)
     elif norm_type == 'categorical':
         norm_t = np.linalg.norm(tun_vectors, axis=2)
-        norm_t = np.linalg.norm(norm_t, axis=1)
-        norm_t = np.repeat(np.expand_dims(norm_t, axis=1), np.shape(tun_vectors)[1], axis=1)
+        norm_t = np.linalg.norm(norm_t, axis=1, keepdims=True)
+        norm_t = np.repeat(norm_t, np.shape(tun_vectors)[1], axis=1)
+    elif norm_type == 'frobenius':
+        norm_t = np.linalg.norm(tun_vectors, axis=(1, 2), keepdims=True)
+        norm_t = np.repeat(norm_t[..., 0], np.shape(tun_vectors)[1], axis=1)
     else:
         raise NotImplementedError("norm_type {} is not a valid type".format(norm_type))
 

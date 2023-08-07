@@ -1,6 +1,6 @@
 {
-  "config_name": "BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001",
-  "project": "ResNet50v2_imagenet",
+  "config_name": "BH_05_morph_space_with_CNN_CORNet_affectnet_w0001",
+  "project": "CORNet_affectnet",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
@@ -8,5 +8,5 @@
   "load_directory": "D:/Dataset/MorphingSpace/DNN_weights",
   "save_directory": "D:/Dataset/MorphingSpace/model_preds",
   "input_shape": [224, 224, 3],
-  "model_name": "ResNet50v2_imagenet_decent-sweep-48"
+  "model_name": "CORNet_affectnet_zany-sweep-83"
 }

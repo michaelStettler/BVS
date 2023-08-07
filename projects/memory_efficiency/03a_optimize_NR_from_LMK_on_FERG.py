@@ -22,7 +22,7 @@ Optimize the tuning direction over all dataset, no mather the avatar type
 """
 
 avatar_type = None
-avatar_type = 4
+avatar_type = 0
 do_optimize = False
 
 
@@ -54,9 +54,9 @@ n_cat = 7
 
 #%%
 # Load data
-train_data = load_data(config, get_raw=True)
+train_data = load_data(config, get_raw=True, get_only_label=True)
 train_label = train_data[1]
-test_data = load_data(config, train=False, get_raw=True)
+test_data = load_data(config, train=False, get_raw=True, get_only_label=True)
 test_label = test_data[1]
 print("shape train_data[0]", np.shape(train_data[0]))
 print("shape test_data[0]", np.shape(test_data[0]))
@@ -163,18 +163,35 @@ if do_optimize:
 # set tuning vector with optimized direction
 if avatar_type is None:
     idx_array = [0, 3993, 6957, 418, 6214, 1945, 4406]  # NRE-I best
+
+# # with accuracy computed on the full dataset
+# elif avatar_type == 0:
+#     idx_array = [0, 287, 1043, 262, 548, 1353, 169]  # NRE-Jules best
+# elif avatar_type == 1:
+#     idx_array = [0, 617, 234, 429, 434, 307, 268]  # NRE-malcolm best
+# elif avatar_type == 2:
+#     idx_array = [0, 596, 1056, 726, 673, 535, 1071]  # NRE-ray best
+# elif avatar_type == 3:
+#     idx_array = [0, 624, 390, 581, 471, 207, 518]  # NRE-aia best
+# elif avatar_type == 4:
+#     idx_array = [0, 517, 315, 877, 868, 20, 1273]  # NRE-bonnie best
+# elif avatar_type == 5:
+#     idx_array = [0, 131, 855, 51, 354, 584, 532]  # NRE-mery best
+
+# with accuracy computed on the filtered dataset
 elif avatar_type == 0:
-    idx_array = [0, 287, 1043, 262, 548, 1353, 169]  # NRE-Jules best
+    idx_array = [0, 28, 21, 10, 0, 0, 0]  # NRE-Jules best
 elif avatar_type == 1:
-    idx_array = [0, 617, 234, 429, 434, 307, 268]  # NRE-malcolm best
+    idx_array = [0, 1, 148, 145, 244, 205, 749]  # NRE-malcolm best
 elif avatar_type == 2:
-    idx_array = [0, 596, 1056, 726, 673, 535, 1071]  # NRE-ray best
+    idx_array = [0, 36, 342, 40, 66, 0, 280]  # NRE-ray best
 elif avatar_type == 3:
-    idx_array = [0, 624, 390, 581, 471, 207, 518]  # NRE-aia best
+    idx_array = [0, 49, 853, 91, 731, 509, 260]  # NRE-aia best
 elif avatar_type == 4:
-    idx_array = [0, 517, 315, 877, 868, 20, 1273]  # NRE-bonnie best
+    idx_array = [0, 903, 14, 627, 24, 427, 1214]  # NRE-bonnie best
 elif avatar_type == 5:
-    idx_array = [0, 131, 855, 51, 354, 584, 532]  # NRE-mery best
+    idx_array = [0, 210, 314, 581, 68, 375, 659]  # NRE-mery best
+
 # learn tun vectors from one avatar
 opt_tun_vectors = learn_tun_vectors(train_data, train_label, ref_vectors, train_avatar,
                                     n_cat=n_cat,
