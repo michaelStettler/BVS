@@ -50,6 +50,7 @@ def load_data(config, train=True, sort_by=None, get_raw=False, get_only_label=Fa
     elif config['train_data'] == 'FERG':  # bfs = basic face shape
         data = _load_FERG(config, train, get_raw=get_raw, get_only_label=get_only_label)
 
+
     else:
         raise ValueError("training data: '{}' does not exists! Please change norm_base_config file or add the training data"
                          .format(config['train_data']))

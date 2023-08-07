@@ -21,32 +21,31 @@ run: python -m projects.loss_optimization.01_alpha_training
 
 if __name__ == '__main__':
     do_plot = False
-    save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
-    # save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
+    # save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
+    save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results'
 
     # declare parameters
     n_dim = 2
     n_cat = 7
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
-    lr = 1e-3
-    n_epochs = 150
-    lr_decay = [150]
+    lr = 1e-4
+    n_epochs = 250
+    lr_decay = [100]
     early_stopping = False
 
-    # alpha_ref = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    # alpha_ref = [i * 0.01 for i in range(1, 15)]
-    alpha_ref = [1]
+    alpha_ref = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+    # alpha_ref = [1]
 
     # define configuration
     # config_file = 'NR_03_FERG_from_LMK_m0001.json'
-    config_file = 'NR_03_FERG_from_LMK_w0001.json'
-    # config_file = 'NR_03_FERG_alex.json'
+    # config_file = 'NR_03_FERG_from_LMK_w0001.json'
+    config_file = 'NR_03_FERG_alex.json'
 
     # load config
     # config = load_config(config_file, path='/Users/michaelstettler/PycharmProjects/BVS/BVS/configs/norm_reference')
-    config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
-    # config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
+    # config = load_config(config_file, path='D:/PycharmProjects/BVS/configs/norm_reference')
+    config = load_config(config_file, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\norm_reference')
     print("-- Config loaded --")
     print()
 
@@ -83,10 +82,10 @@ if __name__ == '__main__':
     print("shape y_test", np.shape(y_test))
 
 
-    ### Only test on neutrals
-    non_neutral_idx = np.where(y_test[:, 0] == 0)[0]
-    x_test = x_test[non_neutral_idx]
-    y_test = y_test[non_neutral_idx]
+    # ### Only test on neutrals
+    # non_neutral_idx = np.where(y_test[:, 0] == 0)[0]
+    # x_test = x_test[non_neutral_idx]
+    # y_test = y_test[non_neutral_idx]
 
     print("shape x_test", np.shape(x_test))
     print("shape y_test", np.shape(y_test))
@@ -138,13 +137,16 @@ if __name__ == '__main__':
         test_accuracies[alpha] = metrics['test_accuracies']
         losses[alpha] = metrics['losses']
 
+    from sklearn.metrics import confusion_matrix
+    print(confusion_matrix(y_train[:, 0], pred))
+
     # save results
 
-    with open(os.path.join(save_path, 'train_alpha_accuracy'), 'wb') as f:
-        pickle.dump(train_accuracies, f)
-
-    with open(os.path.join(save_path, 'test_alpha_accuracy'), 'wb') as f:
-        pickle.dump(test_accuracies, f)
-
-    with open(os.path.join(save_path, 'alpha_losses'), 'wb') as f:
-        pickle.dump(losses, f)
+    # with open(os.path.join(save_path, 'train_alpha_accuracy'), 'wb') as f:
+    #     pickle.dump(train_accuracies, f)
+    #
+    # with open(os.path.join(save_path, 'test_alpha_accuracy'), 'wb') as f:
+    #     pickle.dump(test_accuracies, f)
+    #
+    # with open(os.path.join(save_path, 'alpha_losses'), 'wb') as f:
+    #     pickle.dump(losses, f)

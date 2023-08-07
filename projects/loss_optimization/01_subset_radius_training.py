@@ -74,7 +74,7 @@ if __name__ == '__main__':
     np.random.seed(42)
     do_plot = False
     # save_path = 'D:/Dataset/FERG_DB_256/loss_optimization'
-    save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results\subset'
+    save_path = r'C:\Users\Alex\Documents\Uni\NRE\icann_results\subset_radius'
 
     # declare parameters
     n_dim = 2
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     n_latent = 10  # == n_lmk
     n_ref = 6  # == n_cat
     lr = 1e-3
-    n_epochs = 250
+    n_epochs = 30
     # lr_decay = [50, 100]
     early_stopping = False
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     remaining_indices, x_sub, y_sub = get_first_samples(x_train, y_train)
 
     # Number of images to add on each epoch
-    m = 11
+    m = 0
     remaining_indices, x_sub, y_sub = add_samples(x_train=x_train, y_train=y_train,
                                                   remaining_indices=remaining_indices, x_sub=x_sub, y_sub=y_sub,
                                                   n_samples=(12 * (2 ** m - 1)))
@@ -176,7 +176,8 @@ if __name__ == '__main__':
                                     lr=lr,
                                     alpha_ref=alpha_ref,
                                     n_epochs=n_epochs,
-                                    early_stopping=early_stopping)
+                                    early_stopping=early_stopping,
+                                    train_references=False)
 
     print("finish training")
     print(f"best_accuracy: {metrics['best_acc']}")

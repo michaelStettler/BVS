@@ -70,6 +70,15 @@ def prob_expression(proj, p_neut):
     soft = exp / tf.expand_dims(sum_exp, axis=1)
     return (1 - tf.expand_dims(p_neut, axis=1)) * soft
 
+def probability(x, proj, rho):
+    proj = tf.reduce_sum(proj, axis=1)
+    proj = proj[:, 1:]
+
+    p_neut = prob_neutral(x, rho)
+    p_expr = prob_expression(proj, p_neut)
+    prob = tf.concat((tf.expand_dims(p_neut, axis=1), p_expr), axis=-1)
+    return prob
+
 
 def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: float, alpha_ref=6, n_cat=7):
     """
@@ -80,9 +89,6 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
     :param radius: float
     :return:
     """
-
-    proj = tf.reduce_sum(proj, axis=1)
-    proj = proj[:, 1:]
 
     # p_neut = prob_neutral(x, rho)
     # weighted version
@@ -97,9 +103,7 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
     # loss = scce(y, prob)
 
     # by hand
-    p_neut = prob_neutral(x, rho)
-    p_expr = prob_expression(proj, p_neut)
-    prob = tf.concat((tf.expand_dims(p_neut, axis=1), p_expr), axis=-1)
+    prob = probability(x, proj, rho)
 
     alpha = [alpha_ref] + (prob.shape[1] - 1) * [1]
     alpha = tf.expand_dims(tf.convert_to_tensor(alpha, dtype='float'), 0)
@@ -109,15 +113,15 @@ def compute_loss_with_ref2(x: tf.Tensor, proj: tf.Tensor, y: tf.Tensor, rho: flo
     product = logs * one_hot
     product = alpha * product
     entropy = tf.reduce_sum(product)
-    if tf.math.is_nan(entropy):
-        print('proj:', proj)
-        print('p_expr', tf.math.reduce_min(p_expr, axis=1))
-        print('p_neut', p_neut)
-        print('logs:', tf.math.reduce_min(logs, axis=1))
-        print('--------------------------------------------------------------------------------------------------------')
-        print('Entropy killed. Stop optimization here.')
-        print('--------------------------------------------------------------------------------------------------------')
-        return None
+    # if tf.math.is_nan(entropy):
+    #     print('proj:', proj)
+    #     print('p_expr', tf.math.reduce_min(p_expr, axis=1))
+    #     print('p_neut', p_neut)
+    #     print('logs:', tf.math.reduce_min(logs, axis=1))
+    #     print('--------------------------------------------------------------------------------------------------------')
+    #     print('Entropy killed. Stop optimization here.')
+    #     print('--------------------------------------------------------------------------------------------------------')
+    #     return None
     loss = - entropy
 
     # # use one hot since we want the sample weight
