@@ -2,9 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import torch
+from tqdm import tqdm
 
 from utils.load_config import load_config
 from utils.load_data import load_data
+
+from models.CNN.cornet_s import *
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
@@ -25,17 +29,45 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 show_plot = True
-config_paths = ['BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json',
-                'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json',
-                'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json',
-                'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json',
-                'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json',
-                'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json']
+# config_paths = ['BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json',
+#                 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json',
+#                 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json',
+#                 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json',
+#                 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json',
+#                 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json']
+config_paths = ["BH_05_morph_space_with_CNN_CORNet_imagenet_w0001.json"]
+# config_paths = ["BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json"]
 conditions = ["human_orig", "monkey_orig"]
+conditions = ["human_orig"]
+
+def predict_torch(config, morph_data):
+    if config["model_class"] == "cornet":
+        model = CORnet_S()
+        model.decoder.linear = torch.nn.Linear(in_features=512, out_features=5) # replace linear layer
+
+    state_dict = torch.load(os.path.join(config["load_directory"], config["model_name"]))
+    model.load_state_dict(state_dict)
+    model = model.to("cuda")
+    model.eval()
+
+    X, Y = torch.tensor(morph_data[0]), torch.tensor(morph_data[1])
+    print(X.shape)
+    X = torch.permute(X, (0, 3, 1, 2)).float().to("cuda")
+
+    preds = torch.zeros((Y.shape[0], 5))
+
+    print("Predicting...")
+    with torch.no_grad():
+        for i in tqdm(range(Y.shape[0])):
+            yhat = model(torch.unsqueeze(X[i, :, :, :], 0))
+            preds[i, :] = yhat
+
+    return preds.cpu().numpy()
+
 
 
 for config_path in config_paths:
-    config = load_config(config_path, path='configs/behavourial')
+    config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
     for cond, condition in enumerate(conditions):
 
         morph_csv = [os.path.join(config['directory'], "morphing_space_human_orig.csv"),
@@ -61,11 +93,16 @@ for config_path in config_paths:
         print("len train_data[0]", len(morph_data[0]))
         print()
 
-        #%% load model
-        model = tf.keras.models.load_model(os.path.join(config["load_directory"], config["model_name"]))
+        # raise ValueError("debug")
 
-        #%%
-        preds = model.predict(morph_data[0])
+        #%% load model
+        if "tensor_engine" in config:
+            if config["tensor_engine"] == "torch":
+                preds = predict_torch(config, morph_data)
+        else:
+            model = tf.keras.models.load_model(os.path.join(config["load_directory"], config["model_name"]))
+            preds = model.predict(morph_data[0])
+        print("preds:", preds)
         print("shape preds", np.shape(preds))
 
         #%%
@@ -132,16 +169,21 @@ for config_path in config_paths:
 
         # make into grid
         amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
-        amax_ms_grid = amax_ms_grid[..., 1:]
+        amax_ms_grid = amax_ms_grid[..., 1:]  # remove neutral category
         print("shape amax_ms_grid", np.shape(amax_ms_grid))
 
         cat_grid = np.zeros((5, 5, 4))
         prob_grid = np.zeros((5, 5, 4))
         for i in range(np.shape(amax_ms_grid)[0]):
             for j in range(np.shape(amax_ms_grid)[0]):
-                x = amax_ms_grid[i, j]  # discard neutral
+                x = amax_ms_grid[i, j]
+                print(i*5 + j, "x:", x, np.argmax(x))
                 cat_grid[i, j, np.argmax(x)] = 1
                 prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
+
+        print("test category plot")
+        print(cat_grid[..., 2])
+        print(cat_grid[..., 3])
 
         print("model saved in:", save_path)
         title = config['project'] + "_" + condition
