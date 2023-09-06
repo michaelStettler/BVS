@@ -356,5 +356,3 @@ if show_plot:
     plt.savefig(f"NRE_{norm_type}_bar_expr_level.svg", format='svg')
     plt.show()
 
-
-

@@ -25,7 +25,7 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 
 config_path = 'BH_03_CNN_training_CORNet_imagenet_w0001.json'
 # load config
-config = load_config(config_path, path='configs/behavourial')
+config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
 print(config)
 
 #%% declare weights and biases

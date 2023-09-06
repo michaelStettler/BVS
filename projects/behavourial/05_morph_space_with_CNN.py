@@ -38,7 +38,6 @@ show_plot = True
 config_paths = ["BH_05_morph_space_with_CNN_CORNet_imagenet_w0001.json"]
 # config_paths = ["BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json"]
 conditions = ["human_orig", "monkey_orig"]
-conditions = ["human_orig"]
 
 def predict_torch(config, morph_data):
     if config["model_class"] == "cornet":
@@ -92,8 +91,6 @@ for config_path in config_paths:
         print("-- Data loaded --")
         print("len train_data[0]", len(morph_data[0]))
         print()
-
-        # raise ValueError("debug")
 
         #%% load model
         if "tensor_engine" in config:
@@ -158,7 +155,7 @@ for config_path in config_paths:
                 if show_plot:
                     plt.show()
 
-
+        # rearrange into 25 videos of 150 frames (???)
         morph_space_data = np.reshape(preds, [25, 150, -1])
         print("shape morph_space_data", np.shape(morph_space_data))
 
@@ -168,6 +165,7 @@ for config_path in config_paths:
         print(amax_ms)
 
         # make into grid
+        # rearrange into 5 categories x 5 repeats x 4 predicted categories
         amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
         amax_ms_grid = amax_ms_grid[..., 1:]  # remove neutral category
         print("shape amax_ms_grid", np.shape(amax_ms_grid))

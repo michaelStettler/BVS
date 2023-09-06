@@ -11,13 +11,16 @@ run: python -m projects.behavourial.06_morph_space_comparison
 
 #%% define computer path
 # computer = 'windows'
-computer = 'mac'
+computer = 'alex'
 if 'windows' in computer:
     computer_path = 'D:/Dataset/MorphingSpace'
     computer_letter = 'w'
 elif 'mac' in computer:
     computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
     computer_letter = 'm'
+elif 'alex' in computer:
+    computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
+    computer_letter = 'a'
 
 #%% declare script parameters
 condition = "human_orig"
@@ -32,10 +35,16 @@ CNN_path = os.path.join(computer_path, 'output', condition)
 #%% load data
 behav_data = np.load(os.path.join(behavioural_path, "human_avatar_orig.npy"))
 behav_data = np.moveaxis(behav_data, 0, -1)
-NRE_pred = np.load(os.path.join(NRE_path, f"prob_grid_{norm_type}.npy"))
-NRE_pred = NRE_pred[..., 1:]
-CNN_pred = np.load(os.path.join(CNN_path, f"prob_grid_{condition}_{CNN_model}.npy"))
-CNN_pred = CNN_pred[..., 1:]
+# NRE_pred = np.load(os.path.join(NRE_path, f"prob_grid_{norm_type}.npy"))
+# NRE_pred = NRE_pred[..., 1:]
+# CNN_pred = np.load(os.path.join(CNN_path, f"prob_grid_{condition}_{CNN_model}.npy"))
+# CNN_pred = CNN_pred[..., 1:]
+
+### Use synthetic data untul real data is available
+NRE_pred = np.abs(np.random.randn(*behav_data.shape))
+NRE_pred /= np.sum(NRE_pred, axis=-1, keepdims=True)
+CNN_pred = np.abs(np.random.randn(*behav_data.shape))
+CNN_pred /= np.sum(CNN_pred, axis=-1, keepdims=True)
 
 print("shape behav_data", np.shape(behav_data))
 print("shape NRE_pred", np.shape(NRE_pred))
@@ -44,7 +53,7 @@ data = np.array([behav_data, NRE_pred, CNN_pred])
 
 #%% compute category
 categories = []
-for i in range(3):
+for i in range(len(data)):
     argmax = np.argmax(data[i], axis=2)
     cat = np.zeros(np.shape(data[i]))
     for m in range(5):
@@ -66,7 +75,9 @@ print()
 
 #%% compute KL-divergence
 def KL_divergence(p, q):
-    return np.sum(p * np.log(p / q))
+    log = np.log(p / q)
+    log = np.nan_to_num(log) # replace nans by 0 bc the corresponding contribution to KL is 0
+    return np.sum(p * log)
 
 
 def compute_morph_space_KL_div(p, q):
@@ -84,12 +95,24 @@ def compute_morph_space_KL_div(p, q):
 
 NRE_div = compute_morph_space_KL_div(behav_data, NRE_pred)
 CNN_div = compute_morph_space_KL_div(behav_data, CNN_pred)
+print('NREdiv', NRE_div)
 print("[NRE] sum div", np.sum(NRE_div))
 print(f"[NRE] mean: {np.mean(NRE_div)}, variance: {np.std(NRE_div)}")
 print()
 print("[CNN] sum div", np.sum(CNN_div))
 print(f"[CNN] mean: {np.mean(CNN_div)}, variance: {np.std(CNN_div)}")
 divergences = np.array([NRE_div, CNN_div])
+
+# normalize the divergences s.t. the highest overall point is 1
+max = - np.inf
+for div in divergences:
+    iteration_max = np.max(div)
+    if iteration_max > max:
+        max = iteration_max
+    print(max, iteration_max)
+for div in divergences:
+    div /= max
+
 
 #%% plot comparison
 titles = ["behaviour", "NRE", "CNN"]
@@ -140,12 +163,15 @@ for i in range(3):
 for i in range(2):
     ax = plt.Subplot(fig, outer[i + 7])
     ax.axis('off')
-    im = ax.imshow(divergences[i], cmap='viridis', interpolation='bilinear', vmax=1)
+    im = ax.imshow(divergences[i], cmap='viridis', interpolation='bilinear',
+                   vmin=0, vmax=1)
+    print(divergences[i])
 
     # if i == 1:
     #     fig.colorbar(im, ax=ax)
 
     fig.add_subplot(ax)
+
 
 # plot plot bar
 ax = plt.Subplot(fig, outer[6])

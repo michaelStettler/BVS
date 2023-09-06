@@ -31,13 +31,16 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 """
 
 #%% declare script variables
-computer = 'mac'
+computer = 'alex'
 if 'windows' in computer:
     computer_path = 'D:/Dataset/MorphingSpace'
     computer_letter = 'w'
 elif 'mac' in computer:
     computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
     computer_letter = 'm'
+elif 'alex' in computer:
+    computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
+    computer_letter = 'a'
 
 show_plot = False
 load_RBF_pattern = True
@@ -57,7 +60,7 @@ model_name = 'NRE'
 # norm_type = 'categorical'  # deprecated
 norm_type = 'frobenius'
 use_dynamic = True
-# occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
+# occluded and original are the same for this pipeline as we do not have any landmark on the ears
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
 cond = 0
 condition = conditions[cond]
@@ -84,7 +87,7 @@ tau_d = 1
 #%% import config
 config_path = 'BH_01_morph_space_with_NRE_{}0001.json'.format(computer_letter)
 # load config
-config = load_config(config_path, path='configs/behavourial')
+config = load_config(config_path, path='C:/Users/Alex/Documents/Uni/NRE/BVS/configs/behavourial')
 
 # edit dictionary for single condition type
 if cond is not None:

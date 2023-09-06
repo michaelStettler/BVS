@@ -11,19 +11,23 @@ run: python -m projects.behavourial.08_morph_space_KL_diff_comparison
 
 #%% define computer path
 # computer = 'windows'
-computer = 'mac'
+computer = 'alex'
 if 'windows' in computer:
     computer_path = 'D:/Dataset/MorphingSpace'
     computer_letter = 'w'
 elif 'mac' in computer:
     computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
     computer_letter = 'm'
+elif 'alex' in computer:
+    computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
+    computer_letter = 'a'
 
 #%% declare script parameters
 show_plots = True
 model_names = ["NRE-indi-S", "NRE-indi-D", "NRE-cat-S", "NRE-cat-D",
                "VGG19_imagenet", "VGG19_imagenet_conv33", "Resnet50v2_imagenet",
-               "VGG19_affectnet", "ResNet50v2_affectnet", "CORNet_affectnet"]
+               "VGG19_affectnet", "ResNet50v2_affectnet", "CORNet_affectnet",
+               "CORNet_imagenet"]
 load_path = os.path.join(computer_path, 'model_behav_preds')
 conditions = ["human_orig", "monkey_orig"]
 
