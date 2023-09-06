@@ -52,7 +52,9 @@ print()
 
 
 def KL_divergence(p, q):
-    return np.sum(p * np.log(p / q))
+    log = np.log(p / q)
+    log = np.nan_to_num(log)  # replace nans by 0 bc the corresponding contribution to KL is 0
+    return np.sum(p * log)
 
 
 def compute_morph_space_KL_div(p, q):
