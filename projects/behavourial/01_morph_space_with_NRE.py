@@ -18,6 +18,8 @@ from utils.LMK.construct_LMK import get_identity_and_pos
 from utils.NormReference.reference_vectors import learn_ref_vector
 from utils.NormReference.tuning_vectors import learn_tun_vectors
 from utils.NormReference.tuning_vectors import compute_projections
+from projects.behavourial.project_utils import *
+
 
 from plots_utils.plot_BVS import display_images
 from plots_utils.plot_sequence import plot_sequence
@@ -32,15 +34,7 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 
 #%% declare script variables
 computer = 'alex'
-if 'windows' in computer:
-    computer_path = 'D:/Dataset/MorphingSpace'
-    computer_letter = 'w'
-elif 'mac' in computer:
-    computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
-    computer_letter = 'm'
-elif 'alex' in computer:
-    computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
-    computer_letter = 'a'
+computer_path, computer_letter = get_computer_path(computer)
 
 show_plot = False
 load_RBF_pattern = True

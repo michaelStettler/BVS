@@ -2,6 +2,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from projects.behavourial.project_utils import *
+
 
 np.set_printoptions(precision=3, suppress=True)
 """
@@ -11,15 +13,9 @@ run: python -m projects.behavourial.07_compute_KL_div_CNN
 #%% define computer path
 # computer = 'windows'
 computer = 'alex'
-if 'windows' in computer:
-    computer_path = 'D:/Dataset/MorphingSpace'
-    computer_letter = 'w'
-elif 'mac' in computer:
-    computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
-    computer_letter = 'm'
-elif 'alex' in computer:
-    computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
-    computer_letter = 'a'
+
+computer_path, computer_letter = get_computer_path(computer)
+
 
 #%% declare script parameters
 show_plots = True
@@ -27,25 +23,6 @@ model_names = ["VGG19_imagenet", "VGG19_imagenet_conv33", "Resnet50v2_imagenet",
                "VGG19_affectnet", "ResNet50v2_affectnet", "CORNet_affectnet",
                "CORNet_imagenet"]
 conditions = ["human_orig", "monkey_orig"]
-
-
-def KL_divergence(p, q):
-    log = np.log(p / q)
-    log = np.nan_to_num(log)  # replace nans by 0 bc the corresponding contribution to KL is 0
-    return np.sum(p * log)
-
-
-def compute_morph_space_KL_div(p, q):
-    dim_x = np.shape(p)[0]
-    dim_y = np.shape(p)[1]
-
-    divergences = np.zeros((dim_x, dim_y))
-    for x in range(dim_x):
-        for y in range(dim_y):
-            div = KL_divergence(p[x, y], q[x, y])
-            divergences[x, y] = div
-
-    return divergences
 
 
 def get_pred(model_name, condition):

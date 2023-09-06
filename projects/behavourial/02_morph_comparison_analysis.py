@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from projects.behavourial.project_utils import *
 
 
 np.set_printoptions(precision=3, suppress=True)
@@ -49,26 +50,6 @@ sum_prob = np.sum(pred_data, axis=2)
 print("sum prob", np.shape(sum_prob))
 print(sum_prob)
 print()
-
-
-def KL_divergence(p, q):
-    log = np.log(p / q)
-    log = np.nan_to_num(log)  # replace nans by 0 bc the corresponding contribution to KL is 0
-    return np.sum(p * log)
-
-
-def compute_morph_space_KL_div(p, q):
-    dim_x = np.shape(p)[0]
-    dim_y = np.shape(p)[1]
-
-    divergences = np.zeros((dim_x, dim_y))
-    for x in range(dim_x):
-        for y in range(dim_y):
-            div = KL_divergence(p[x, y], q[x, y])
-            divergences[x, y] = div
-
-    print(divergences)
-    return divergences
 
 
 div = compute_morph_space_KL_div(behav_data, pred_data)
