@@ -17,35 +17,3 @@ def get_computer_path(computer):
         computer_letter = 'a'
     return computer_path, computer_letter
 
-def KL_divergence(p, q):
-    log = np.log(p / q)
-    log = np.nan_to_num(log) # replace nans by 0 bc the corresponding contribution to KL is 0
-    return np.sum(p * log)
-
-
-def compute_morph_space_KL_div(p, q):
-    dim_x = np.shape(p)[0]
-    dim_y = np.shape(p)[1]
-
-    divergences = np.zeros((dim_x, dim_y))
-    for x in range(dim_x):
-        for y in range(dim_y):
-            div = KL_divergence(p[x, y], q[x, y])
-            divergences[x, y] = div
-
-    return divergences
-
-def total_variation(p, q):
-    return 0.5 * np.sum(np.abs(p - q))
-
-def compute_morph_space_total_variation(p, q):
-    dim_x = np.shape(p)[0]
-    dim_y = np.shape(p)[1]
-
-    divergences = np.zeros((dim_x, dim_y))
-    for x in range(dim_x):
-        for y in range(dim_y):
-            div = total_variation(p[x, y], q[x, y])
-            divergences[x, y] = div
-
-    return divergences
