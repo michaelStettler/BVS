@@ -12,16 +12,17 @@ run: python -m projects.behavourial.02_morph_comparison_analysis
 
 show_plots = False
 conditions = ["human_orig", "monkey_orig"]
-cond = 0
+cond = 1
 condition = conditions[cond]
 # norm_type = "individual"
 norm_type = "frobenius"
-use_dynamic = True
+use_dynamic = False
 
 # declare saving and loading path
-morph_space = "/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace"
+computer = "alex"
+morph_space, computer_letter = get_computer_path(computer)
 behav_path = "morphing_psychophysics_result"
-saved_path = "model_preds"
+saved_path = "model_behav_preds"
 load_path = os.path.join(morph_space, saved_path)
 save_path = load_path
 
@@ -53,6 +54,8 @@ print()
 
 
 div = compute_morph_space_KL_div(behav_data, pred_data)
+total_variation = compute_morph_space_total_variation(behav_data, pred_data)
+
 print("shape div", np.shape(div))
 print("sum div", np.sum(div))
 print("mean: {}, variance: {}".format(np.mean(div), np.std(div)))
@@ -145,6 +148,7 @@ plt.savefig(f"NRE_{norm_type}_{modality}_category_analysis.jpeg")
 
 # save kl div
 np.save((os.path.join(save_path, f"NRE_{norm_type}_{modality}_{condition}_KL_div")), div)
+np.save((os.path.join(save_path, f"NRE_{norm_type}_{modality}_{condition}_total_variation")), total_variation)
 np.save((os.path.join(save_path, f"NRE_{norm_type}_{modality}_{condition}_morph_acc")), (25 - n_cat_diff)/25)
 
 # show plots

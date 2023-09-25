@@ -7,7 +7,7 @@ from projects.behavourial.project_utils import *
 
 np.set_printoptions(precision=3, suppress=True)
 """
-run: python -m projects.behavourial.08_morph_space_KL_diff_comparison
+run: python -m projects.behavourial.08_morph_space_total_variation_comparison
 """
 
 #%% define computer path
@@ -39,60 +39,60 @@ def get_path(model_name, condition):
             modality = 'dynamic'
 
         # acc_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_morph_acc.npy")
-        kl_div_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_KL_div.npy")
+        total_variation_path = os.path.join(load_path, f"NRE_{norm_type}_{modality}_{condition}_total_variation.npy")
     else:
         # acc_path = os.path.join(load_path, f"{model_name}_{condition}_morph_acc.npy")
-        kl_div_path = os.path.join(load_path, f"{model_name}_{condition}_KL_div.npy")
+        total_variation_path = os.path.join(load_path, f"{model_name}_{condition}_total_variation.npy")
 
-    return kl_div_path
+    return total_variation_path
 
 
 #%% load data
 accuracies = []
-kl_divergences = []
+distances = []
 for model_name in model_names:
     # accuracy = []
-    kl_divergence = []
+    distance = []
     for condition in conditions:
         # create path
-        kl_div_path = get_path(model_name, condition)
+        total_variation_path = get_path(model_name, condition)
 
         # # load data
         # if acc_path is not None:
         #     acc = np.load(acc_path)
         # else:
         #     acc = 0
-        if kl_div_path is not None:
-            kl_div = np.load(kl_div_path)
+        if total_variation_path is not None:
+            dist = np.load(total_variation_path)
         else:
-            kl_div = np.zeros((5, 5))
+            dist = np.zeros((5, 5))
 
         # append to condition
         # accuracy.append(acc)
-        kl_divergence.append(kl_div)
+        distance.append(dist)
 
     # append to models
     # accuracies.append(accuracy)
-    kl_divergences.append(kl_divergence)
+    distances.append(distance)
 
 # accuracies = np.array(accuracies)
-kl_divergences = np.array(kl_divergences)
+distances = np.array(distances)
 # print("shape accuracies", np.shape(accuracies))
-print("shape kl_divergences", np.shape(kl_divergences))
+print("shape distances", np.shape(distances))
 
 
 #%% plot kl divergence
-print("shape kl_divergences", np.shape(kl_divergences))
-sum_kl_div = np.sum(kl_divergences, axis=(2, 3))
-print("shape sum_kl_div", np.shape(sum_kl_div))
+print("shape distances", np.shape(distances))
+sum_dist = np.sum(distances, axis=(2, 3))
+print("shape sum_dist", np.shape(sum_dist))
 
 fig, ax = plt.subplots()
-x = np.arange(len(kl_divergences))
+x = np.arange(len(distances))
 width = 0.25
 # plot each condition
 for c, condition in enumerate(conditions):
     offset = width * c
-    rects = plt.bar(x + offset, sum_kl_div[:, c], width, label=condition)
+    rects = plt.bar(x + offset, sum_dist[:, c], width, label=condition)
     # ax.bar_label(rects, padding=3)  # add value to bar
 # ax.set_xticks(x + width, model_names)
 ax.set_xticks(x, model_names)
@@ -100,11 +100,11 @@ plt.xticks(rotation=90)
 plt.tight_layout()
 ax.legend()
 
-plt.savefig(f"bar_plot_kl_div_analysis.svg", format='svg')
+plt.savefig(f"bar_plot_total_variation_analysis.svg", format='svg')
 
 for m, model in enumerate(model_names):
     for c, condition in enumerate(conditions):
-        print(f"model: {model}-{condition}, KL-div: {sum_kl_div[m, c]}")
+        print(f"model: {model}-{condition}, KL-div: {sum_dist[m, c]}")
     print()
 
 if show_plots:

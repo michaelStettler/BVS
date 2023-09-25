@@ -3,6 +3,7 @@ Some project-specific utility functions, mainly for paths and stuff
 '''
 
 import numpy as np
+from scipy.stats import wasserstein_distance
 
 def get_computer_path(computer):
     if 'windows' in computer:
@@ -30,6 +31,21 @@ def compute_morph_space_KL_div(p, q):
     for x in range(dim_x):
         for y in range(dim_y):
             div = KL_divergence(p[x, y], q[x, y])
+            divergences[x, y] = div
+
+    return divergences
+
+def total_variation(p, q):
+    return 0.5 * np.sum(np.abs(p - q))
+
+def compute_morph_space_total_variation(p, q):
+    dim_x = np.shape(p)[0]
+    dim_y = np.shape(p)[1]
+
+    divergences = np.zeros((dim_x, dim_y))
+    for x in range(dim_x):
+        for y in range(dim_y):
+            div = total_variation(p[x, y], q[x, y])
             divergences[x, y] = div
 
     return divergences

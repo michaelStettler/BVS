@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-
+from projects.behavourial.project_utils import *
 
 np.set_printoptions(precision=3, suppress=True)
 """
@@ -12,20 +12,12 @@ run: python -m projects.behavourial.06_morph_space_comparison
 #%% define computer path
 # computer = 'windows'
 computer = 'alex'
-if 'windows' in computer:
-    computer_path = 'D:/Dataset/MorphingSpace'
-    computer_letter = 'w'
-elif 'mac' in computer:
-    computer_path = '/Users/michaelstettler/PycharmProjects/BVS/data/MorphingSpace'
-    computer_letter = 'm'
-elif 'alex' in computer:
-    computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
-    computer_letter = 'a'
+computer_path, computer_letter = get_computer_path(computer)
 
 #%% declare script parameters
 condition = "human_orig"
 norm_type = "categorical"
-CNN_model = 'ResNet50v2_imagenet'
+CNN_model = 'CORNet_imagenet'
 
 #%% construct path
 behavioural_path = os.path.join(computer_path, 'morphing_psychophysics_result')
@@ -35,16 +27,16 @@ CNN_path = os.path.join(computer_path, 'output', condition)
 #%% load data
 behav_data = np.load(os.path.join(behavioural_path, "human_avatar_orig.npy"))
 behav_data = np.moveaxis(behav_data, 0, -1)
-# NRE_pred = np.load(os.path.join(NRE_path, f"prob_grid_{norm_type}.npy"))
-# NRE_pred = NRE_pred[..., 1:]
-# CNN_pred = np.load(os.path.join(CNN_path, f"prob_grid_{condition}_{CNN_model}.npy"))
+NRE_pred = np.load(os.path.join(NRE_path, f"prob_grid_{norm_type}.npy"))
+NRE_pred = NRE_pred[..., 1:]
+CNN_pred = np.load(os.path.join(CNN_path, f"prob_grid_{condition}_{CNN_model}.npy"))
 # CNN_pred = CNN_pred[..., 1:]
 
-### Use synthetic data untul real data is available
-NRE_pred = np.abs(np.random.randn(*behav_data.shape))
-NRE_pred /= np.sum(NRE_pred, axis=-1, keepdims=True)
-CNN_pred = np.abs(np.random.randn(*behav_data.shape))
-CNN_pred /= np.sum(CNN_pred, axis=-1, keepdims=True)
+# ### Use synthetic data untul real data is available
+# NRE_pred = np.abs(np.random.randn(*behav_data.shape))
+# NRE_pred /= np.sum(NRE_pred, axis=-1, keepdims=True)
+# CNN_pred = np.abs(np.random.randn(*behav_data.shape))
+# CNN_pred /= np.sum(CNN_pred, axis=-1, keepdims=True)
 
 print("shape behav_data", np.shape(behav_data))
 print("shape NRE_pred", np.shape(NRE_pred))
@@ -73,24 +65,6 @@ CNN_cat_count = np.sum(CNN_cat_count)
 print("[CNN] ratio of categorization difference", CNN_cat_count/25 * 100)
 print()
 
-#%% compute KL-divergence
-def KL_divergence(p, q):
-    log = np.log(p / q)
-    log = np.nan_to_num(log) # replace nans by 0 bc the corresponding contribution to KL is 0
-    return np.sum(p * log)
-
-
-def compute_morph_space_KL_div(p, q):
-    dim_x = np.shape(p)[0]
-    dim_y = np.shape(p)[1]
-
-    divergences = np.zeros((dim_x, dim_y))
-    for x in range(dim_x):
-        for y in range(dim_y):
-            div = KL_divergence(p[x, y], q[x, y])
-            divergences[x, y] = div
-
-    return divergences
 
 
 NRE_div = compute_morph_space_KL_div(behav_data, NRE_pred)

@@ -50,9 +50,9 @@ save_ref = False
 load_tun = True
 save_tun = False
 model_name = 'NRE'
-# norm_type = 'individual'
+norm_type = 'individual'
 # norm_type = 'categorical'  # deprecated
-norm_type = 'frobenius'
+# norm_type = 'frobenius'
 use_dynamic = True
 # occluded and original are the same for this pipeline as we do not have any landmark on the ears
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]

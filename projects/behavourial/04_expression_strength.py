@@ -61,7 +61,7 @@ train_idx = None
 #%% import config
 config_path = 'BH_04_expr_strength_m0001.json'
 # load config
-config = load_config(config_path, path='configs/behavourial')
+config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
 
 # create directory
 save_path = os.path.join(config["directory"], config["LMK_data_directory"])
