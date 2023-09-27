@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from projects.behavourial.project_utils import *
+from G_compute_KL_div_CNN import *
 
 
 np.set_printoptions(precision=3, suppress=True)
@@ -10,7 +11,7 @@ np.set_printoptions(precision=3, suppress=True)
 run: python -m projects.behavourial.02_morph_comparison_analysis
 """
 
-show_plots = False
+show_plots = True
 conditions = ["human_orig", "monkey_orig"]
 cond = 1
 condition = conditions[cond]

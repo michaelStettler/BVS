@@ -1,4 +1,5 @@
 import os
+from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -19,6 +20,7 @@ computer_path, computer_letter = get_computer_path(computer)
 
 #%% declare script parameters
 show_plots = True
+plot_format = 'svg'
 model_names = ["NRE_individual_static", "NRE_individual_dynamic",
                "NRE_frobenius_static", "NRE_frobenius_dynamic",
                "VGG19_imagenet", "VGG19_imagenet_conv33", "Resnet50v2_imagenet",
@@ -114,7 +116,7 @@ labels = ["NRE-indi-S", "NRE-indi-D",
                "CORNet-IM"]
 colors = ['#FE938C', '#4281A4']
 
-def make_bar_plot(data_dict, labels, colors):
+def make_bar_plot(data_dict, labels, colors, title, save_name=None):
     fig, ax = plt.subplots()
     x = np.arange(len(data_dict))
     width = 0.25
@@ -128,17 +130,23 @@ def make_bar_plot(data_dict, labels, colors):
                 ax.legend()
     ax.set_xticks(x, labels)
     plt.xticks(rotation=90)
+    plt.title(title)
     plt.tight_layout()
+    if save_name is not None:
+        plt.savefig(join('plots', save_name) + '.' + plot_format, format=plot_format)
     plt.show()
 
-make_bar_plot(kl_divergences, labels, colors)
-make_bar_plot(total_variations, labels, colors)
+make_bar_plot(kl_divergences, labels, colors, title='KL Divergence', save_name='kl_divergence')
+make_bar_plot(total_variations, labels, colors, title="Total Variation Distance", save_name='total_var_dist')
 model_names.insert(0, 'behavioural')
-labels.insert(0, 'Psychophysics')
-make_bar_plot(entropies, labels, colors)
+labels.insert(0, 'Humans')
+make_bar_plot(entropies, labels, colors, title='Entropies', save_name='entropy_bar_plot')
 
-nre_entropy = entropies['NRE_individual_dynamic']['human_orig']
-cnn_entropy = entropies['CORNet_imagenet']['human_orig']
+
+### Entropy heat maps
+
+nre_entropy = entropies['NRE_individual_static']['human_orig']
+cnn_entropy = entropies['VGG19_imagenet']['human_orig']
 behav_entropy = entropies['behavioural']['human_orig']
 print(nre_entropy)
 print(cnn_entropy)
@@ -146,12 +154,18 @@ print(behav_entropy)
 max_entropy = np.maximum(np.max(nre_entropy), np.max(cnn_entropy))
 max_entropy = np.maximum(np.max(behav_entropy), max_entropy)
 print('Max entropy:', max_entropy)
-plt.imshow(nre_entropy, vmin=0, vmax=max_entropy)
-plt.colorbar()
-plt.show()
-plt.imshow(cnn_entropy, vmin=0, vmax=max_entropy)
-plt.colorbar()
-plt.show()
-plt.imshow(behav_entropy, vmin=0, vmax=max_entropy)
-plt.colorbar()
+
+fig, ax = plt.subplots(1, 3)
+entropy_list = [behav_entropy, nre_entropy, cnn_entropy]
+title_list = ['Humans', 'NRE', 'CNN']
+for i in range(3):
+    im = ax[i].imshow(entropy_list[i], vmin=0, vmax=max_entropy)
+    ax[i].set_xticks([])
+    ax[i].set_yticks([])
+    ax[i].title.set_text(title_list[i])
+# plt.colorbar(im, ax=fig.get_axes())
+cax = fig.add_axes([ax[2].get_position().x1 + 0.02, ax[2].get_position().y0,
+                    0.02, ax[2].get_position().y1-ax[2].get_position().y0])
+fig.colorbar(im, cax=cax)
+plt.savefig(join('plots', 'entropy_example.') + plot_format, format=plot_format)
 plt.show()

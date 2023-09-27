@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from projects.behavourial.project_utils import *
+from G_compute_KL_div_CNN import *
 
 np.set_printoptions(precision=3, suppress=True)
 """
@@ -12,24 +12,25 @@ run: python -m projects.behavourial.06_morph_space_comparison
 #%% define computer path
 # computer = 'windows'
 computer = 'alex'
+plot_format = 'svg'
 computer_path, computer_letter = get_computer_path(computer)
 
 #%% declare script parameters
 condition = "human_orig"
 norm_type = "categorical"
-CNN_model = 'CORNet_imagenet'
+CNN_model = 'VGG19_imagenet'
 
 #%% construct path
 behavioural_path = os.path.join(computer_path, 'morphing_psychophysics_result')
 NRE_path = os.path.join(computer_path, 'saved_lmks_pos', condition)
-CNN_path = os.path.join(computer_path, 'output', condition)
+CNN_path = os.path.join(computer_path, 'model_preds')
 
 #%% load data
 behav_data = np.load(os.path.join(behavioural_path, "human_avatar_orig.npy"))
 behav_data = np.moveaxis(behav_data, 0, -1)
 NRE_pred = np.load(os.path.join(NRE_path, f"prob_grid_{norm_type}.npy"))
 NRE_pred = NRE_pred[..., 1:]
-CNN_pred = np.load(os.path.join(CNN_path, f"prob_grid_{condition}_{CNN_model}.npy"))
+CNN_pred = np.load(os.path.join(CNN_path, f"{CNN_model}_{condition}_prob_grid.npy"))
 # CNN_pred = CNN_pred[..., 1:]
 
 # ### Use synthetic data untul real data is available
@@ -89,9 +90,9 @@ for div in divergences:
 
 
 #%% plot comparison
-titles = ["behaviour", "NRE", "CNN"]
+titles = ["Humans", "NRE", "CNN"]
 fig = plt.figure(figsize=(9, 9))
-outer = gridspec.GridSpec(3, 3, wspace=0.2, hspace=0.2)
+outer = gridspec.GridSpec(2, 3, wspace=0.2, hspace=0.2)
 
 # plot raw outputs
 for i in range(3):
@@ -113,29 +114,29 @@ for i in range(3):
         ax.set_yticks([])
         fig.add_subplot(ax)
 
-# plot categorization
-for i in range(3):
-    # set outer titles
-    ax = plt.Subplot(fig, outer[i])
-    ax.axis('off')
-    fig.add_subplot(ax)
-
-    inner = gridspec.GridSpecFromSubplotSpec(2, 2,
-                                             subplot_spec=outer[i + 3], wspace=0.1, hspace=0.1)
-
-    for j in range(4):
-        ax = plt.Subplot(fig, inner[j])
-        im = ax.imshow(categories[i, ..., j], cmap='viridis', vmax=1)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        fig.add_subplot(ax)
-
-    # if i == 2:
-    #     fig.colorbar(im, ax=ax)
+# # plot categorization
+# for i in range(3):
+#     # set outer titles
+#     ax = plt.Subplot(fig, outer[i])
+#     ax.axis('off')
+#     fig.add_subplot(ax)
+#
+#     inner = gridspec.GridSpecFromSubplotSpec(2, 2,
+#                                              subplot_spec=outer[i + 3], wspace=0.1, hspace=0.1)
+#
+#     for j in range(4):
+#         ax = plt.Subplot(fig, inner[j])
+#         im = ax.imshow(categories[i, ..., j], cmap='viridis', vmax=1)
+#         ax.set_xticks([])
+#         ax.set_yticks([])
+#         fig.add_subplot(ax)
+#
+#     # if i == 2:
+#     #     fig.colorbar(im, ax=ax)
 
 # plot div
 for i in range(2):
-    ax = plt.Subplot(fig, outer[i + 7])
+    ax = plt.Subplot(fig, outer[i + 4])
     ax.axis('off')
     im = ax.imshow(divergences[i], cmap='viridis', interpolation='bilinear',
                    vmin=0, vmax=1)
@@ -148,7 +149,8 @@ for i in range(2):
 
 
 # plot plot bar
-ax = plt.Subplot(fig, outer[6])
+ax = plt.Subplot(fig, outer[3])
 fig.colorbar(im, ax=ax)
 
+plt.savefig(join('plots', 'behav_results.') + plot_format, format=plot_format)
 plt.show()
