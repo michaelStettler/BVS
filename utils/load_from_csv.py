@@ -1,10 +1,13 @@
 import cv2
 import os
+from os.path import join
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
+from PIL import Image
 
 
-def load_from_csv(df, config, x_col="image_path", get_only_label=False):
+def load_from_csv(df, config, x_col="image_path", get_only_label=False, debugging=False):
     """
     helper function to load data and put them into an numpy array
 
@@ -51,5 +54,20 @@ def load_from_csv(df, config, x_col="image_path", get_only_label=False):
             x[index, :, :, :] = im_rgb
         y[index] = row['category']
         index += 1
+        if debugging:
+            print('Only loading one image in debugging mode.')
+            break
 
     return [x, y]
+
+
+def load_PIL_from_csv(csv_path, idx):
+    df = pd.read_csv(csv_path)
+    img_paths = list(df['image_path'])
+    img_path = join(r'C:\Users\Alex\Documents\Uni\NRE\Dataset\MorphingSpace', img_paths[idx])
+    return Image.open(img_path)
+
+def get_dataset_length(csv_path):
+    df = pd.read_csv(csv_path)
+    img_paths = list(df['image_path'])
+    return len(img_paths)

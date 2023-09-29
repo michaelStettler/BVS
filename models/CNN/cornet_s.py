@@ -127,3 +127,8 @@ def CORnet_S():
             m.bias.data.zero_()
 
     return model
+
+def remove_last_layer(cornet_model):
+    cornet_model.decoder.avgpool = Identity()
+    cornet_model.decoder.linear = Identity()
+    return cornet_model

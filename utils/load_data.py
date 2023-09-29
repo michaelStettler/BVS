@@ -12,7 +12,7 @@ from utils.image_utils import pad_image
 from utils.load_from_csv import load_from_csv
 
 
-def load_data(config, train=True, sort_by=None, get_raw=False, get_only_label=False):
+def load_data(config, train=True, sort_by=None, get_raw=False, get_only_label=False, debugging=False):
     if config['train_data'] == 'test':
         print("[DATA] Generate random training data")
         np.random.seed(0)
@@ -48,7 +48,7 @@ def load_data(config, train=True, sort_by=None, get_raw=False, get_only_label=Fa
         data = _load_KDEF(config, train, get_raw=get_raw)
 
     elif config['train_data'] == 'FERG':  # bfs = basic face shape
-        data = _load_FERG(config, train, get_raw=get_raw, get_only_label=get_only_label)
+        data = _load_FERG(config, train, get_raw=get_raw, get_only_label=get_only_label, debugging=debugging)
 
 
     else:
@@ -479,7 +479,7 @@ def _load_KDEF(config, train, get_raw=False):
     return data
 
 
-def _load_FERG(config, train, get_raw=False, get_only_label=False):
+def _load_FERG(config, train, get_raw=False, get_only_label=False, debugging=False):
     """
     helper function to load the FERG dataset
     """
@@ -490,7 +490,7 @@ def _load_FERG(config, train, get_raw=False, get_only_label=False):
         df = pd.read_csv(config['test_csv'], index_col=0)
 
     # load each image from the csv file
-    data = load_from_csv(df, config, get_only_label=get_only_label)
+    data = load_from_csv(df, config, get_only_label=get_only_label, debugging=debugging)
 
     if get_raw:
         data[0] = data[0]

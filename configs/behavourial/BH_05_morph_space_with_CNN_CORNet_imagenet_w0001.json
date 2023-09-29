@@ -8,7 +8,8 @@
   "load_directory": "C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/DNN_weights",
   "save_directory": "C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/model_preds",
   "input_shape": [224, 224, 3],
-  "model_name": "CORNet_imagenet_autumn-sweep-118",
+  "weights": "C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/pretrained_weights/cornet_s-1d3f7974.pth",
+  "model_name": "CORNet_imagenet_easy-sweep-16",
   "model_class": "cornet",
   "tensor_engine": "torch"
 }

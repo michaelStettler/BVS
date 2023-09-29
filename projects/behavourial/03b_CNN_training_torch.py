@@ -55,6 +55,7 @@ project_name = config["project"]
 sweep_id = wandb.sweep(sweep_config, entity="BVS", project=project_name)
 
 
+#%%
 
 def main():
     run = wandb.init(entity="BVS", project=project_name)
@@ -64,11 +65,13 @@ def main():
     train_data = load_data(config, get_raw=True)
     val_data = load_data(config, get_raw=True, train=False)
 
-    x_train = torch.tensor(train_data[0])
+    # %%
+
+    x_train = torch.tensor(train_data[0]) / 255.
     x_train = x_train.permute([0, 3, 1, 2])   # torch wants the channel dimension first
     y_train = torch.tensor(train_data[1])
 
-    x_val = torch.tensor(val_data[0])
+    x_val = torch.tensor(val_data[0]) / 255.
     x_val = x_val.permute([0, 3, 1, 2])  # torch wants the channel dimension first
     y_val = torch.tensor(val_data[1])
 
@@ -174,7 +177,9 @@ def main():
             x, y = x.float(), y.long()   # torch doesn't deal well with half precision, so convert
             x = data_augmentation(x)
             x, y = x.to("cuda"), y.to("cuda")
+            print('x', torch.max(x))
             x = normalize(x)
+            print('x', torch.max(x))
 
             yhat = model(x)
 
