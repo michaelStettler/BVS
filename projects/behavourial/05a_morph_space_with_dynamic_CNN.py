@@ -1,15 +1,23 @@
 import os
+from os.path import join
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import torch
 from tqdm import tqdm
 from torchvision import transforms
+from torchvision.transforms import ToTensor
+from torchvision.transforms import Resize
+from torchvision.transforms import Normalize
+from PIL import Image
+
+from utils.load_config import *
 
 from utils.load_config import load_config
 from utils.load_data import load_data
 
 from models.CNN.cornet_s import *
+from models.CNN.MAE_DFER.build_model import create_MAE_DFER
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
@@ -19,98 +27,118 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 """
 
 #%% import config
-# config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json'              # OK
-# config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json'       # OK
-# config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'             # OK
-# config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
-# config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'        # OK
-# config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            # OK
-# load config
+config_path = 'BH_05_morph_space_with_CNN_MAE_DFER_w0001.json'
 
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 show_plot = True
-config_paths = ['BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json',
-                'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json',
-                'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json',
-                'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json',
-                'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json',
-                'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json']
-# config_paths = ["BH_05_morph_space_with_CNN_CORNet_imagenet_w0001.json"]
-# config_paths = ["BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json"]
+
+config_paths = ["BH_05_morph_space_with_CNN_MAE_DFER_w0001.json"]
 conditions = ["human_orig", "monkey_orig"]
 
-def predict_torch(config, morph_data):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
 
-    if config["model_class"] == "cornet":
-        model = CORnet_S()
-        model.decoder.linear = torch.nn.Linear(in_features=512, out_features=5) # replace linear layer
-    print('Loading weights from:', os.path.join(config["load_directory"], config["model_name"]))
-    state_dict = torch.load(os.path.join(config["load_directory"], config["model_name"]))
-    model.load_state_dict(state_dict)
-    model = model.to("cuda")
-    model.eval()
+model = create_MAE_DFER().to('cpu')
+model.fc_norm = None
 
-    X, Y = torch.tensor(morph_data[0]), torch.tensor(morph_data[1])
-    print('shape X:', X.shape)
+def load_video_from_frames(directory):
+    to_tensor = ToTensor()
+    to160 = Resize(160)
+    normalize = Normalize(mean=[0.485, 0.456, 0.406],
+                                           std=[0.229, 0.224, 0.225])
 
-    X = X / 255.
-    X = torch.permute(X, (0, 3, 1, 2)).float().to("cuda")
+    T = len(os.listdir(directory))
+    frames_to_keep = np.arange(0, T, step=(T / 16)).astype(int)
+    x = torch.zeros((3, 16, 160, 160))
+
+    imgs = []
+    for img in os.listdir(directory):
+        img = Image.open(join(directory, img))
+        imgs.append(img)
+    for i, idx in enumerate(frames_to_keep):
+        img = imgs[idx]
+        # img.show()
+        img = to_tensor(img)
+        img = to160(img)
+        img = normalize(img)
+        x[:, i, :, :] = img     # c, t, h, w
+    x = torch.unsqueeze(x, 0)       # b, c, t, h, w
+    return x
 
 
-    preds = torch.zeros((Y.shape[0], 5))
+### Train
+def train_morphing(model, config, condition):
+    base_path = config['directory']
+    if condition == 'human_orig':
+        paths = [
+            join(base_path, r'human_orig\HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'),
+            join(base_path, r'human_orig\HumanAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0'),
+            join(base_path, r'human_orig\HumanAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0'),
+            join(base_path, r'human_orig\HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'),
+        ]
+    elif condition == 'monkey_orig':
+        paths = [
+            join(base_path, r'monkey_orig\MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'),
+            join(base_path, r'monkey_orig\MonkeyAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0'),
+            join(base_path, r'monkey_orig\MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0'),
+            join(base_path, r'monkey_orig\MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'),
+        ]
+    print('norm:', model.norm)
+    print('fc_norm:', model.fc_norm)
+    tuning_vectors = torch.zeros((4, 512))
+    for i, path in enumerate(paths):
+        x = load_video_from_frames(path).to('cpu')
+        print('x:', x.shape)
+        out, z = model(x, save_feature=True)
+        z = z.detach().cpu()
+        tuning_vectors[i, :] = (z / torch.linalg.norm(z))
+        print('Out distribution:', out)
+    print('tuning vectors:', tuning_vectors @ tuning_vectors.T)
+    return tuning_vectors
 
-    print("Predicting...")
-    with torch.no_grad():
-        for i in tqdm(range(Y.shape[0])):
-            sample = torch.unsqueeze(X[i, :, :, :], 0)
-            sample = normalize(sample)
-            yhat = model(sample)
-            preds[i, :] = yhat
+tuning_vectors = train_morphing(model, config, 'human_orig')
 
-    return preds.cpu().numpy()
+def predict(model, config, tuning_vectors, sample_path):
+    x = load_video_from_frames(sample_path).to('cpu')
+    print('x:', x.shape)
+    z = model.forward_features(x).detach().cpu()
+    z = z / torch.linalg.norm(z)
+    preds = z @ tuning_vectors.T
+    print(preds)
+    return preds
 
+base_path = config['directory']
+paths = [
+            join(base_path, r'human_orig\HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'),
+            join(base_path, r'human_orig\HumanAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0'),
+            join(base_path, r'human_orig\HumanAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0'),
+            join(base_path, r'human_orig\HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'),
+        ]
+
+print('fc_norm:', model.fc_norm)
+print('head:', model.head)
+
+for sample_path in paths:
+    y = predict(model, config, tuning_vectors, sample_path=sample_path)
+    print('preds:', y)
 
 
 for config_path in config_paths:
-    config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
     for cond, condition in enumerate(conditions):
 
-        morph_csv = [os.path.join(config['directory'], "morphing_space_human_orig.csv"),
-                     os.path.join(config['directory'], "morphing_space_monkey_orig.csv")]
+        base_path = join(config['directory'], condition)
+        sample_paths = os.listdir(base_path)
 
-        # edit dictionary for single condition type
-        if cond is not None:
-            config["train_csv"] = morph_csv[cond]
-            config["condition"] = condition
-            if "human" in condition[cond]:
-                config["avatar_types"] = ["human"]
-            else:
-                config["avatar_types"] = ["monkey"]
+        for sample_path in sample_paths:
+            y = predict(model, config, tuning_vectors, join(base_path, sample_path))
+            print(sample_path, y)
 
         # create directory
         save_path = os.path.join(config["directory"], "model_behav_preds")
         if not os.path.exists(save_path):
             os.mkdir(save_path)
 
-        #%% import data
-        print('Loading data:', config['avatar_types'])
-        morph_data = load_data(config, get_raw=True)
-        print("-- Data loaded --")
-        print("len train_data[0]", len(morph_data[0]))
-        print()
 
-        #%% load model
-        if "tensor_engine" in config:
-            if config["tensor_engine"] == "torch":
-                preds = predict_torch(config, morph_data)
-        else:
-            model = tf.keras.models.load_model(os.path.join(config["load_directory"], config["model_name"]))
-            preds = model.predict(morph_data[0])
-        print("preds:", preds)
-        print("shape preds", np.shape(preds))
 
         #%%
         def print_morph_space(amax_ms_grid=None, cat_grid=None, prob_grid=None,

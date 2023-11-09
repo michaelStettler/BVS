@@ -1,6 +1,6 @@
 {
-  "config_name": "BH_05_morph_space_with_CNN_CORNet_imagenet_w0001",
-  "project": "CORNet_imagenet",
+  "config_name": "BH_05_morph_space_with_CNN_MAE_DFER_w0001",
+  "project": "MAE_DFER",
   "train_data": "FERG",
   "x_col": "image_path",
   "y_col": "category",
@@ -8,8 +8,7 @@
   "load_directory": "C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/DNN_weights",
   "save_directory": "C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/model_preds",
   "input_shape": [224, 224, 3],
-  "weights": "C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/pretrained_weights/cornet_s-1d3f7974.pth",
-  "model_name": "CORNet_imagenet_toasty-sweep-49",
-  "model_class": "cornet",
+  "model_name": "MAE_DFER",
+  "model_class": "ViT",
   "tensor_engine": "torch"
 }
