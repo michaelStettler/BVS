@@ -28,6 +28,8 @@ config_path = 'BH_03_CNN_training_CORNet_imagenet_w0001.json'
 config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
 print(config)
 
+raise ValueError('debug')
+
 #%% declare weights and biases
 import wandb
 
@@ -53,6 +55,7 @@ pprint.pprint(sweep_config)
 # create sweep id
 project_name = config["project"]
 sweep_id = wandb.sweep(sweep_config, entity="BVS", project=project_name)
+
 
 
 #%%
