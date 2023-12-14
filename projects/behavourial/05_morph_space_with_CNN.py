@@ -22,7 +22,7 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json'              # OK
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json'       # OK
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'             # OK
-# config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
+config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'        # OK
 # config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            # OK
 # load config
@@ -37,7 +37,7 @@ config_paths = ['BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json',
                 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json',
                 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json']
 # config_paths = ["BH_05_morph_space_with_CNN_CORNet_imagenet_w0001.json"]
-# config_paths = ["BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json"]
+config_paths = ["BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json"]
 conditions = ["human_orig", "monkey_orig"]
 
 def predict_torch(config, morph_data):
@@ -76,7 +76,15 @@ def predict_torch(config, morph_data):
 
 for config_path in config_paths:
     config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
+    print(config['model_name'])
+
+    ###
+    config['directory'] = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
+    config['load_directory'] = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/DNN_weights'
+    ###
+
     for cond, condition in enumerate(conditions):
+        print(cond, condition)
 
         morph_csv = [os.path.join(config['directory'], "morphing_space_human_orig.csv"),
                      os.path.join(config['directory'], "morphing_space_monkey_orig.csv")]
@@ -87,8 +95,13 @@ for config_path in config_paths:
             config["condition"] = condition
             if "human" in condition[cond]:
                 config["avatar_types"] = ["human"]
-            else:
+            elif 'monkey' in condition:
                 config["avatar_types"] = ["monkey"]
+            else:
+                raise NameError('No avatar of that type.')
+        print(config['train_csv'])
+        print(config['condition'])
+        print(config['avatar_types'])
 
         # create directory
         save_path = os.path.join(config["directory"], "model_behav_preds")
