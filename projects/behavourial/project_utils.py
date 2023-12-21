@@ -16,4 +16,3 @@ def get_computer_path(computer):
         computer_path = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
         computer_letter = 'a'
     return computer_path, computer_letter
-

@@ -22,9 +22,9 @@ run: python -m projects.behavourial.05_morph_space_with_CNN
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json'              # OK
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_imagenet_conv33_w0001.json'       # OK
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'             # OK
-config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
+# config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'        # OK
-# config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            # OK
+config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            # OK
 # load config
 
 #%% declare script variables
@@ -93,7 +93,7 @@ for config_path in config_paths:
         if cond is not None:
             config["train_csv"] = morph_csv[cond]
             config["condition"] = condition
-            if "human" in condition[cond]:
+            if "human" in condition:
                 config["avatar_types"] = ["human"]
             elif 'monkey' in condition:
                 config["avatar_types"] = ["monkey"]
