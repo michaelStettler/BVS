@@ -21,7 +21,7 @@ computer_path, computer_letter = get_computer_path(computer)
 
 conditions = ["human_orig", "monkey_orig"]
 
-model_name = 'ResNet50v2_affectnet'
+model_name = 'NRE_frobenius_static'
 
 
 def softmax(array, beta):
@@ -64,12 +64,14 @@ for condition in conditions:   # Do humans and monkey seperately
     # Read predictions from dictionary
     nre_preds = predictions[condition]['NRE']
     humans = predictions[condition]['behavioral']
-    baselines[condition]['kl'] = compute_morph_space_KL_div(humans, preds, sum=True)
-    baselines[condition]['tot_var'] = compute_morph_space_total_variation(humans, preds, sum=True)
-    baselines[condition]['entropy_diff'] = compute_entropy_difference(humans, preds, sum=True)
+    baselines[condition]['kl'] = compute_morph_space_KL_div(humans, nre_preds, sum=True)
+    baselines[condition]['tot_var'] = compute_morph_space_total_variation(humans, nre_preds, sum=True)
+    baselines[condition]['entropy_diff'] = compute_entropy_difference(humans, nre_preds, sum=True)
+
+print(baselines)
 
 # Compute difference metrics for softmaxed nre output with varying temperature
-betas = np.arange(1, 20, step=0.1)
+betas = np.arange(0, 10, step=0.01)
 kl = {'human_orig': [], 'monkey_orig': []}
 tot_var = {'human_orig': [], 'monkey_orig': []}
 entropy_diff = {'human_orig': [], 'monkey_orig': []}
@@ -86,22 +88,28 @@ for beta in betas:  # Loop over beta values for the softmax
         tot_var[condition].append(compute_morph_space_total_variation(humans, inhibited_preds, sum=True))
         entropy_diff[condition].append(compute_entropy_difference(humans, inhibited_preds, sum=True))
 
-print('kl:', kl)
-print('tot_var:', tot_var)
-print('entropy_diff:', entropy_diff)
+
 
 def make_line_plot(betas, kl, tot_var, entropy_diff, condition, baselines):
-    plt.plot(betas, kl[condition], label='kl', color='tab:orange')
-    plt.plot(betas, tot_var[condition], label='tot_var', color='tab:blue')
-    plt.plot(betas, entropy_diff[condition], label='entropy_diff', color='tab:green')
+    cols = ['#B1614E', '#FDD692', '#A3B9C9']
+    plt.plot(betas, kl[condition], label='KL Divergence', color=cols[0])
+    plt.plot(betas, tot_var[condition], label='Total Variation', color=cols[1])
+    plt.plot(betas, entropy_diff[condition], label='Entropy', color=cols[2])
+    if condition == 'human_orig':
+        plt.title('Human Avatar')
+    else:
+        plt.title('Monkey Avatar')
 
-    plt.hlines(baselines[condition]['kl'], xmin=betas[0], xmax=betas[-1], colors='tab:orange', linestyle='dashed')
-    plt.hlines(baselines[condition]['tot_var'], xmin=betas[0], xmax=betas[-1], colors='tab:blue', linestyle='dashed')
-    plt.hlines(baselines[condition]['entropy_diff'], xmin=betas[0], xmax=betas[-1], colors='tab:green', linestyle='dashed')
+    plt.hlines(baselines[condition]['kl'], xmin=betas[0], xmax=betas[-1], colors=cols[0], linestyle='dashed')
+    plt.hlines(baselines[condition]['tot_var'], xmin=betas[0], xmax=betas[-1], colors=cols[1], linestyle='dashed')
+    plt.hlines(baselines[condition]['entropy_diff'], xmin=betas[0], xmax=betas[-1], colors=cols[2], linestyle='dashed')
+    plt.ylim(0, 19)
     plt.xlabel('Softmax Temperature')
-    plt.ylabel('Difference Metric between NRE and Human Predictions')
+    plt.ylabel('Difference between NRE and Human Predictions')
     plt.legend()
+    plt.savefig(join('plots', 'tuning_' + condition) + '.' + 'svg', format='svg')
     plt.show()
+
 
 make_line_plot(betas, kl, tot_var, entropy_diff, 'human_orig', baselines)
 make_line_plot(betas, kl, tot_var, entropy_diff, 'monkey_orig', baselines)

@@ -196,7 +196,7 @@ def main():
                ]
     ####
 
-    colors = ['#FE938C', '#4281A4']
+    colors = ['#EC7357', '#78A1BB']
 
     legend_dict = {'human_orig': 'Human Avatar', 'monkey_orig': 'Monkey Avatar'}
 
@@ -224,9 +224,11 @@ def main():
         except:
             model_names, labels = sort_plot_data(data_dict, model_names, labels, fixed_preorder=sort_plot)
         fig, ax = plt.subplots()
-        x = np.arange(len(data_dict))
+        x = np.arange(len(labels))
         width = 0.25
+        x = x + (width / 2)     # make sure that xticks are in correct spots
         # plot each condition
+        print(model_names, labels)
         for i, model_name in enumerate(model_names):
             for c, condition in enumerate(conditions):
                 offset = width * c
@@ -234,7 +236,7 @@ def main():
                                 width, label=legend_dict[condition], color=colors[c])
                 if i == 0:
                     ax.legend()
-        ax.set_xticks(x, labels)
+        ax.set_xticks(x + width / 2, labels)
         plt.xticks(rotation=90)
         plt.title(title)
         plt.tight_layout()
@@ -251,7 +253,10 @@ def main():
     make_bar_plot(entropy_diffs, model_names, labels, colors, title="Normalized Entropy Difference", save_name='entropy_diffs', sort_plot=fixed_order)
     model_names.insert(0, 'behavioural')
     labels.insert(0, 'Humans')
-    make_bar_plot(entropies, model_names, labels, colors, title='Entropies', sort_plot=False, save_name='entropy_bar_plot')
+    entropy_models = ['behavioural', 'NRE_frobenius_static']
+    entropy_labels = ['Humans', 'NRE-static']
+    print('Entropy -------------------------------------------------')
+    make_bar_plot(entropies, entropy_models, entropy_labels, colors, title='Entropy', sort_plot=False, save_name='entropy_bar_plot')
 
 
     ### Entropy heat maps
@@ -293,15 +298,15 @@ def main():
         print()
 
     print('Pred dict:')
-    print(pred_dict['behavioural']['human_orig'][3, :, :])
-    print(pred_dict['NRE_frobenius_static']['human_orig'][3, :, :])
-    print(pred_dict['CORNet_imagenet_linear']['human_orig'][3, :, :])
-    print(pred_dict['Resnet50v2_imagenet_linear']['human_orig'][3, :, :])
+    print(pred_dict['behavioural']['human_orig'][0, :, :])
+    print(pred_dict['NRE_frobenius_static']['human_orig'][0, :, :])
+    print(pred_dict['CORNet_imagenet_linear']['human_orig'][0, :, :])
+    print(pred_dict['Resnet50v2_imagenet_linear']['human_orig'][0, :, :])
     # print(pred_dict['behavioural']['monkey_orig'][4, :, :])
     # print(pred_dict['Resnet50v2_imagenet']['monkey_orig'][4, :, :])
 
-    print(np.mean(np.abs(pred_dict['behavioural']['human_orig'] - pred_dict['Resnet50v2_imagenet']['human_orig'])))
-    print(np.mean(np.abs(pred_dict['behavioural']['monkey_orig'] - pred_dict['Resnet50v2_imagenet']['monkey_orig'])))
+    # print(np.mean(np.abs(pred_dict['behavioural']['human_orig'] - pred_dict['Resnet50v2_imagenet']['human_orig'])))
+    # print(np.mean(np.abs(pred_dict['behavioural']['monkey_orig'] - pred_dict['Resnet50v2_imagenet']['monkey_orig'])))
 
 if __name__ == '__main__':
     main()

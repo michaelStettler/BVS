@@ -173,10 +173,12 @@ def test_full_model(model, data):
     yhat = np.squeeze(yhat)
     print('yhat shape:', yhat.shape)
     print('Output of softmax:')
-    print(yhat)
-    yhat = np.argmax(yhat, axis=1)
-    print('yhat:', yhat)
-    print('Number of errors:', np.sum(yhat != y_test))
+    for i in range(len(y_test)):
+        print(y_test[i], yhat[i])
+    # yhat = np.argmax(yhat, axis=1)
+    # print('yhat:', yhat)
+    # print('Number of errors:', np.sum(yhat != y_test))
+
     return None
 
 
@@ -193,13 +195,16 @@ def add_readout(cnn, regression):
 
     return model
 
+#%%
 regression = train(base_model, train_data)
 model = add_readout(base_model, regression)
+
+#%%
 test_full_model(model, val_data)
 test(base_model, regression, val_data)
 
-save_path = join(save_path, config['project'])
-model.save(save_path)
+# save_path = join(save_path, config['project'])
+# model.save(save_path)
 
 
 
