@@ -77,8 +77,8 @@ def get_pred(load_path, model_name, condition):
 
 
 def main():
-    # computer = 'windows'
-    computer = 'alex'
+    computer = 'windows'
+    # computer = 'alex'
 
     computer_path, computer_letter = get_computer_path(computer)
 
@@ -262,7 +262,7 @@ def main():
     ### Entropy heat maps
 
     nre_entropy = entropies['NRE_frobenius_static']['human_orig']
-    cnn_entropy = entropies['CORNet_imagenet_linear']['human_orig']
+    cnn_entropy = entropies['ResNet50v2_affectnet_linear']['human_orig']
     behav_entropy = entropies['behavioural']['human_orig']
     print(nre_entropy)
     print(cnn_entropy)

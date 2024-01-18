@@ -14,8 +14,8 @@ run: python -m projects.behavourial.07_compute_KL_div_CNN
 """
 
 #%% define computer path
-# computer = 'windows'
-computer = 'alex'
+computer = 'windows'
+# computer = 'alex'
 
 computer_path, computer_letter = get_computer_path(computer)
 
@@ -107,7 +107,7 @@ def make_line_plot(betas, kl, tot_var, entropy_diff, condition, baselines):
     plt.xlabel('Softmax Temperature')
     plt.ylabel('Difference between NRE and Human Predictions')
     plt.legend()
-    plt.savefig(join('plots', 'tuning_' + condition) + '.' + 'svg', format='svg')
+    # plt.savefig(join('plots', 'tuning_' + condition) + '.' + 'svg', format='svg')
     plt.show()
 
 

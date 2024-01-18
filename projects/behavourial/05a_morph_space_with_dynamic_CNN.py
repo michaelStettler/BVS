@@ -1,7 +1,7 @@
 import os
 from os.path import join
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 import matplotlib.pyplot as plt
 import torch
 from tqdm import tqdm
@@ -17,29 +17,29 @@ from utils.load_config import load_config
 from utils.load_data import load_data
 
 from models.CNN.cornet_s import *
-from models.CNN.MAE_DFER.build_model import create_MAE_DFER
+# from models.CNN.MAE_DFER.build_model import create_MAE_DFER
+from models.CNN.M3DFEL import *
 
 np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
 
 """
-run: python -m projects.behavourial.05_morph_space_with_CNN
+run: python -m projects.behavourial.05a_morph_space_with_dynamic_CNN
 """
 
 #%% import config
-config_path = 'BH_05_morph_space_with_CNN_MAE_DFER_w0001.json'
+config_path = 'BH_03_CNN_training_M3DFEL_w0001.json'
 
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 show_plot = True
 
 config_paths = ["BH_05_morph_space_with_CNN_MAE_DFER_w0001.json"]
+config_paths = ["BH_03_CNN_training_M3DFEL_w0001.json"]
 conditions = ["human_orig", "monkey_orig"]
 
-config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
+config = load_config(config_path, path=r'D:\PycharmProjects\BVS\configs\behavourial')
 
-model = create_MAE_DFER().to('cpu')
-model.fc_norm = None
 
 def load_video_from_frames(directory):
     to_tensor = ToTensor()
@@ -65,6 +65,15 @@ def load_video_from_frames(directory):
     x = torch.unsqueeze(x, 0)       # b, c, t, h, w
     return x
 
+if config["project"] == "MAE_DFER":
+    model = create_MAE_DFER().to('cpu')
+    model.fc_norm = None
+
+elif config["project"] == "M3DFEL":
+    model = M3DFEL()
+    state = torch.load(config["weights"])
+    model.load_state_dict(state["state_dict"])
+    print("Model:", model)
 
 ### Train
 def train_morphing(model, config, condition):

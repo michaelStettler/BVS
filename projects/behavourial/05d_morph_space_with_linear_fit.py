@@ -16,7 +16,7 @@ np.random.seed(0)
 np.set_printoptions(precision=3, suppress=True, linewidth=180)
 
 """
-run: python -m projects.behavourial.05_morph_space_with_CNN
+run: python -m projects.behavourial.05_morph_space_with_linear_fit
 """
 
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
@@ -26,7 +26,7 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 # config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'             # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_imagenet_w0001.json'         # OK
 # config_path = 'BH_05_morph_space_with_CNN_ResNet50v2_affectnet_w0001.json'        # OK
-config_path = 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json'            # OK
+config_path = 'BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json'            # OK
 # load config
 
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
@@ -39,7 +39,7 @@ config_paths = ['BH_05_morph_space_with_CNN_VGG19_imagenet_w0001.json',
                 'BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json']
 # config_paths = ["BH_05_morph_space_with_CNN_CORNet_imagenet_w0001.json"]
 
-config_path = "BH_05_morph_space_with_CNN_CORNet_affectnet_w0001.json"
+config_path = "BH_05_morph_space_with_CNN_VGG19_affectnet_w0001.json"
 conditions = ["human_orig", "monkey_orig"]
 
 
@@ -68,43 +68,6 @@ def predict_torch(config, morph_data):
     model = model.to("cuda")
     model.eval()
 
-    
-    ### Sanity check
-    sanity_data = load_data(config, get_raw=True, train=False)
-
-    x_sanity = (torch.tensor(sanity_data[0]) / 255.).float()
-    x_sanity = rearrange(x_sanity, 'b h w c -> b c h w')
-    y_sanity = torch.tensor(sanity_data[1])
-
-    sanity_dataset = torch.utils.data.TensorDataset(x_sanity, y_sanity)
-
-    sanity_loader = torch.utils.data.DataLoader(sanity_dataset, batch_size=config["batch_size"], shuffle=False)
-
-    def test_full_model(model, dataloader):
-        print('Performing Sanity check...')
-        preds = []
-        targets = []
-
-        with torch.no_grad():
-            for x, target in dataloader:
-                x = x.to('cuda')
-                x = normalize(x)
-                yhat = model(x)
-                preds.append(yhat.cpu().numpy())
-                targets.append(target)
-        yhat = np.concatenate(preds)
-        y = np.concatenate(targets)
-        print('yhat shape', yhat.shape)
-        print('yhat:', yhat)
-        print('y shape', y.shape)
-        for i in range(len(y)):
-            print(y[i], yhat[i])
-        yhat = np.argmax(yhat, axis=1)
-        print('yhat:', yhat)
-        print('Number of errors:', np.sum(yhat != y))
-        return None
-    test_full_model(model, sanity_loader)
-    ###
 
     X, Y = torch.tensor(morph_data[0]), torch.tensor(morph_data[1])
     print('shape X:', X.shape)
@@ -278,14 +241,14 @@ def process_and_save_predictions(config, preds):
 
 #%% GET PREDS
 pred_dict = {}
-config = load_config(config_path, path=r'C:\Users\Alex\Documents\Uni\NRE\BVS\configs\behavourial')
+config = load_config(config_path, path=r'D:\PycharmProjects\BVS\configs\behavourial')
 print(config['model_name'])
 project = config['project']
 pred_dict[project] = {}
 
 ###
-config['directory'] = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace'
-config['load_directory'] = 'C:/Users/Alex/Documents/Uni/NRE/Dataset/MorphingSpace/DNN_weights/linear_fits'
+config['directory'] = 'D:/Dataset/MorphingSpace'
+config['load_directory'] = 'D:/Dataset/MorphingSpace/DNN_weights/linear_fits'
 ###
 
 # create directory
@@ -298,3 +261,14 @@ for cond, condition in enumerate(conditions):
 
     preds = make_predictions(config)
     pred_dict[project][condition] = preds
+
+
+#%%
+X = pred_dict[project]["human_orig"]
+print(X)
+
+
+#%%
+for cond, condition in enumerate(conditions):
+    preds = pred_dict[project][condition]
+    process_and_save_predictions(config, preds)
