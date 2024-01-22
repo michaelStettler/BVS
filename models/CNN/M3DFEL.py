@@ -3,7 +3,7 @@ from torch import nn
 from torchvision.models.video import r3d_18, R3D_18_Weights
 from einops import rearrange
 
-from utils import *
+from models.CNN.m3dfel_utils import *
 
 
 class M3DFEL(nn.Module):

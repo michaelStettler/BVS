@@ -99,7 +99,7 @@ def main():
     ### names for poster
     model_names = ["NRE_frobenius_static", "NRE_frobenius_dynamic",
                    "VGG19_affectnet_linear", "ResNet50v2_affectnet_linear", "CORNet_affectnet_linear",
-                   "VGG19_imagenet_linear", 'Resnet50v2_imagenet_linear', 'CORNet_imagenet_linear']
+                   "M3DFEL", 'Resnet50v2_imagenet_linear', 'CORNet_imagenet_linear']
     ###
 
 
@@ -122,7 +122,7 @@ def main():
         entropy_model_dict = {}
         entropy_diff_model_dict = {}
         for cond, condition in enumerate(conditions):
-            load_path = os.path.join(computer_path, 'model_behav_preds')
+            load_path = os.path.join(computer_path, 'model_behav_preds/linear_fits')
 
             # load data
             # load behavioural data
@@ -192,7 +192,7 @@ def main():
     ### Labels for the poster
     labels = [ "NRE-Static", "NRE-Dynamic",
                    "VGG19-ANN", "Resnet50v2-AN",
-                   "CORNet-AN", "VGG-IM", "ResNet50v2-IM", "CORNet-IM"
+                   "CORNet-AN", "M3DFEL-IM", "ResNet50v2-IM", "CORNet-IM"
                ]
     ####
 

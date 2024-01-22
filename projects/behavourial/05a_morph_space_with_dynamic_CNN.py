@@ -1,80 +1,61 @@
 import os
 from os.path import join
-import numpy as np
-# import tensorflow as tf
-import matplotlib.pyplot as plt
-import torch
-from tqdm import tqdm
-from torchvision import transforms
-from torchvision.transforms import ToTensor
-from torchvision.transforms import Resize
-from torchvision.transforms import Normalize
-from PIL import Image
 
-from utils.load_config import *
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+import torchvision.transforms
+from PIL import Image
+from einops import rearrange
+from torchvision.transforms import Resize
 
 from utils.load_config import load_config
-from utils.load_data import load_data
-
-from models.CNN.cornet_s import *
-# from models.CNN.MAE_DFER.build_model import create_MAE_DFER
-from models.CNN.M3DFEL import *
 
 np.random.seed(0)
-np.set_printoptions(precision=3, suppress=True, linewidth=180)
 
 """
-run: python -m projects.behavourial.05a_morph_space_with_dynamic_CNN
+run: python -m projects.behavourial.03b_CNN_training_torch
+tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 """
+
+from models.CNN.M3DFEL import M3DFEL
 
 #%% import config
-config_path = 'BH_03_CNN_training_M3DFEL_w0001.json'
+
+config_paths = ['BH_05_morph_space_with_dynamics_M3DFEL_w0001.json']
 
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
 show_plot = True
 
-config_paths = ["BH_05_morph_space_with_CNN_MAE_DFER_w0001.json"]
-config_paths = ["BH_03_CNN_training_M3DFEL_w0001.json"]
 conditions = ["human_orig", "monkey_orig"]
 
-config = load_config(config_path, path=r'D:\PycharmProjects\BVS\configs\behavourial')
-
-
-def load_video_from_frames(directory):
-    to_tensor = ToTensor()
-    to160 = Resize(160)
-    normalize = Normalize(mean=[0.485, 0.456, 0.406],
-                                           std=[0.229, 0.224, 0.225])
-
-    T = len(os.listdir(directory))
-    frames_to_keep = np.arange(0, T, step=(T / 16)).astype(int)
-    x = torch.zeros((3, 16, 160, 160))
-
+def load_video_from_frames(directory, transform, frames_to_keep):
     imgs = []
     for img in os.listdir(directory):
         img = Image.open(join(directory, img))
+        img = torchvision.transforms.functional.to_tensor(img)
         imgs.append(img)
-    for i, idx in enumerate(frames_to_keep):
-        img = imgs[idx]
-        # img.show()
-        img = to_tensor(img)
-        img = to160(img)
-        img = normalize(img)
-        x[:, i, :, :] = img     # c, t, h, w
-    x = torch.unsqueeze(x, 0)       # b, c, t, h, w
+    video = [imgs[idx] for idx in frames_to_keep]
+    x = torch.stack(video)
+    x = transform(x)
+    x = rearrange(x, "t c h w -> 1 t c h w")
     return x
 
-if config["project"] == "MAE_DFER":
-    model = create_MAE_DFER().to('cpu')
-    model.fc_norm = None
+def get_preprocessing_procedure(config):
+    if config["project"] == "MAE_DFER":
+        model = create_MAE_DFER().to('cpu')
+        model.fc_norm = None
 
-elif config["project"] == "M3DFEL":
-    model = M3DFEL()
-    state = torch.load(config["weights"])
-    model.load_state_dict(state["state_dict"])
-    print("Model:", model)
-
+    elif config["project"] == "M3DFEL":
+        model = M3DFEL()
+        weight_path = r"D:\PycharmProjects\dynamic_face_models\TFace\attribute\M3DFEL\outputs\DFEW-[12_17]_[20_29]\model_best.pth"
+        checkpoint = torch.load(weight_path)
+        model.load_state_dict(checkpoint["state_dict"])
+        model.remove_head()
+        transform = Resize(112)
+        frames_to_keep = np.linspace(0, 149, num=16).astype(int)
+    return model, transform, frames_to_keep
 ### Train
 def train_morphing(model, config, condition):
     base_path = config['directory']
@@ -92,58 +73,47 @@ def train_morphing(model, config, condition):
             join(base_path, r'monkey_orig\MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0'),
             join(base_path, r'monkey_orig\MonkeyAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'),
         ]
-    print('norm:', model.norm)
-    print('fc_norm:', model.fc_norm)
-    tuning_vectors = torch.zeros((4, 512))
+    tuning_vectors = []
     for i, path in enumerate(paths):
-        x = load_video_from_frames(path).to('cpu')
-        print('x:', x.shape)
-        out, z = model(x, save_feature=True)
+        x = load_video_from_frames(directory=path, transform=transform, frames_to_keep=frames_to_keep).to('cpu')
+        z = model(x)
         z = z.detach().cpu()
-        tuning_vectors[i, :] = (z / torch.linalg.norm(z))
-        print('Out distribution:', out)
+        tuning_vectors.append(z / torch.linalg.norm(z))
+    tuning_vectors = torch.stack(tuning_vectors)
+    print("tuning vectors shape:", tuning_vectors.shape)
     print('tuning vectors:', tuning_vectors @ tuning_vectors.T)
     return tuning_vectors
 
-tuning_vectors = train_morphing(model, config, 'human_orig')
-
-def predict(model, config, tuning_vectors, sample_path):
-    x = load_video_from_frames(sample_path).to('cpu')
-    print('x:', x.shape)
-    z = model.forward_features(x).detach().cpu()
+def predict(model, tuning_vectors, sample_path, transform, frames_to_keep):
+    x = load_video_from_frames(sample_path, transform, frames_to_keep).to('cpu')
+    z = model(x).detach().cpu()
     z = z / torch.linalg.norm(z)
-    preds = z @ tuning_vectors.T
-    print(preds)
-    return preds
-
-base_path = config['directory']
-paths = [
-            join(base_path, r'human_orig\HumanAvatar_Anger_0.0_Fear_1.0_Monkey_0.0_Human_1.0'),
-            join(base_path, r'human_orig\HumanAvatar_Anger_0.0_Fear_1.0_Monkey_1.0_Human_0.0'),
-            join(base_path, r'human_orig\HumanAvatar_Anger_1.0_Fear_0.0_Monkey_0.0_Human_1.0'),
-            join(base_path, r'human_orig\HumanAvatar_Anger_1.0_Fear_0.0_Monkey_1.0_Human_0.0'),
-        ]
-
-print('fc_norm:', model.fc_norm)
-print('head:', model.head)
-
-for sample_path in paths:
-    y = predict(model, config, tuning_vectors, sample_path=sample_path)
-    print('preds:', y)
-
+    pred = z @ tuning_vectors.T
+    pred = torch.exp(20 * pred) / torch.sum(np.exp(20 * pred))
+    return pred
 
 for config_path in config_paths:
+    # load config
+    config = load_config(config_path, path=r'D:\PycharmProjects\BVS\configs\behavourial')
+    model, transform, frames_to_keep = get_preprocessing_procedure(config)
+
+    project_name = config["project"]
     for cond, condition in enumerate(conditions):
+
+        tuning_vectors = train_morphing(model, config, condition)
 
         base_path = join(config['directory'], condition)
         sample_paths = os.listdir(base_path)
 
+        preds = []
         for sample_path in sample_paths:
-            y = predict(model, config, tuning_vectors, join(base_path, sample_path))
+            y = predict(model, tuning_vectors, join(base_path, sample_path), transform, frames_to_keep)
+            preds.append(y.detach().cpu().numpy())
             print(sample_path, y)
+        preds = np.stack(preds)
 
         # create directory
-        save_path = os.path.join(config["directory"], "model_behav_preds")
+        save_path = os.path.join(config["directory"], "model_behav_preds/linear_fits")
         if not os.path.exists(save_path):
             os.mkdir(save_path)
 
@@ -203,18 +173,10 @@ for config_path in config_paths:
                     plt.show()
 
         # rearrange into 25 videos of 150 frames (???)
-        morph_space_data = np.reshape(preds, [25, 150, -1])
-        print("shape morph_space_data", np.shape(morph_space_data))
+        print("shape preds:", preds.shape)
 
-        # get max values for each video and category
-        amax_ms = np.amax(morph_space_data, axis=1)
-        print("shape amax_ms", np.shape(amax_ms))
-        print(amax_ms)
-
-        # make into grid
         # rearrange into 5 categories x 5 repeats x 4 predicted categories
-        amax_ms_grid = np.reshape(amax_ms, [5, 5, -1])
-        amax_ms_grid = amax_ms_grid[..., 1:]  # remove neutral category
+        amax_ms_grid = np.reshape(preds, [5, 5, -1])
         print("shape amax_ms_grid", np.shape(amax_ms_grid))
 
         cat_grid = np.zeros((5, 5, 4))
