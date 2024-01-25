@@ -122,7 +122,9 @@ def main():
         entropy_model_dict = {}
         entropy_diff_model_dict = {}
         for cond, condition in enumerate(conditions):
-            load_path = os.path.join(computer_path, 'model_behav_preds/linear_fits')
+            load_path = os.path.join(computer_path, 'model_behav_preds')
+            if '_linear' in model_name:
+                load_path = os.path.join(load_path, 'linear_fits')
 
             # load data
             # load behavioural data
