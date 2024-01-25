@@ -19,10 +19,12 @@ tensorboard: tensorboard --logdir D:/PycharmProjects/BVS/logs/fit
 """
 
 from models.CNN.M3DFEL import M3DFEL
+from models.CNN.former_dfer.ST_Former import GenerateModel, RecorderMeter
 
 #%% import config
 
 config_paths = ['BH_05_morph_space_with_dynamics_M3DFEL_w0001.json']
+config_paths = ['BH_05_morph_space_with_dynamics_FORMER_DFER_w0001.json']
 
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
@@ -55,7 +57,26 @@ def get_preprocessing_procedure(config):
         model.remove_head()
         transform = Resize(112)
         frames_to_keep = np.linspace(0, 149, num=16).astype(int)
+    elif config["project"] == "FORMER_DFER":
+        model = GenerateModel()
+        weight_path = config["weights"]
+        checkpoint = torch.load(weight_path)
+        new_statedict = {}
+        for key, val in checkpoint["state_dict"].items():
+            s = key.replace("module.", "")
+            print(key, s)
+            new_statedict[s] = val
+        model.load_state_dict(new_statedict)
+        model.remove_head()
+        transform = Resize(112)
+        frames_to_keep = np.linspace(0, 149, num=16).astype(int)
+
+    model.eval()
     return model, transform, frames_to_keep
+
+
+
+
 ### Train
 def train_morphing(model, config, condition):
     base_path = config['directory']
@@ -79,7 +100,7 @@ def train_morphing(model, config, condition):
         z = model(x)
         z = z.detach().cpu()
         tuning_vectors.append(z / torch.linalg.norm(z))
-    tuning_vectors = torch.stack(tuning_vectors)
+    tuning_vectors = torch.stack(tuning_vectors).squeeze()
     print("tuning vectors shape:", tuning_vectors.shape)
     print('tuning vectors:', tuning_vectors @ tuning_vectors.T)
     return tuning_vectors
