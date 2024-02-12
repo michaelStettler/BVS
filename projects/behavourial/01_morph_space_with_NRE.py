@@ -33,8 +33,9 @@ run: python -m projects.behavourial.01_morph_space_with_NRE
 """
 
 #%% declare script variables
-computer = 'alex'
+computer = 'mac'
 computer_path, computer_letter = get_computer_path(computer)
+print(computer_path)
 
 show_plot = False
 load_RBF_pattern = True
@@ -53,7 +54,7 @@ model_name = 'NRE'
 norm_type = 'individual'
 # norm_type = 'categorical'  # deprecated
 # norm_type = 'frobenius'
-use_dynamic = True
+use_dynamic = False
 # occluded and original are the same for this pipeline as we do not have any landmark on the ears
 conditions = ["human_orig", "monkey_orig", "human_equi", "monkey_equi"]
 cond = 0
@@ -81,7 +82,8 @@ tau_d = 1
 #%% import config
 config_path = 'BH_01_morph_space_with_NRE_{}0001.json'.format(computer_letter)
 # load config
-config = load_config(config_path, path='C:/Users/Alex/Documents/Uni/NRE/BVS/configs/behavourial')
+config = load_config(config_path, path=r'D:\PycharmProjects\BVS\configs\behavourial')
+print(config)
 
 # edit dictionary for single condition type
 if cond is not None:
@@ -497,7 +499,7 @@ for i in range(np.shape(amax_ms_grid)[0]):
     for j in range(np.shape(amax_ms_grid)[0]):
         x = amax_ms_grid[i, j]  # discard neutral
         cat_grid[i, j, np.argmax(x)] = 1
-        prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
+        prob_grid[i, j] = x / np.sum(x)
 
 title = f"{model_name}_{norm_type}_{modality}_{condition}"
 print(f"finish script for {title}")
