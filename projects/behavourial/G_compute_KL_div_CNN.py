@@ -98,8 +98,8 @@ def main():
 
     ### names for poster
     model_names = ["NRE_frobenius_static", "NRE_frobenius_dynamic",
-                   "VGG19_affectnet_linear", "ResNet50v2_affectnet_linear", "CORNet_affectnet_linear",
-                   "M3DFEL", 'Resnet50v2_imagenet_linear', 'CORNet_imagenet_linear']
+                   "FORMER_DFER_linear", "ResNet50v2_affectnet_linear", "CORNet_affectnet_linear",
+                   "M3DFEL_linear", 'Resnet50v2_imagenet_linear', 'CORNet_imagenet_linear']
     ###
 
 
@@ -123,8 +123,6 @@ def main():
         entropy_diff_model_dict = {}
         for cond, condition in enumerate(conditions):
             load_path = os.path.join(computer_path, 'model_behav_preds')
-            if '_linear' in model_name:
-                load_path = os.path.join(load_path, 'linear_fits')
 
             # load data
             # load behavioural data
@@ -193,8 +191,8 @@ def main():
 
     ### Labels for the poster
     labels = [ "NRE-Static", "NRE-Dynamic",
-                   "VGG19-ANN", "Resnet50v2-AN",
-                   "CORNet-AN", "M3DFEL-IM", "ResNet50v2-IM", "CORNet-IM"
+                   "FORMER_DFER", "Resnet50v2-AN",
+                   "CORNet-AN", "M3DFEL", "ResNet50v2-IM", "CORNet-IM"
                ]
     ####
 
@@ -247,12 +245,12 @@ def main():
         plt.show()
 
     ### Fix the plot order for the poster
-    fixed_order = np.array([0, 1, 7, 4, 6, 5, 3, 2])
+    fixed_order = np.array([0, 3, 4, 6, 7, 1, 5, 2])
     ###
 
     make_bar_plot(kl_divergences, model_names, labels, colors, title='KL Divergence', save_name='kl_divergence', sort_plot=fixed_order)
     make_bar_plot(total_variations, model_names, labels, colors, title="Total Variation Distance", save_name='total_var_dist', sort_plot=fixed_order)
-    make_bar_plot(entropy_diffs, model_names, labels, colors, title="Normalized Entropy Difference", save_name='entropy_diffs', sort_plot=fixed_order)
+    # make_bar_plot(entropy_diffs, model_names, labels, colors, title="Normalized Entropy Difference", save_name='entropy_diffs', sort_plot=fixed_order)
     model_names.insert(0, 'behavioural')
     labels.insert(0, 'Humans')
     entropy_models = ['behavioural', 'NRE_frobenius_static']
@@ -263,9 +261,9 @@ def main():
 
     ### Entropy heat maps
 
-    nre_entropy = entropies['NRE_frobenius_static']['human_orig']
-    cnn_entropy = entropies['ResNet50v2_affectnet_linear']['human_orig']
-    behav_entropy = entropies['behavioural']['human_orig']
+    nre_entropy = entropies['NRE_frobenius_static']['monkey_orig']
+    cnn_entropy = entropies['ResNet50v2_affectnet_linear']['monkey_orig']
+    behav_entropy = entropies['behavioural']['monkey_orig']
     print(nre_entropy)
     print(cnn_entropy)
     print(behav_entropy)

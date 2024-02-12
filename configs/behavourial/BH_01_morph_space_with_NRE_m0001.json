@@ -34,5 +34,4 @@
   "use_only_last": true,
   "condition_names": ["Hum. Anger", "Hum. Fear", "Monk. Anger", "Monk. Fear"],
   "save_path": "model_preds"
-
 }

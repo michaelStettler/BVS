@@ -24,7 +24,7 @@ from models.CNN.former_dfer.ST_Former import GenerateModel, RecorderMeter
 #%% import config
 
 config_paths = ['BH_05_morph_space_with_dynamics_M3DFEL_w0001.json']
-config_paths = ['BH_05_morph_space_with_dynamics_FORMER_DFER_w0001.json']
+# config_paths = ['BH_05_morph_space_with_dynamics_FORMER_DFER_w0001.json']
 
 #%% declare script variables
 # occluded and orignial are the same for this pipeline as we do not have any landmark on the ears
@@ -45,11 +45,7 @@ def load_video_from_frames(directory, transform, frames_to_keep):
     return x
 
 def get_preprocessing_procedure(config):
-    if config["project"] == "MAE_DFER":
-        model = create_MAE_DFER().to('cpu')
-        model.fc_norm = None
-
-    elif config["project"] == "M3DFEL":
+    if config["project"] == "M3DFEL":
         model = M3DFEL()
         weight_path = r"D:\PycharmProjects\dynamic_face_models\TFace\attribute\M3DFEL\outputs\DFEW-[12_17]_[20_29]\model_best.pth"
         checkpoint = torch.load(weight_path)
@@ -110,7 +106,6 @@ def predict(model, tuning_vectors, sample_path, transform, frames_to_keep):
     z = model(x).detach().cpu()
     z = z / torch.linalg.norm(z)
     pred = z @ tuning_vectors.T
-    pred = torch.exp(20 * pred) / torch.sum(np.exp(20 * pred))
     return pred
 
 for config_path in config_paths:
@@ -207,7 +202,7 @@ for config_path in config_paths:
                 x = amax_ms_grid[i, j]
                 print(i*5 + j, "x:", x, np.argmax(x))
                 cat_grid[i, j, np.argmax(x)] = 1
-                prob_grid[i, j] = np.exp(x) / sum(np.exp(x))
+                prob_grid[i, j] = x / np.sum(x)
 
         print("test category plot")
         print(cat_grid[..., 2])
